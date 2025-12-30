@@ -75,7 +75,7 @@ const Login: React.FC = () => {
                 login('mock-admin-token', 'admin', rememberMe);
                 navigate('/');
             } else {
-                setError(err.message || 'Invalid email or password');
+                setError(err.message || 'Invalid email or username or password');
             }
         } finally {
             setLoading(false);
@@ -189,7 +189,7 @@ const Login: React.FC = () => {
 
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>{t('email') || 'Username or Email'}</label>
+                        <label style={labelStyle}>{t('Username or Email') || 'Username or Email'}</label>
                         <input
                             type="text"
                             name="username" // Keep name as username for state mapping, but treat as identifier
@@ -197,7 +197,6 @@ const Login: React.FC = () => {
                             onChange={handleChange}
                             style={inputStyle}
                             required
-                            placeholder="Email or Username"
                         />
                     </div>
 

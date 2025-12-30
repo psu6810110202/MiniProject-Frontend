@@ -1,0 +1,116 @@
+/* src/pages/Login.css */
+.login-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ไล่สีพื้นหลังจางๆ ส้ม-ดำ */
+  background: radial-gradient(circle at center, #2a1005 0%, var(--bg-color) 70%);
+  font-family: 'Inter', sans-serif;
+  transition: background 0.3s;
+}
+
+.login-card {
+  background: var(--card-bg);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* เงาเข้มขึ้นให้ดูลอย */
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  transition: background 0.3s, border 0.3s;
+}
+
+.login-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary-color); /* หัวข้อสีส้ม */
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+/* ตอนคลิกช่องกรอกข้อมูล ให้ขอบเป็นสีส้ม */
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.25); 
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color); /* ปุ่มสีส้ม */
+  color: #fff; /* ตัวหนังสือบนปุ่มสีขาวเสมอ */
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.login-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.login-button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: rgba(255, 87, 34, 0.1); /* พื้นแดงอมส้มจางๆ */
+  color: #ff5722;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  border: 1px solid #ff5722;
+}
+
+.toggle-link {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.toggle-link a {
+  color: var(--primary-color); /* ลิงค์สีส้ม */
+  text-decoration: none;
+  font-weight: bold;
+}

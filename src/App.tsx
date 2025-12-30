@@ -7,6 +7,7 @@ import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
 import { usePoints } from './hooks/usePoints';
+import { useLanguage } from './contexts/LanguageContext';
 
 // --- Navbar Component ---
 interface NavbarProps {
@@ -14,6 +15,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ points }) => {
+  const { t, language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   const isLoggedIn = !!token;
@@ -66,12 +68,6 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
   return (
     <nav style={navStyle}>
       <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        {/* ✅ 3. Logo ใน Navbar: ล็อคใช้แบบ DarkTone (ตัวขาว) เสมอ เพราะพื้นหลังดำ */}
-        <img
-          src="/DomPort_DarkTone.png"
-          alt="DomPort Logo"
-          style={{ height: '50px', marginRight: '10px' }}
-        />
         <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
           Dom<span style={{ color: '#ffffff' }}>Port</span>
         </span>
@@ -87,9 +83,15 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
             border: '1px solid #FF5722'
           }}>
             <span style={{ fontSize: '1.2rem' }}>💎</span>
-            <span style={{ color: '#fff', fontWeight: 'bold' }}>{points} pts</span>
+            <span style={{ color: '#fff', fontWeight: 'bold' }}>{points} {t('points')}</span>
           </div>
         )}
+
+        <Link to="/" style={linkStyle}>{t('home')}</Link>
+        <Link to="/catalog" style={linkStyle}>{t('catalog')}</Link>
+        <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
+        <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
+        <Link to="/about" style={linkStyle}>{t('about')}</Link>
 
         {/* ปุ่มสลับ Theme: ยังทำงานเปลี่ยนสีเนื้อหาข้างล่าง แต่ตัวปุ่มเป็นสีขาว */}
         <button
@@ -106,11 +108,22 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
 
-        <Link to="/" style={linkStyle}>Home</Link>
-        <Link to="/catalog" style={linkStyle}>Catalog</Link>
-        <Link to="/preorder" style={linkStyle}>Pre-Order</Link>
-        <Link to="/updates" style={linkStyle}>Updates</Link>
-        <Link to="/about" style={linkStyle}>About Us</Link>
+        {/* Language Switcher */}
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+          style={{
+            background: 'transparent',
+            border: '1px solid #444',
+            color: '#ffffff',
+            borderRadius: '20px',
+            padding: '5px 12px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            fontWeight: 'bold'
+          }}
+        >
+          {language === 'en' ? 'TH' : 'EN'}
+        </button>
 
         {isLoggedIn ? (
           <button
@@ -130,7 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
               textDecoration: 'none', borderRadius: '50px', fontWeight: 'bold'
             }}
           >
-            Login
+            {t('login')}
           </Link>
         )}
       </div>
@@ -140,13 +153,10 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
 
 // --- Home Component ---
 // ส่วนเนื้อหา Home ยังคงเปลี่ยนสีตามโหมด (Dark/Light) เพื่อความสวยงาม
-interface HomeProps {
-  addPoints: (amount: number) => void;
-}
-
-const Home: React.FC<HomeProps> = ({ addPoints }) => {
+const Home: React.FC = () => {
+  const { t } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('theme') || 'dark');
-  const [canCheckIn, setCanCheckIn] = useState(true);
+
 
   useEffect(() => {
     const checkTheme = () => {
@@ -154,24 +164,10 @@ const Home: React.FC<HomeProps> = ({ addPoints }) => {
       if (t) setCurrentTheme(t);
     };
     const interval = setInterval(checkTheme, 100);
-    const lastCheckIn = localStorage.getItem('last_check_in');
-    if (lastCheckIn) {
-      const today = new Date().toDateString();
-      if (lastCheckIn === today) setCanCheckIn(false);
-    }
-
     return () => clearInterval(interval);
   }, []);
 
-  const handleCheckIn = () => {
-    if (canCheckIn) {
-      addPoints(10);
-      setCanCheckIn(false);
-      const today = new Date().toDateString();
-      localStorage.setItem('last_check_in', today);
-      alert("You earned 10 points!");
-    }
-  };
+
 
   // ส่วนเนื้อหา Home ยังเปลี่ยนโลโก้ตามพื้นหลัง (เพราะพื้นหลัง Home เปลี่ยนสีได้)
   const logoSrc = currentTheme === 'dark' ? '/DomPort_DarkTone.png' : '/DomPort.png';
@@ -200,10 +196,10 @@ const Home: React.FC<HomeProps> = ({ addPoints }) => {
         }}
       />
       <h1 style={{ fontSize: '4rem', marginBottom: '20px', fontWeight: '900', color: 'var(--text-main)' }}>
-        Welcome to <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>DomPort</span>
+        {t('welcome')} <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>DomPort</span>
       </h1>
       <p style={{ fontSize: '1.3rem', color: 'var(--text-muted)', maxWidth: '600px', lineHeight: '1.6' }}>
-        Your ultimate gateway to the fandom universe.
+        {t('description')}
       </p>
 
       <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -218,27 +214,8 @@ const Home: React.FC<HomeProps> = ({ addPoints }) => {
           boxShadow: '0 0 20px rgba(255, 87, 34, 0.4)',
           transition: 'transform 0.2s'
         }}>
-          Explore Now
+          {t('explore')}
         </Link>
-
-        <button
-          onClick={handleCheckIn}
-          disabled={!canCheckIn}
-          style={{
-            padding: '15px 40px',
-            fontSize: '1.1rem',
-            background: canCheckIn ? 'linear-gradient(45deg, #FFD700, #FFA500)' : '#555',
-            color: canCheckIn ? '#000' : '#888',
-            borderRadius: '50px',
-            border: 'none',
-            fontWeight: 'bold',
-            cursor: canCheckIn ? 'pointer' : 'not-allowed',
-            boxShadow: canCheckIn ? '0 0 20px rgba(255, 215, 0, 0.4)' : 'none',
-            transition: 'transform 0.2s'
-          }}
-        >
-          {canCheckIn ? '✨ Collect Daily Points' : '✅ Checked In Today'}
-        </button>
       </div>
     </div>
   );
@@ -252,7 +229,7 @@ function App() {
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
         <Navbar points={points} />
         <Routes>
-          <Route path="/" element={<Home addPoints={addPoints} />} />
+          <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
           <Route path="/updates" element={<Updates />} />

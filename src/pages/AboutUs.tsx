@@ -2,14 +2,17 @@ import React from 'react';
 import './AboutUs.css';
 import type { TeamMember, Feature } from '../types';
 
+import { useLanguage } from '../contexts/LanguageContext';
+
 const AboutUs: React.FC = () => {
+  const { t } = useLanguage();
   // ข้อมูลสมาชิก (แก้ไขเป็นข้อมูลจริง)
   const members: TeamMember[] = [
     {
       studentId: '64xxxxxxxx',
       name: 'Member Name 1',
       role: 'Backend Developer',
-      imageUrl: 'A', 
+      imageUrl: 'A',
     },
     {
       studentId: '64xxxxxxxx',
@@ -45,9 +48,9 @@ const AboutUs: React.FC = () => {
     <div className="about-container">
       {/* Hero Section เต็มจอ */}
       <section className="about-hero">
-        <h1>Welcome to DomPort</h1>
+        <h1>{t('about_title')}</h1>
         <p>
-          The ultimate marketplace for fans. Connect with your favorite universe.
+          {t('about_desc')}
         </p>
       </section>
 
@@ -61,25 +64,6 @@ const AboutUs: React.FC = () => {
                 <span className="feature-icon">{item.icon}</span>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Team */}
-        <section>
-          <h2 className="section-title">Our Team</h2>
-          <div className="team-grid">
-            {members.map((member) => (
-              <div key={member.studentId} className="team-card">
-                <div className="team-image-placeholder">
-                  {member.imageUrl}
-                </div>
-                <div className="team-info">
-                  <span className="team-role">{member.role}</span>
-                  <h3>{member.name}</h3>
-                  <p style={{ color: '#718096' }}>ID: {member.studentId}</p>
-                </div>
               </div>
             ))}
           </div>

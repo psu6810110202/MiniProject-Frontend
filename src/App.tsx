@@ -585,6 +585,9 @@ const Footer: React.FC = () => {
   );
 };
 
+import FandomManager from './pages/FandomManager'; // Import FandomManager
+import FandomList from './pages/FandomList';
+
 function App() {
   const { points, addPoints } = usePoints();
 
@@ -604,6 +607,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/fandoms" element={<FandomList />} />
+            <Route path="/admin/fandom/:name" element={<FandomManager />} />
           </Routes>
         </div>
         <Footer />

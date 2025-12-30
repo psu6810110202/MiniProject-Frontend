@@ -90,6 +90,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           </span>
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
+          <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
           {role === 'admin' && (
@@ -362,13 +363,23 @@ const Home: React.FC = () => {
     ? 'radial-gradient(circle at center, #2e1005 0%, #000000 80%)'
     : 'radial-gradient(circle at center, #fff3e0 0%, #ffffff 80%)';
 
-  // Extract unique fandoms
-  const { items } = useProducts();
+  // Extract unique fandoms and categories
+  const { items, fandomImages } = useProducts();
   const fandoms = React.useMemo(() => {
     const unique = Array.from(new Set(items.map(item => item.fandom)));
     return unique.map(f => {
       const item = items.find(i => i.fandom === f);
-      return { name: f, image: item?.image };
+      // Use custom image if available, else fallback to first item
+      const image = (fandomImages && fandomImages[f]) ? fandomImages[f] : item?.image;
+      return { name: f, image: image };
+    });
+  }, [items, fandomImages]);
+
+  const categories = React.useMemo(() => {
+    const unique = Array.from(new Set(items.map(item => item.category)));
+    return unique.map(c => {
+      const item = items.find(i => i.category === c);
+      return { name: c, image: item?.image };
     });
   }, [items]);
 
@@ -443,7 +454,7 @@ const Home: React.FC = () => {
           }}>
             All Fandom
           </h2>
-          <Link to="/catalog" style={{
+          <Link to="/creators" style={{
             color: '#FF5722',
             textDecoration: 'none',
             fontWeight: 'bold',
@@ -452,7 +463,7 @@ const Home: React.FC = () => {
             alignItems: 'center',
             gap: '5px'
           }}>
-            {t('all_products')} →
+            View All Fandom →
           </Link>
         </div>
 
@@ -463,18 +474,28 @@ const Home: React.FC = () => {
           gap: '40px', // Increased gap
           padding: '10px',
           scrollBehavior: 'smooth',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }} className="no-scrollbar">
+          paddingBottom: '20px' // Space for scrollbar
+        }} className="custom-scrollbar">
           <style>{`
-             .no-scrollbar::-webkit-scrollbar {
-               display: none;
+             .custom-scrollbar::-webkit-scrollbar {
+               height: 8px;
+             }
+             .custom-scrollbar::-webkit-scrollbar-track {
+               background: rgba(255, 255, 255, 0.05); 
+               border-radius: 4px;
+             }
+             .custom-scrollbar::-webkit-scrollbar-thumb {
+               background: #FF5722; 
+               border-radius: 4px;
+             }
+             .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+               background: #F4511E; 
              }
            `}</style>
           {fandoms.map((f, i) => (
             <Link key={i} to="/catalog" style={{ textDecoration: 'none' }}>
               <div style={{
-                flex: '0 0 320px', // Wider cards
+                flex: '0 0 220px', // Smaller cards
                 cursor: 'pointer',
                 transition: 'transform 0.3s'
               }}
@@ -483,8 +504,8 @@ const Home: React.FC = () => {
 
                 {/* Image Container - Square */}
                 <div style={{
-                  width: '320px',
-                  height: '320px', // Square aspect ratio
+                  width: '220px',
+                  height: '220px', // Square aspect ratio
                   borderRadius: '24px',
                   overflow: 'hidden',
                   boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
@@ -513,6 +534,88 @@ const Home: React.FC = () => {
                 }}>
                   {f.name}
                 </h3>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Categories Section */}
+      <div style={{
+        padding: '60px 40px',
+        background: 'var(--bg-color)',
+        maxWidth: '1600px',
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'end',
+          marginBottom: '30px',
+          padding: '0 10px'
+        }}>
+          <h2 style={{
+            fontSize: '2.5rem',
+            margin: 0,
+            color: 'var(--text-main)',
+            fontWeight: 'bold'
+          }}>
+            Categories
+          </h2>
+          <Link to="/catalog" style={{
+            color: '#FF5722',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            View All Categories →
+          </Link>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '40px',
+          padding: '10px',
+          scrollBehavior: 'smooth',
+          paddingBottom: '20px'
+        }} className="custom-scrollbar">
+          {categories.slice(0, 6).map((c, i) => (
+            <Link key={i} to="/catalog" style={{ textDecoration: 'none' }}>
+              <div style={{
+                flex: '0 0 220px',
+                cursor: 'pointer',
+                transition: 'transform 0.3s'
+              }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+
+                <div style={{
+                  width: '220px',
+                  height: '220px',
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+                  marginBottom: '20px',
+                  position: 'relative'
+                }}>
+                  <img src={c.image} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0, left: 0, right: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)',
+                    padding: '20px',
+                    height: '50%',
+                    display: 'flex', alignItems: 'end', justifyContent: 'center'
+                  }}>
+                  </div>
+                </div>
+                <h3 style={{ textAlign: 'center', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 'bold' }}>{c.name}</h3>
               </div>
             </Link>
           ))}
@@ -588,11 +691,16 @@ const Footer: React.FC = () => {
 import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 
+import AllFandom from './pages/AllFandom';
+
+import ScrollToTop from './components/ScrollToTop';
+
 function App() {
   const { points, addPoints } = usePoints();
 
   return (
     <Router>
+      <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
         <Navbar points={points} />
         <div style={{ flex: 1 }}>
@@ -600,6 +708,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
+            <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/profile" element={<Profile />} />

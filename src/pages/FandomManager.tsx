@@ -7,10 +7,13 @@ const FandomManager: React.FC = () => {
     const { name } = useParams<{ name: string }>();
     const navigate = useNavigate();
     const { role } = useAuth();
-    const { items, updateFandomName, deleteFandom } = useProducts();
+    const { items, updateFandomName, deleteFandom, fandomImages, setFandomImage } = useProducts();
 
     const [fandomName, setFandomName] = useState(name || '');
     const [relatedItems, setRelatedItems] = useState(items.filter(i => i.fandom === name));
+
+    // Initialize image: explicitly set fandom image OR first item image OR placeholder
+    const [currentImage, setCurrentImage] = useState<string>('');
 
     useEffect(() => {
         if (role !== 'admin') {
@@ -22,13 +25,31 @@ const FandomManager: React.FC = () => {
         if (name) {
             setFandomName(name);
             setRelatedItems(items.filter(i => i.fandom === name));
+
+            // Logic to determine initial image
+            if (fandomImages && fandomImages[name]) {
+                setCurrentImage(fandomImages[name]);
+            } else {
+                const firstItem = items.find(i => i.fandom === name);
+                setCurrentImage(firstItem?.image || '');
+            }
         }
-    }, [name, items]);
+    }, [name, items, fandomImages]);
 
 
     const handleSave = () => {
-        if (name && fandomName && fandomName !== name) {
-            updateFandomName(name, fandomName);
+        if (name && fandomName) {
+            if (fandomName !== name) {
+                updateFandomName(name, fandomName);
+            }
+            // Save image if it changed/exists
+            if (currentImage) {
+                // Determine if it's the new name or old name (if name didn't change, they are same)
+                // If name changed, updateFandomName handles name migration, but we might need to set it for the new name explicitly if we just uploaded it.
+                // However, updateFandomName migrates the *existing* key. 
+                // Best to set it for the *final* name.
+                setFandomImage(fandomName, currentImage);
+            }
             navigate('/admin');
         } else {
             navigate('/admin');
@@ -43,6 +64,17 @@ const FandomManager: React.FC = () => {
             }
         }
     }
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCurrentImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', color: 'var(--text-main)' }}>
@@ -72,6 +104,55 @@ const FandomManager: React.FC = () => {
                             fontSize: '1rem'
                         }}
                     />
+                </div>
+
+                <div style={{ marginBottom: '30px' }}>
+                    <label style={{ display: 'block', marginBottom: '10px', color: '#888' }}>Fandom Cover Image</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{
+                            width: '150px',
+                            height: '150px',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            border: '2px dashed #444',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            background: '#1a1a1a'
+                        }}>
+                            {currentImage ? (
+                                <img src={currentImage} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <span style={{ color: '#666' }}>No Image</span>
+                            )}
+                        </div>
+                        <div>
+                            <input
+                                type="file"
+                                id="fandom-image"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <label
+                                htmlFor="fandom-image"
+                                style={{
+                                    padding: '10px 20px',
+                                    background: '#333',
+                                    color: 'white',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'inline-block',
+                                    border: '1px solid #555'
+                                }}
+                            >
+                                Choose Image
+                            </label>
+                            <p style={{ marginTop: '10px', color: '#666', fontSize: '0.9rem' }}>
+                                Recommended size: 16:9 ratio (e.g., 1280x720)
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '15px' }}>

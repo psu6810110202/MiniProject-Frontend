@@ -5,11 +5,13 @@ import { preorderItems, type PreOrderItem } from '../data/preorderData';
 interface ProductContextType {
     items: Item[];
     fandoms: string[];
+    fandomImages: Record<string, string>;
     preOrders: PreOrderItem[];
     addItem: (item: Item) => void;
     updateItem: (item: Item) => void;
     deleteItem: (id: number) => void;
     addFandom: (name: string) => void;
+    setFandomImage: (name: string, image: string) => void;
     deleteFandom: (name: string) => void;
     updateFandomName: (oldName: string, newName: string) => void;
     addPreOrder: (item: PreOrderItem) => void;
@@ -24,6 +26,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [preOrders, setPreOrders] = useState<PreOrderItem[]>(preorderItems);
     // Initialize fandoms from unique items, but keep it as state so we can add empty ones
     const [fandoms, setFandoms] = useState<string[]>(() => Array.from(new Set(mockItems.map(i => i.fandom))));
+
+    const [fandomImages, setFandomImages] = useState<Record<string, string>>({});
 
     const addItem = (item: Item) => {
         setItems([...items, item]);
@@ -49,10 +53,18 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
+    const setFandomImage = (name: string, image: string) => {
+        setFandomImages(prev => ({ ...prev, [name]: image }));
+    };
+
     const deleteFandom = (name: string) => {
         setFandoms(fandoms.filter(f => f !== name));
         // Also delete all items in this fandom
         setItems(items.filter(item => item.fandom !== name));
+        // Delete image
+        const newImages = { ...fandomImages };
+        delete newImages[name];
+        setFandomImages(newImages);
     };
 
     const updateFandomName = (oldName: string, newName: string) => {
@@ -62,6 +74,12 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 ? { ...item, fandom: newName }
                 : item
         ));
+        // Migrate image
+        if (fandomImages[oldName]) {
+            const newImages = { ...fandomImages, [newName]: fandomImages[oldName] };
+            delete newImages[oldName];
+            setFandomImages(newImages);
+        }
     };
 
     const addPreOrder = (item: PreOrderItem) => {
@@ -78,9 +96,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     return (
         <ProductContext.Provider value={{
-            items, fandoms, preOrders,
+            items, fandoms, fandomImages, preOrders,
             addItem, updateItem, deleteItem,
-            addFandom, deleteFandom, updateFandomName,
+            addFandom, deleteFandom, updateFandomName, setFandomImage,
             addPreOrder, updatePreOrder, deletePreOrder
         }}>
             {children}

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Register: React.FC = () => {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: '',
@@ -53,15 +55,15 @@ const Register: React.FC = () => {
     };
 
     // --- Dynamic Styles (เปลี่ยนตาม isDark) ---
-    
+
     const containerStyle: React.CSSProperties = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 'calc(100vh - 70px)',
         // 🌓 พื้นหลัง: Dark=ดำไล่ส้ม / Light=ขาวไล่ส้มจางๆ
-        background: isDark 
-            ? 'radial-gradient(circle at center, rgba(255, 87, 34, 0.2) 0%, #000000 70%)' 
+        background: isDark
+            ? 'radial-gradient(circle at center, rgba(255, 87, 34, 0.2) 0%, #000000 70%)'
             : 'radial-gradient(circle at center, rgba(255, 87, 34, 0.15) 0%, #ffffff 70%)',
         padding: '20px',
         fontFamily: "'Inter', sans-serif",
@@ -74,7 +76,7 @@ const Register: React.FC = () => {
         padding: '40px',
         borderRadius: '16px',
         // 🔥 เงาฟุ้งสีส้มหลังกล่อง (ปรับความเข้มตามโหมดเพื่อให้ดูดีทั้งคู่)
-        boxShadow: isDark 
+        boxShadow: isDark
             ? '0 0 60px rgba(255, 87, 34, 0.6)'  // โหมดมืด: เงาส้มเข้ม
             : '0 0 60px rgba(255, 87, 34, 0.3)', // โหมดสว่าง: เงาส้มจางลงนิดนึงจะได้ไม่แสบตา
         width: '100%',
@@ -112,7 +114,7 @@ const Register: React.FC = () => {
         border: '1px solid',
         borderColor: isDark ? '#444' : '#ddd',
         // 🌓 ช่องกรอก: Dark=สีเทาเข้ม / Light=สีขาวควันบุหรี่
-        background: isDark ? '#2a2a2a' : '#f9f9f9', 
+        background: isDark ? '#2a2a2a' : '#f9f9f9',
         color: isDark ? '#fff' : '#333',
         fontSize: '1rem',
         outline: 'none',
@@ -139,9 +141,9 @@ const Register: React.FC = () => {
     return (
         <div style={containerStyle}>
             <div style={cardStyle}>
-                <h2 style={titleStyle}>Create Account</h2>
+                <h2 style={titleStyle}>{t('create_account')}</h2>
                 <p style={{ color: isDark ? '#a0a0a0' : '#888', marginBottom: '30px', fontSize: '0.95rem' }}>
-                    Join FandomShip today
+                    {t('join_us')}
                 </p>
 
                 {error && (
@@ -161,7 +163,7 @@ const Register: React.FC = () => {
 
                 <form onSubmit={handleRegister}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Username</label>
+                        <label style={labelStyle}>{t('username')}</label>
                         <input
                             type="text"
                             name="username"
@@ -175,7 +177,7 @@ const Register: React.FC = () => {
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Email</label>
+                        <label style={labelStyle}>{t('email')}</label>
                         <input
                             type="email"
                             name="email"
@@ -189,7 +191,7 @@ const Register: React.FC = () => {
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Password</label>
+                        <label style={labelStyle}>{t('password')}</label>
                         <input
                             type="password"
                             name="password"
@@ -203,7 +205,7 @@ const Register: React.FC = () => {
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Confirm Password</label>
+                        <label style={labelStyle}>{t('confirm_password')}</label>
                         <input
                             type="password"
                             name="confirmPassword"
@@ -216,19 +218,19 @@ const Register: React.FC = () => {
                         />
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         style={buttonStyle}
                         disabled={loading}
                         onMouseOver={(e) => e.currentTarget.style.transform = loading ? 'none' : 'translateY(-2px)'}
                         onMouseOut={(e) => e.currentTarget.style.transform = 'none'}
                     >
-                        {loading ? 'Creating Account...' : 'Sign Up'}
+                        {loading ? t('creating_account') : t('sign_up')}
                     </button>
                 </form>
 
                 <p style={{ marginTop: '25px', fontSize: '0.9rem', color: isDark ? '#888' : '#666' }}>
-                    Already have an account? <Link to="/login" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>Login here</Link>
+                    {t('already_have_account')} <Link to="/login" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>{t('login_here')}</Link>
                 </p>
             </div>
         </div>

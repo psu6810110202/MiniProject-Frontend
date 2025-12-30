@@ -26,20 +26,20 @@ const AboutUs: React.FC = () => {
   const features: Feature[] = [
     {
       id: 1,
-      title: 'Official Merchandise',
-      description: 'สินค้าลิขสิทธิ์แท้ 100% จากค่ายโดยตรง',
+      title: t('feature_merch_title'),
+      description: t('feature_merch_desc'),
       icon: '🛍️',
     },
     {
       id: 2,
-      title: 'Loyalty Points',
-      description: 'ทุกยอดซื้อสะสมแต้ม แลกส่วนลดได้ทันที',
+      title: t('feature_loyalty_title'),
+      description: t('feature_loyalty_desc'),
       icon: '💎',
     },
     {
       id: 3,
-      title: 'Pre-order System',
-      description: 'จองสินค้าล่วงหน้า การันตีได้รับของแน่นอน',
+      title: t('feature_preorder_title'),
+      description: t('feature_preorder_desc'),
       icon: '📦',
     },
   ];
@@ -57,7 +57,7 @@ const AboutUs: React.FC = () => {
       <div className="section-content">
         {/* Features */}
         <section>
-          <h2 className="section-title">What We Offer</h2>
+          <h2 className="section-title">{t('what_we_offer')}</h2>
           <div className="features-grid">
             {features.map((item) => (
               <div key={item.id} className="feature-card">

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Login: React.FC = () => {
+    const { t } = useLanguage();
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true); // Default to true for better UX
     const [loading, setLoading] = useState(false);
 
     // ✅ 1. เพิ่มตัวแปรสำหรับตรวจจับ Theme (Dark/Light)
@@ -25,10 +29,12 @@ const Login: React.FC = () => {
 
     const isDark = theme === 'dark'; // ตัวช่วยเช็คว่าเป็นโหมดมืดหรือไม่
 
+    // ✅ Explicitly using React.ChangeEvent type
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // ✅ Explicitly using React.FormEvent type
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -37,24 +43,24 @@ const Login: React.FC = () => {
         // จำลองการ Login (Mock)
         setTimeout(() => {
             if (formData.username === 'demo' && formData.password === '1234') {
-                const mockToken = 'mock-access-token-12345';
-                if (rememberMe) {
-                    localStorage.setItem('access_token', mockToken);
-                } else {
-                    sessionStorage.setItem('access_token', mockToken);
-                }
+                const mockToken = 'mock-user-token-12345';
+                login(mockToken, 'user', rememberMe);
                 setLoading(false);
                 navigate('/');
-                window.location.reload();
+            } else if (formData.username === 'admin' && formData.password === 'admin') {
+                const mockToken = 'mock-admin-token-99999';
+                login(mockToken, 'admin', rememberMe);
+                setLoading(false);
+                navigate('/'); // Or navigate to /admin-dashboard if you create one
             } else {
-                setError('Invalid username or password (Try: demo / 1234)');
+                setError('Invalid credentials. (User: demo/1234, Admin: admin/admin)');
                 setLoading(false);
             }
         }, 1000);
     };
 
     // --- Dynamic Styles (เปลี่ยนสีตาม isDark) ---
-    
+
     const containerStyle: React.CSSProperties = {
         display: 'flex',
         justifyContent: 'center',
@@ -63,8 +69,8 @@ const Login: React.FC = () => {
         // 🔥 ไฮไลท์: พื้นหลังเปลี่ยนตามโหมด
         // Dark: แสงส้มบนพื้นดำ
         // Light: แสงส้มบนพื้นขาว (เงาส้มฟุ้งๆ)
-        background: isDark 
-            ? 'radial-gradient(circle at center, rgba(255, 87, 34, 0.4) 0%, #000000 70%)' 
+        background: isDark
+            ? 'radial-gradient(circle at center, rgba(255, 87, 34, 0.4) 0%, #000000 70%)'
             : 'radial-gradient(circle at center, rgba(255, 87, 34, 0.25) 0%, #ffffff 70%)',
         padding: '20px',
         fontFamily: "'Inter', sans-serif",
@@ -77,7 +83,7 @@ const Login: React.FC = () => {
         padding: '40px',
         borderRadius: '16px',
         // เงาของการ์ด
-        boxShadow: isDark 
+        boxShadow: isDark
             ? '0 10px 40px rgba(0, 0, 0, 0.8)' // เงาดำสำหรับโหมดมืด
             : '0 10px 40px rgba(255, 87, 34, 0.15)', // เงาส้มจางๆ สำหรับโหมดสว่าง
         width: '100%',
@@ -130,19 +136,19 @@ const Login: React.FC = () => {
     return (
         <div style={containerStyle}>
             <div style={cardStyle}>
-                <h2 style={{ 
-                    marginBottom: '10px', 
-                    fontSize: '2rem', 
-                    color: '#FF5722', 
+                <h2 style={{
+                    marginBottom: '10px',
+                    fontSize: '2rem',
+                    color: '#FF5722',
                     fontWeight: '800',
                     letterSpacing: '-0.5px'
                 }}>
-                    Welcome Back
+                    {t('welcome_back')}
                 </h2>
                 <p style={{ color: isDark ? '#a0a0a0' : '#888888', marginBottom: '30px', fontSize: '0.95rem' }}>
-                    Sign in to manage your collection
+                    {t('sign_in_desc')}
                 </p>
-                
+
                 {error && (
                     <div style={{
                         padding: '12px',
@@ -160,7 +166,7 @@ const Login: React.FC = () => {
 
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Username</label>
+                        <label style={labelStyle}>{t('username')}</label>
                         <input
                             type="text"
                             name="username"
@@ -172,7 +178,7 @@ const Login: React.FC = () => {
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Password</label>
+                        <label style={labelStyle}>{t('password')}</label>
                         <input
                             type="password"
                             name="password"
@@ -184,29 +190,29 @@ const Login: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.9rem', color: isDark ? '#a0a0a0' : '#666', textAlign: 'left' }}>
-                        <input 
-                            type="checkbox" 
+                        <input
+                            type="checkbox"
                             id="rememberMe"
-                            checked={rememberMe} 
-                            onChange={(e) => setRememberMe(e.target.checked)} 
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
                             style={{ marginRight: '10px', accentColor: '#FF5722', width: '16px', height: '16px', cursor: 'pointer' }}
                         />
-                        <label htmlFor="rememberMe" style={{ cursor: 'pointer' }}>Remember Me</label>
+                        <label htmlFor="rememberMe" style={{ cursor: 'pointer' }}>{t('remember_me')}</label>
                     </div>
 
-                    <button 
+                    <button
                         type="submit"
                         style={buttonStyle}
                         disabled={loading}
                         onMouseOver={(e) => e.currentTarget.style.transform = loading ? 'none' : 'translateY(-2px)'}
                         onMouseOut={(e) => e.currentTarget.style.transform = 'none'}
                     >
-                        {loading ? 'Signing In...' : 'Sign In'}
+                        {loading ? t('signing_in') : t('sign_in')}
                     </button>
                 </form>
 
                 <p style={{ marginTop: '25px', fontSize: '0.9rem', color: isDark ? '#888' : '#666' }}>
-                    Don't have an account? <Link to="/register" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>Sign up</Link>
+                    {t('dont_have_account')} <Link to="/register" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>{t('sign_up')}</Link>
                 </p>
             </div>
         </div>

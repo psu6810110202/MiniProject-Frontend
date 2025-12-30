@@ -1,34 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { mockItems } from '../data/mockItem';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useProducts } from '../contexts/ProductContext';
 
 const Catalog: React.FC = () => {
+    const { t } = useLanguage();
+    const { items } = useProducts();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFandom, setSelectedFandom] = useState('All');
-    const [maxPrice, setMaxPrice] = useState<number>(20000);
+
 
     // Extract unique fandoms for filtering
     const fandoms = useMemo(() => {
-        const fans = new Set(mockItems.map(item => item.fandom));
+        const fans = new Set(items.map(item => item.fandom));
         return ['All', ...Array.from(fans)];
-    }, []);
+    }, [items]);
 
-    // Helper to parse price string "฿4,500" -> 4500
-    const parsePrice = (priceStr: string) => {
-        return parseInt(priceStr.replace(/[^\d]/g, ''), 10);
-    };
+
 
     // Filter Logic: Filter by FANDOM instead of Category
     const filteredItems = useMemo(() => {
-        return mockItems.filter(item => {
-            const price = parsePrice(item.price);
+        return items.filter(item => {
+
             const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
             // Check Fandom
             const matchesFandom = selectedFandom === 'All' || item.fandom === selectedFandom;
-            const matchesPrice = price <= maxPrice;
 
-            return matchesSearch && matchesFandom && matchesPrice;
+            return matchesSearch && matchesFandom;
         });
-    }, [searchTerm, selectedFandom, maxPrice]);
+    }, [searchTerm, selectedFandom]);
 
     return (
         <div style={{
@@ -41,10 +40,10 @@ const Catalog: React.FC = () => {
             alignItems: 'center'
         }}>
             <h1 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '10px' }}>
-                <span style={{ color: '#FF5722' }}>Explore</span> Fandoms
+                <span style={{ color: '#FF5722' }}>{t('explore_fandoms').split(' ')[0]}</span> {t('explore_fandoms').split(' ').slice(1).join(' ')}
             </h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '40px' }}>
-                Search items by your favorite series.
+                {t('catalog_subtitle')}
             </p>
 
             {/* Search & Filter Section */}
@@ -65,7 +64,7 @@ const Catalog: React.FC = () => {
                 {/* Text Search */}
                 <input
                     type="text"
-                    placeholder="Search items..."
+                    placeholder={t('search_placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
@@ -103,19 +102,7 @@ const Catalog: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Price Ranger */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ccc' }}>
-                    <span>Max Price: ฿{maxPrice.toLocaleString()}</span>
-                    <input
-                        type="range"
-                        min="0"
-                        max="20000"
-                        step="500"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                        style={{ accentColor: '#FF5722' }}
-                    />
-                </div>
+
             </div>
 
             {/* Results Grid */}
@@ -165,7 +152,7 @@ const Catalog: React.FC = () => {
                                     borderRadius: '5px',
                                     cursor: 'pointer'
                                 }}>
-                                    View
+                                    {t('view_details')}
                                 </button>
                             </div>
                         </div>
@@ -175,12 +162,12 @@ const Catalog: React.FC = () => {
 
             {filteredItems.length === 0 && (
                 <div style={{ marginTop: '50px', textAlign: 'center', color: '#666' }}>
-                    <h2>No items found matching your criteria.</h2>
+                    <h2>{t('no_items_found')}</h2>
                     <button
-                        onClick={() => { setSearchTerm(''); setSelectedFandom('All'); setMaxPrice(20000); }}
+                        onClick={() => { setSearchTerm(''); setSelectedFandom('All'); }}
                         style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer', background: 'transparent', border: '1px solid #555', color: '#fff' }}
                     >
-                        Reset Filters
+                        {t('reset_filters')}
                     </button>
                 </div>
             )}

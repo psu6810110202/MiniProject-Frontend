@@ -6,8 +6,13 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
+import Orders from './pages/Orders';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 import { usePoints } from './hooks/usePoints';
 import { useLanguage } from './contexts/LanguageContext';
+import { useAuth } from './contexts/AuthContext';
+import { useProducts } from './contexts/ProductContext';
 
 // --- Navbar Component ---
 interface NavbarProps {
@@ -16,12 +21,25 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ points }) => {
   const { t, language, setLanguage } = useLanguage();
+  const { isLoggedIn, role, logout } = useAuth();
   const navigate = useNavigate();
-  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-  const isLoggedIn = !!token;
 
   // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
   const [theme, setTheme] = useState('dark');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -38,10 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    sessionStorage.removeItem('access_token');
+    logout();
     navigate('/login');
-    window.location.reload();
   };
 
   // ✅ 1. Navbar Style: ล็อคเป็นสีดำ (ไม่ใช้ตัวแปร Theme)
@@ -67,85 +83,255 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
 
   return (
     <nav style={navStyle}>
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-        <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
-          Dom<span style={{ color: '#ffffff' }}>Port</span>
-        </span>
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
+            Dom<span style={{ color: '#ffffff' }}>Port</span>
+          </span>
+        </Link>
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
+          <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
+          {role === 'admin' && (
+            <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
+          )}
+        </div>
+      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
 
-        {/* Points Display */}
-        {isLoggedIn && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '5px',
-            background: 'rgba(255, 87, 34, 0.2)', padding: '5px 15px', borderRadius: '20px',
-            border: '1px solid #FF5722'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>💎</span>
-            <span style={{ color: '#fff', fontWeight: 'bold' }}>{points} {t('points')}</span>
-          </div>
-        )}
+        {/* Search Icon */}
+        <Link to="/catalog" style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </Link>
 
-        <Link to="/" style={linkStyle}>{t('home')}</Link>
-        <Link to="/catalog" style={linkStyle}>{t('catalog')}</Link>
-        <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
-        <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
-        <Link to="/about" style={linkStyle}>{t('about')}</Link>
-
-        {/* ปุ่มสลับ Theme: ยังทำงานเปลี่ยนสีเนื้อหาข้างล่าง แต่ตัวปุ่มเป็นสีขาว */}
-        <button
-          onClick={toggleTheme}
-          style={{
-            background: 'transparent',
-            border: '1px solid #444',
-            color: '#ffffff', // ไอคอนสีขาว
-            borderRadius: '50%',
-            width: '40px', height: '40px',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-
-        {/* Language Switcher */}
-        <button
-          onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
-          style={{
-            background: 'transparent',
-            border: '1px solid #444',
-            color: '#ffffff',
-            borderRadius: '20px',
-            padding: '5px 12px',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            fontWeight: 'bold'
-          }}
-        >
-          {language === 'en' ? 'TH' : 'EN'}
-        </button>
-
-        {isLoggedIn ? (
+        {/* User Profile Dropdown */}
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
           <button
-            onClick={handleLogout}
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
-              padding: '8px 20px', backgroundColor: '#d32f2f', color: 'white',
-              border: 'none', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer'
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0',
+              color: 'white'
             }}
           >
-            Logout
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
           </button>
-        ) : (
-          <Link
-            to="/login"
-            style={{
-              padding: '8px 20px', backgroundColor: '#FF5722', color: 'white',
-              textDecoration: 'none', borderRadius: '50px', fontWeight: 'bold'
-            }}
-          >
-            {t('login')}
-          </Link>
+
+          {isDropdownOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '150%',
+              right: '-10px',
+              width: '240px',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '12px',
+              boxShadow: '0 5px 20px rgba(0,0,0,0.5)',
+              border: '1px solid #333',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              zIndex: 1001
+            }}>
+              <Link
+                to={isLoggedIn ? "/profile" : "/login"}
+                onClick={() => setIsDropdownOpen(false)}
+                style={{
+                  padding: '12px 20px',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderBottom: '1px solid #333',
+                  display: 'flex', alignItems: 'center', gap: '10px'
+                }}
+              >
+                <span>👤</span> {t('profile')}
+              </Link>
+
+              {role === 'admin' && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsDropdownOpen(false)}
+                  style={{
+                    padding: '12px 20px',
+                    color: '#FF5722',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid #333',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  <span>⚙️</span> Admin Panel
+                </Link>
+              )}
+
+              {/* Points Display */}
+              {isLoggedIn && (
+                <div style={{ padding: '15px 20px', borderBottom: '1px solid #333', background: 'rgba(255,87,34,0.1)' }}>
+                  <div style={{ color: '#aaa', fontSize: '0.8rem', marginBottom: '5px' }}>Your Points</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF5722', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    <span>💎</span> {points}
+                  </div>
+                </div>
+              )}
+
+
+
+              <div
+                onClick={() => {
+                  setLanguage(language === 'en' ? 'th' : 'en');
+                }}
+                style={{
+                  padding: '12px 20px',
+                  color: '#ccc',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  borderBottom: '1px solid #333'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>🌐</span> {t('language')}
+                </div>
+                <span style={{ fontSize: '0.8rem', background: '#FF5722', padding: '2px 8px', borderRadius: '10px', color: 'white' }}>
+                  {language.toUpperCase()}
+                </span>
+              </div>
+
+              <div
+                onClick={toggleTheme}
+                style={{
+                  padding: '12px 20px',
+                  color: '#ccc',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  borderBottom: '1px solid #333'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>{theme === 'dark' ? '🌙' : '☀️'}</span> {t('theme')}
+                </div>
+              </div>
+
+              {isLoggedIn ? (
+                <div
+                  onClick={handleLogout}
+                  style={{
+                    padding: '12px 20px',
+                    color: '#ff4444',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span>🚪</span> {t('logout')}
+                </div>
+              ) : (
+                <Link to="/login" onClick={() => setIsDropdownOpen(false)} style={{
+                  padding: '12px 20px',
+                  color: '#FF5722',
+                  textDecoration: 'none',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  fontWeight: 'bold'
+                }}>
+                  <span>🔑</span> {t('login')}
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Cart Icon (Toggle Drawer) */}
+        <button
+          onClick={() => setIsCartOpen(true)}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '5px', color: 'white'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span style={{ fontWeight: 'bold' }}>0</span>
+        </button>
+
+        {/* Cart Drawer */}
+        {isCartOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              onClick={() => setIsCartOpen(false)}
+              style={{
+                position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                background: 'rgba(0,0,0,0.5)', zIndex: 1100
+              }}
+            />
+            {/* Drawer Panel */}
+            <div style={{
+              position: 'fixed', top: 0, right: 0, width: '400px', height: '100vh',
+              background: 'var(--card-bg)', zIndex: 1101,
+              display: 'flex', flexDirection: 'column',
+              boxShadow: '-5px 0 30px rgba(0,0,0,0.5)',
+              animation: 'slideIn 0.3s ease-out'
+            }}>
+              {/* Drawer Header */}
+              <div style={{
+                padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                borderBottom: '2px solid #FF5722'
+              }}>
+                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{t('your_cart')}</h2>
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: 'var(--text-muted)' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Drawer Content (Empty State) */}
+              <div style={{
+                flex: 1, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)'
+              }}>
+                <div style={{ marginBottom: '20px', color: 'var(--border-color)' }}>
+                  <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                  </svg>
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{t('cart_empty')}</h3>
+              </div>
+            </div>
+
+            {/* Keyframes for animation - inline style hack since we can't easily add keyframes in inline styles. 
+                 Ideally this should be in CSS, but this works for a quick implementation. */}
+            <style>{`
+              @keyframes slideIn {
+                from { transform: translateX(100%); }
+                to { transform: translateX(0); }
+              }
+            `}</style>
+          </>
         )}
+
       </div>
     </nav>
   );
@@ -176,48 +362,226 @@ const Home: React.FC = () => {
     ? 'radial-gradient(circle at center, #2e1005 0%, #000000 80%)'
     : 'radial-gradient(circle at center, #fff3e0 0%, #ffffff 80%)';
 
-  return (
-    <div style={{
-      padding: '80px 20px',
-      textAlign: 'center',
-      minHeight: '80vh',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: homeBackground,
-      transition: 'background 0.3s'
-    }}>
-      <img
-        src={logoSrc}
-        alt="DomPort Giant Logo"
-        style={{
-          width: '220px',
-          marginBottom: '30px',
-          transition: 'all 0.3s',
-          filter: 'drop-shadow(0 0 15px rgba(255,87,34,0.4))'
-        }}
-      />
-      <h1 style={{ fontSize: '4rem', marginBottom: '20px', fontWeight: '900', color: 'var(--text-main)' }}>
-        {t('welcome')} <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>DomPort</span>
-      </h1>
-      <p style={{ fontSize: '1.3rem', color: 'var(--text-muted)', maxWidth: '600px', lineHeight: '1.6' }}>
-        {t('description')}
-      </p>
+  // Extract unique fandoms
+  const { items } = useProducts();
+  const fandoms = React.useMemo(() => {
+    const unique = Array.from(new Set(items.map(item => item.fandom)));
+    return unique.map(f => {
+      const item = items.find(i => i.fandom === f);
+      return { name: f, image: item?.image };
+    });
+  }, [items]);
 
-      <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Link to="/about" style={{
-          padding: '15px 40px',
-          fontSize: '1.1rem',
-          background: '#FF5722',
-          color: 'white',
-          borderRadius: '50px',
-          textDecoration: 'none',
-          fontWeight: 'bold',
-          boxShadow: '0 0 20px rgba(255, 87, 34, 0.4)',
-          transition: 'transform 0.2s'
+  return (
+    <div>
+      {/* Hero Section */}
+      <div style={{
+        padding: '80px 20px',
+        textAlign: 'center',
+        minHeight: '80vh',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        background: homeBackground,
+        transition: 'background 0.3s'
+      }}>
+        <img
+          src={logoSrc}
+          alt="DomPort Giant Logo"
+          style={{
+            width: '220px',
+            marginBottom: '30px',
+            transition: 'all 0.3s',
+            filter: 'drop-shadow(0 0 15px rgba(255,87,34,0.4))'
+          }}
+        />
+        <h1 style={{ fontSize: '4rem', marginBottom: '20px', fontWeight: '900', color: 'var(--text-main)' }}>
+          {t('welcome')} <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>DomPort</span>
+        </h1>
+        <p style={{ fontSize: '1.3rem', color: 'var(--text-muted)', maxWidth: '600px', lineHeight: '1.6' }}>
+          {t('description')}
+        </p>
+
+        <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link to="/catalog" style={{
+            padding: '15px 40px',
+            fontSize: '1.1rem',
+            background: '#FF5722',
+            color: 'white',
+            borderRadius: '50px',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            boxShadow: '0 0 20px rgba(255, 87, 34, 0.4)',
+            transition: 'transform 0.2s'
+          }}>
+            {t('explore')}
+          </Link>
+        </div>
+      </div>
+
+      {/* All Fandom Section */}
+      <div style={{
+        padding: '60px 40px',
+        background: 'var(--bg-color)',
+        borderTop: '1px solid var(--border-color)',
+        maxWidth: '1600px',
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {/* Section Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'end',
+          marginBottom: '30px',
+          padding: '0 10px'
         }}>
-          {t('explore')}
-        </Link>
+          <h2 style={{
+            fontSize: '2.5rem',
+            margin: 0,
+            color: 'var(--text-main)',
+            fontWeight: 'bold'
+          }}>
+            All Fandom
+          </h2>
+          <Link to="/catalog" style={{
+            color: '#FF5722',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            {t('all_products')} →
+          </Link>
+        </div>
+
+        {/* Horizontal Scroll Container */}
+        <div style={{
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '40px', // Increased gap
+          padding: '10px',
+          scrollBehavior: 'smooth',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }} className="no-scrollbar">
+          <style>{`
+             .no-scrollbar::-webkit-scrollbar {
+               display: none;
+             }
+           `}</style>
+          {fandoms.map((f, i) => (
+            <Link key={i} to="/catalog" style={{ textDecoration: 'none' }}>
+              <div style={{
+                flex: '0 0 320px', // Wider cards
+                cursor: 'pointer',
+                transition: 'transform 0.3s'
+              }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+
+                {/* Image Container - Square */}
+                <div style={{
+                  width: '320px',
+                  height: '320px', // Square aspect ratio
+                  borderRadius: '24px',
+                  overflow: 'hidden',
+                  boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+                  marginBottom: '20px',
+                  border: '1px solid var(--border-color)',
+                  position: 'relative',
+                  background: 'var(--card-bg)'
+                }}>
+                  <img src={f.image} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+                  {/* Optional: Subtle gradient overlay for depth */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'linear-gradient(to bottom, transparent 80%, rgba(0,0,0,0.4))',
+                  }}></div>
+                </div>
+
+                <h3 style={{
+                  textAlign: 'center',
+                  color: 'var(--text-main)',
+                  fontSize: '1.4rem',
+                  fontWeight: 'bold',
+                  margin: '0',
+                  letterSpacing: '0.5px'
+                }}>
+                  {f.name}
+                </h3>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
+  );
+};
+
+// --- Footer Component ---
+const Footer: React.FC = () => {
+  const { t } = useLanguage();
+
+  return (
+    <footer style={{
+      backgroundColor: 'var(--bg-color)',
+      borderTop: '2px solid var(--border-color)',
+      padding: '60px 40px',
+      marginTop: 'auto'
+    }}>
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        gap: '40px'
+      }}>
+        {/* Brand Section */}
+        <div style={{ flex: '1 1 300px' }}>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', margin: '0 0 20px 0', letterSpacing: '-1px' }}>
+            <span style={{ color: 'var(--text-main)' }}>DOM</span>
+            <span style={{ color: '#FF5722' }}>PORT</span>
+          </h2>
+        </div>
+
+        {/* Links Container */}
+        <div style={{ display: 'flex', gap: '80px', flexWrap: 'wrap' }}>
+          {/* Shop Column */}
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('shop')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('all_products')}</Link>
+              <Link to="/preorder" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('preorder')}</Link>
+              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('vinyl_figures')}</Link>
+            </div>
+          </div>
+
+          {/* About Column */}
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('who_we_are')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('about')}</Link>
+              <Link to="/updates" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('updates')}</Link>
+              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('for_creators')}</Link>
+            </div>
+          </div>
+
+          {/* Support Column */}
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
+              <Link to="/orders" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 
@@ -226,17 +590,23 @@ function App() {
 
   return (
     <Router>
-      <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
+      <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
         <Navbar points={points} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
-          <Route path="/updates" element={<Updates />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+        <div style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
+            <Route path="/updates" element={<Updates />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Routes>
+        </div>
+        <Footer />
       </div>
     </Router>
   );

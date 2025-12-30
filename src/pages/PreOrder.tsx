@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PreOrderProps {
     addPoints: (amount: number) => void;
 }
 
 const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
+    const { t } = useLanguage();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
@@ -36,10 +38,10 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                     WebkitTextFillColor: 'transparent',
                     marginBottom: '10px'
                 }}>
-                    Exclusive Pre-Orders
+                    {t('exclusive_preorders')}
                 </h1>
                 <p style={{ color: '#aaa', fontSize: '1.2rem' }}>
-                    Secure the most anticipated items before anyone else.
+                    {t('preorder_subtitle')}
                 </p>
             </div>
 
@@ -89,7 +91,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 fontWeight: 'bold',
                                 border: '1px solid #FFC107'
                             }}>
-                                Release: {item.releaseDate}
+                                {t('release_date')}: {item.releaseDate}
                             </div>
                         </div>
 
@@ -101,11 +103,11 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '20px' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', color: '#888' }}>Total Price</div>
+                                    <div style={{ fontSize: '0.9rem', color: '#888' }}>{t('total_price')}</div>
                                     <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>฿{item.price.toLocaleString()}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.9rem', color: '#ff7043' }}>Deposit</div>
+                                    <div style={{ fontSize: '0.9rem', color: '#ff7043' }}>{t('deposit')}</div>
                                     <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#FF5722' }}>฿{item.deposit.toLocaleString()}</div>
                                 </div>
                             </div>
@@ -129,7 +131,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
                                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                Pre-order Now
+                                {t('preorder_now')}
                             </button>
                         </div>
                     </div>

@@ -1,12 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useProducts } from '../contexts/ProductContext';
+import { useCart } from '../contexts/CartContext';
 
 const Catalog: React.FC = () => {
     const { t } = useLanguage();
     const { items } = useProducts();
+    const { addToCart } = useCart();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFandom, setSelectedFandom] = useState('All');
+
+    const handleAddToCart = (item: any) => {
+        addToCart(item);
+        alert(`${item.name} added to cart!`);
+    };
 
 
     // Extract unique fandoms for filtering
@@ -153,6 +160,20 @@ const Catalog: React.FC = () => {
                                     cursor: 'pointer'
                                 }}>
                                     {t('view_details')}
+                                </button>
+                                <button
+                                    onClick={() => handleAddToCart(item)}
+                                    style={{
+                                        padding: '8px 15px',
+                                        background: '#FF5722',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        marginLeft: '10px'
+                                    }}
+                                >
+                                    {t('add_to_cart') || 'Add'}
                                 </button>
                             </div>
                         </div>

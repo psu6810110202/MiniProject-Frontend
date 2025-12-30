@@ -9,10 +9,12 @@ import Catalog from './pages/Catalog';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import Checkout from './pages/Checkout';
 import { usePoints } from './hooks/usePoints';
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
+import { useCart } from './contexts/CartContext';
 
 // --- Navbar Component ---
 interface NavbarProps {
@@ -22,6 +24,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ points }) => {
   const { t, language, setLanguage } = useLanguage();
   const { isLoggedIn, role, logout } = useAuth();
+  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
   // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
@@ -159,22 +162,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
                 <span>👤</span> {t('profile')}
               </Link>
 
-              {role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={() => setIsDropdownOpen(false)}
-                  style={{
-                    padding: '12px 20px',
-                    color: '#FF5722',
-                    textDecoration: 'none',
-                    borderBottom: '1px solid #333',
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  <span>⚙️</span> Admin Panel
-                </Link>
-              )}
+
 
               {/* Points Display */}
               {isLoggedIn && (
@@ -270,7 +258,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span style={{ fontWeight: 'bold' }}>0</span>
+          <span style={{ fontWeight: 'bold' }}>{totalItems}</span>
         </button>
 
         {/* Cart Drawer */}
@@ -306,20 +294,69 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
                 </button>
               </div>
 
-              {/* Drawer Content (Empty State) */}
-              <div style={{
-                flex: 1, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)'
-              }}>
-                <div style={{ marginBottom: '20px', color: 'var(--border-color)' }}>
-                  <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                  </svg>
-                </div>
-                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{t('cart_empty')}</h3>
+              {/* Drawer Content */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                {cartItems.length === 0 ? (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', height: '100%'
+                  }}>
+                    <div style={{ marginBottom: '20px', color: 'var(--border-color)' }}>
+                      <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                      </svg>
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{t('cart_empty')}</h3>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {cartItems.map(item => (
+                      <div key={item.id} style={{ display: 'flex', gap: '15px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={item.image} alt={item.name} style={{ width: '70px', height: '70px', borderRadius: '10px', objectFit: 'cover' }} />
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem', color: 'var(--text-main)' }}>{item.name}</h4>
+                          <div style={{ color: '#FF5722', fontWeight: 'bold' }}>{item.price}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ background: '#333', border: 'none', color: 'white', width: '25px', height: '25px', borderRadius: '5px', cursor: 'pointer' }}>-</button>
+                            <span style={{ color: 'var(--text-main)' }}>{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ background: '#333', border: 'none', color: 'white', width: '25px', height: '25px', borderRadius: '5px', cursor: 'pointer' }}>+</button>
+                            <button onClick={() => removeFromCart(item.id)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: '0.8rem' }}>Remove</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Drawer Footer (Total & Checkout) */}
+              {cartItems.length > 0 && (
+                <div style={{ padding: '20px', borderTop: '2px solid #FF5722', background: 'var(--card-bg)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                    <span>Total:</span>
+                    <span style={{ color: '#FF5722' }}>฿{totalAmount.toLocaleString()}</span>
+                  </div>
+                  <Link to="/checkout"
+                    onClick={() => setIsCartOpen(false)}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '15px',
+                      background: '#FF5722',
+                      color: 'white',
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      borderRadius: '10px',
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    Proceed to Checkout
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Keyframes for animation - inline style hack since we can't easily add keyframes in inline styles. 
@@ -718,6 +755,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
+            <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </div>
         <Footer />

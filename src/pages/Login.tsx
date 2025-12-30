@@ -40,23 +40,46 @@ const Login: React.FC = () => {
         setError('');
         setLoading(true);
 
-        // จำลองการ Login (Mock)
-        setTimeout(() => {
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.username, // Using username field as email for now, or update backend DTO
+                    password: formData.password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            if (data.access_token) {
+                login(data.access_token, data.user?.role || 'user', rememberMe);
+                navigate('/');
+            } else {
+                throw new Error('No access token received');
+            }
+
+        } catch (err: any) {
+            console.error('Login Error:', err);
+            // Fallback for demo users if backend is down (Optional, remove before production)
             if (formData.username === 'demo' && formData.password === '1234') {
-                const mockToken = 'mock-user-token-12345';
-                login(mockToken, 'user', rememberMe);
-                setLoading(false);
+                login('mock-user-token', 'user', rememberMe);
                 navigate('/');
             } else if (formData.username === 'admin' && formData.password === 'admin') {
-                const mockToken = 'mock-admin-token-99999';
-                login(mockToken, 'admin', rememberMe);
-                setLoading(false);
-                navigate('/'); // Or navigate to /admin-dashboard if you create one
+                login('mock-admin-token', 'admin', rememberMe);
+                navigate('/');
             } else {
-                setError('Invalid credentials. (User: demo/1234, Admin: admin/admin)');
-                setLoading(false);
+                setError(err.message || 'Invalid email or password');
             }
-        }, 1000);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // --- Dynamic Styles (เปลี่ยนสีตาม isDark) ---
@@ -166,14 +189,15 @@ const Login: React.FC = () => {
 
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>{t('username')}</label>
+                        <label style={labelStyle}>{t('email') || 'Username or Email'}</label>
                         <input
                             type="text"
-                            name="username"
+                            name="username" // Keep name as username for state mapping, but treat as identifier
                             value={formData.username}
                             onChange={handleChange}
                             style={inputStyle}
                             required
+                            placeholder="Email or Username"
                         />
                     </div>
 

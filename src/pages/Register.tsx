@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    // ✅ Use useAuth hook
+    const { login } = useAuth();
+
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -45,13 +49,45 @@ const Register: React.FC = () => {
 
         setLoading(true);
 
-        // จำลองการ Register (Mock)
-        setTimeout(() => {
-            console.log('Registering with:', formData);
+        try {
+            // Call Backend API
+            const response = await fetch('http://localhost:3000/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+
+            // Auto Login if token is present
+            if (data.access_token) {
+                // Assuming the backend returns { access_token, user: { role, ... } }
+                // The backend was modified to return login result which includes access_token and user object
+                login(data.access_token, data.user?.role || 'user', true);
+                alert('Registration successful!');
+                navigate('/');
+            } else {
+                // Fallback if no token returned (should not happen with updated backend)
+                alert('Registration successful! Please login.');
+                navigate('/login');
+            }
+
+        } catch (err: any) {
+            console.error('Registration Error:', err);
+            setError(err.message || 'An error occurred during registration');
+        } finally {
             setLoading(false);
-            alert('Registration successful! Please login.');
-            navigate('/login');
-        }, 1500);
+        }
     };
 
     // --- Dynamic Styles (เปลี่ยนตาม isDark) ---
@@ -89,6 +125,7 @@ const Register: React.FC = () => {
         transition: 'all 0.3s ease'
     };
 
+    // Reuse existing styles...
     const titleStyle: React.CSSProperties = {
         marginBottom: '10px',
         fontSize: '2rem',
@@ -122,6 +159,7 @@ const Register: React.FC = () => {
         transition: 'all 0.3s'
     };
 
+    // Reuse button style
     const buttonStyle: React.CSSProperties = {
         width: '100%',
         padding: '14px',

@@ -1,108 +1,216 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './Login.css';
 
 const Login: React.FC = () => {
-  const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false); // ✅ Checkbox State
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({ username: '', password: '' });
+    const [error, setError] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    // ✅ 1. เพิ่มตัวแปรสำหรับตรวจจับ Theme (Dark/Light)
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
-    try {
-      const response = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+    // ฟังก์ชันคอยเช็คว่า Navbar มีการเปลี่ยนโหมดหรือยัง (เช็คทุก 0.1 วินาที)
+    useEffect(() => {
+        const checkTheme = () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme && currentTheme !== theme) {
+                setTheme(currentTheme);
+            }
+        };
+        const interval = setInterval(checkTheme, 100);
+        return () => clearInterval(interval);
+    }, [theme]);
 
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
+    const isDark = theme === 'dark'; // ตัวช่วยเช็คว่าเป็นโหมดมืดหรือไม่
 
-      const data = await response.json();
-      const token = data.access_token; // รับ Token จาก Backend
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-      // ✅ Logic: Remember Me
-      if (rememberMe) {
-        localStorage.setItem('access_token', token); // จำตลอดไป (จนกว่าจะ Logout)
-      } else {
-        sessionStorage.setItem('access_token', token); // จำแค่ปิด Browser
-      }
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
-      // alert('Login Successful!');
-      navigate('/'); // ไปหน้า Home
-      window.location.reload(); // Reload เพื่อให้ Navbar อัปเดตสถานะ
+        // จำลองการ Login (Mock)
+        setTimeout(() => {
+            if (formData.username === 'demo' && formData.password === '1234') {
+                const mockToken = 'mock-access-token-12345';
+                if (rememberMe) {
+                    localStorage.setItem('access_token', mockToken);
+                } else {
+                    sessionStorage.setItem('access_token', mockToken);
+                }
+                setLoading(false);
+                navigate('/');
+                window.location.reload();
+            } else {
+                setError('Invalid username or password (Try: demo / 1234)');
+                setLoading(false);
+            }
+        }, 1000);
+    };
 
-    } catch (err) {
-      setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // --- Dynamic Styles (เปลี่ยนสีตาม isDark) ---
+    
+    const containerStyle: React.CSSProperties = {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 'calc(100vh - 70px)',
+        // 🔥 ไฮไลท์: พื้นหลังเปลี่ยนตามโหมด
+        // Dark: แสงส้มบนพื้นดำ
+        // Light: แสงส้มบนพื้นขาว (เงาส้มฟุ้งๆ)
+        background: isDark 
+            ? 'radial-gradient(circle at center, rgba(255, 87, 34, 0.4) 0%, #000000 70%)' 
+            : 'radial-gradient(circle at center, rgba(255, 87, 34, 0.25) 0%, #ffffff 70%)',
+        padding: '20px',
+        fontFamily: "'Inter', sans-serif",
+        transition: 'background 0.3s ease' // เพิ่ม transition ให้สมูทเวลาเปลี่ยนโหมด
+    };
 
-  return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1 className="login-title">Welcome Back</h1>
-        <p className="login-subtitle">Sign in to manage your collection</p>
+    const cardStyle: React.CSSProperties = {
+        // Dark: การ์ดสีเทาดำ / Light: การ์ดสีขาว
+        background: isDark ? '#1a1a1a' : '#ffffff',
+        padding: '40px',
+        borderRadius: '16px',
+        // เงาของการ์ด
+        boxShadow: isDark 
+            ? '0 10px 40px rgba(0, 0, 0, 0.8)' // เงาดำสำหรับโหมดมืด
+            : '0 10px 40px rgba(255, 87, 34, 0.15)', // เงาส้มจางๆ สำหรับโหมดสว่าง
+        width: '100%',
+        maxWidth: '400px',
+        textAlign: 'center',
+        color: isDark ? '#ffffff' : '#333333', // เปลี่ยนสีตัวหนังสือตามโหมด
+        border: isDark ? '1px solid #333' : '1px solid #ffe0b2', // ขอบสีเปลี่ยนตามโหมด
+        transition: 'all 0.3s ease'
+    };
 
-        {error && <div className="error-message">{error}</div>}
+    const labelStyle: React.CSSProperties = {
+        display: 'block',
+        marginBottom: '8px',
+        fontWeight: '600',
+        color: isDark ? '#e0e0e0' : '#555555', // สี Label
+        fontSize: '0.9rem',
+        textAlign: 'left'
+    };
 
-        <form onSubmit={handleLogin}>
-          <div className="form-group">
-             <label className="form-label">Username</label>
-             <input 
-               type="text" 
-               className="form-input" 
-               value={username} 
-               onChange={(e) => setUsername(e.target.value)} 
-               required 
-             />
-          </div>
+    const inputStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid',
+        borderColor: isDark ? '#ccc' : '#ddd',
+        background: '#f0f4f8', // ให้ช่องกรอกเป็นสีสว่างเสมอเพื่อให้อ่านง่าย
+        color: '#333',
+        fontSize: '1rem',
+        outline: 'none',
+        boxSizing: 'border-box',
+        transition: 'border 0.3s'
+    };
 
-          <div className="form-group">
-             <label className="form-label">Password</label>
-             <input 
-               type="password" 
-               className="form-input" 
-               value={password} 
-               onChange={(e) => setPassword(e.target.value)} 
-               required 
-             />
-          </div>
+    const buttonStyle: React.CSSProperties = {
+        width: '100%',
+        padding: '12px',
+        background: '#FF5722',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: loading ? 'not-allowed' : 'pointer',
+        opacity: loading ? 0.7 : 1,
+        marginTop: '20px',
+        boxShadow: '0 4px 15px rgba(255, 87, 34, 0.4)',
+        transition: 'transform 0.2s, background 0.2s'
+    };
 
-          {/* ✅ Checkbox Remember Me */}
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-            <input 
-              type="checkbox" 
-              id="remember" 
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              style={{ marginRight: '8px', width: 'auto' }}
-            />
-            <label htmlFor="remember" style={{ color: '#4a5568', fontSize: '0.9rem', cursor: 'pointer' }}>
-              Remember Me
-            </label>
-          </div>
+    return (
+        <div style={containerStyle}>
+            <div style={cardStyle}>
+                <h2 style={{ 
+                    marginBottom: '10px', 
+                    fontSize: '2rem', 
+                    color: '#FF5722', 
+                    fontWeight: '800',
+                    letterSpacing: '-0.5px'
+                }}>
+                    Welcome Back
+                </h2>
+                <p style={{ color: isDark ? '#a0a0a0' : '#888888', marginBottom: '30px', fontSize: '0.95rem' }}>
+                    Sign in to manage your collection
+                </p>
+                
+                {error && (
+                    <div style={{
+                        padding: '12px',
+                        background: 'rgba(211, 47, 47, 0.1)',
+                        border: '1px solid #d32f2f',
+                        color: '#d32f2f',
+                        borderRadius: '8px',
+                        marginBottom: '20px',
+                        fontSize: '0.9rem',
+                        textAlign: 'left'
+                    }}>
+                        ⚠️ {error}
+                    </div>
+                )}
 
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-        
-        <div className="toggle-link">
-          Don't have an account? <Link to="/register">Sign up</Link>
+                <form onSubmit={handleLogin}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={labelStyle}>Username</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            style={inputStyle}
+                            required
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={labelStyle}>Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            style={inputStyle}
+                            required
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.9rem', color: isDark ? '#a0a0a0' : '#666', textAlign: 'left' }}>
+                        <input 
+                            type="checkbox" 
+                            id="rememberMe"
+                            checked={rememberMe} 
+                            onChange={(e) => setRememberMe(e.target.checked)} 
+                            style={{ marginRight: '10px', accentColor: '#FF5722', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="rememberMe" style={{ cursor: 'pointer' }}>Remember Me</label>
+                    </div>
+
+                    <button 
+                        type="submit"
+                        style={buttonStyle}
+                        disabled={loading}
+                        onMouseOver={(e) => e.currentTarget.style.transform = loading ? 'none' : 'translateY(-2px)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'none'}
+                    >
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <p style={{ marginTop: '25px', fontSize: '0.9rem', color: isDark ? '#888' : '#666' }}>
+                    Don't have an account? <Link to="/register" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>Sign up</Link>
+                </p>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default Login;

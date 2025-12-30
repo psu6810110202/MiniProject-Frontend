@@ -10,11 +10,13 @@ const Navbar: React.FC = () => {
   const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   const isLoggedIn = !!token;
 
+  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
   const [theme, setTheme] = useState('dark');
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
+    // เปลี่ยน Theme รวมของเว็บ (Body, Cards, Text)
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
   };
@@ -32,46 +34,49 @@ const Navbar: React.FC = () => {
     window.location.reload();
   };
 
-  const logoSrc = theme === 'dark' ? '/DomPort.png' : '/DomPort_DarkTone.png';
-
-  // 👇👇 จุดที่ 1: แก้สี Navbar ตรงนี้ครับ 👇👇
+  // ✅ 1. Navbar Style: ล็อคเป็นสีดำ (ไม่ใช้ตัวแปร Theme)
   const navStyle = {
     padding: '10px 40px',
-    // เปลี่ยนพื้นหลังเป็นสีดำเข้ม
-    background: '#0a0a0a', 
-    // เพิ่มเส้นขอบล่างสีส้ม
-    borderBottom: '2px solid #FF5722', 
-    // เพิ่มเงาสีส้มจางๆ ให้ดูสวย
-    boxShadow: '0 4px 20px rgba(255, 87, 34, 0.2)', 
+    background: '#0a0a0a', // สีดำเสมอ
+    borderBottom: '2px solid #FF5722',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     position: 'sticky' as 'sticky',
     top: 0,
     zIndex: 1000,
-    transition: 'background 0.3s'
+  };
+
+  // ✅ 2. Link Style: ล็อคตัวหนังสือเป็นสีขาว (เพื่อให้เห็นบนแถบดำ)
+  const linkStyle = {
+    textDecoration: 'none',
+    color: '#ffffff', // ขาวเสมอ
+    fontWeight: '500'
   };
 
   return (
     <nav style={navStyle}>
       <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        {/* ✅ 3. Logo ใน Navbar: ล็อคใช้แบบ DarkTone (ตัวขาว) เสมอ เพราะพื้นหลังดำ */}
         <img 
-          src={logoSrc} 
+          src="/DomPort_DarkTone.png" 
           alt="DomPort Logo" 
-          style={{ height: '50px', marginRight: '10px', transition: 'all 0.3s' }} 
+          style={{ height: '50px', marginRight: '10px' }} 
         />
         <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
-          Dom<span style={{ color: 'var(--text-main)' }}>Port</span>
+          Dom<span style={{ color: '#ffffff' }}>Port</span>
         </span>
       </Link>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        {/* ปุ่มสลับ Theme: ยังทำงานเปลี่ยนสีเนื้อหาข้างล่าง แต่ตัวปุ่มเป็นสีขาว */}
         <button 
           onClick={toggleTheme}
           style={{
             background: 'transparent',
-            border: '1px solid var(--border-color)',
-            color: 'var(--text-main)',
+            border: '1px solid #444',
+            color: '#ffffff', // ไอคอนสีขาว
             borderRadius: '50%',
             width: '40px', height: '40px',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -80,8 +85,8 @@ const Navbar: React.FC = () => {
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
 
-        <Link to="/" style={{ textDecoration: 'none', color: 'var(--text-main)', fontWeight: '500' }}>Home</Link>
-        <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-main)', fontWeight: '500' }}>About Us</Link>
+        <Link to="/" style={linkStyle}>Home</Link>
+        <Link to="/about" style={linkStyle}>About Us</Link>
 
         {isLoggedIn ? (
           <button 
@@ -110,6 +115,7 @@ const Navbar: React.FC = () => {
 };
 
 // --- Home Component ---
+// ส่วนเนื้อหา Home ยังคงเปลี่ยนสีตามโหมด (Dark/Light) เพื่อความสวยงาม
 const Home: React.FC = () => {
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('theme') || 'dark');
   
@@ -122,7 +128,12 @@ const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const logoSrc = currentTheme === 'dark' ? '/DomPort.png' : '/DomPort_DarkTone.png';
+  // ส่วนเนื้อหา Home ยังเปลี่ยนโลโก้ตามพื้นหลัง (เพราะพื้นหลัง Home เปลี่ยนสีได้)
+  const logoSrc = currentTheme === 'dark' ? '/DomPort_DarkTone.png' : '/DomPort.png';
+  
+  const homeBackground = currentTheme === 'dark' 
+    ? 'radial-gradient(circle at center, #2e1005 0%, #000000 80%)' 
+    : 'radial-gradient(circle at center, #fff3e0 0%, #ffffff 80%)';
 
   return (
     <div style={{ 
@@ -130,9 +141,8 @@ const Home: React.FC = () => {
       textAlign: 'center',
       minHeight: '80vh',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      // 👇👇 จุดที่ 2: แก้สีพื้นหลัง Home ตรงนี้ครับ 👇👇
-      // ใช้การไล่สีจาก ตรงกลาง (ส้มเข้มๆ) -> ไปหาขอบ (สีดำ)
-      background: 'radial-gradient(circle at center, #2e1005 0%, #000000 80%)' 
+      background: homeBackground,
+      transition: 'background 0.3s'
     }}>
       <img 
         src={logoSrc} 
@@ -141,7 +151,6 @@ const Home: React.FC = () => {
           width: '220px', 
           marginBottom: '30px', 
           transition: 'all 0.3s',
-          // เพิ่มเงาให้โลโก้เด่นขึ้น
           filter: 'drop-shadow(0 0 15px rgba(255,87,34,0.4))' 
         }} 
       />

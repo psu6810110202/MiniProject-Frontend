@@ -96,6 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
+          <Link to="/timeline" style={linkStyle}>Timeline</Link>
           {role === 'admin' && (
             <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
           )}
@@ -730,6 +731,8 @@ import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
 
+import ProductionTimeline from './pages/ProductionTimeline';
+
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -756,6 +759,7 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/timeline" element={<ProductionTimeline />} />
           </Routes>
         </div>
         <Footer />

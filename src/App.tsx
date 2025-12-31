@@ -732,6 +732,7 @@ import FandomList from './pages/FandomList';
 import AllFandom from './pages/AllFandom';
 
 import ProductionTimeline from './pages/ProductionTimeline';
+import ProductDetail from './pages/ProductDetail';
 
 import ScrollToTop from './components/ScrollToTop';
 
@@ -760,6 +761,7 @@ function App() {
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/timeline" element={<ProductionTimeline />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>
         <Footer />

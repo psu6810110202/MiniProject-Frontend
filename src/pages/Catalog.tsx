@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
@@ -151,16 +152,21 @@ const Catalog: React.FC = () => {
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>
-                                <button style={{
-                                    padding: '8px 15px',
-                                    background: '#333',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer'
-                                }}>
+                                <Link 
+                                    to={`/product/${item.id}`}
+                                    style={{
+                                        padding: '8px 15px',
+                                        background: '#333',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        textDecoration: 'none',
+                                        display: 'inline-block'
+                                    }}
+                                >
                                     {t('view_details')}
-                                </button>
+                                </Link>
                                 <button
                                     onClick={() => handleAddToCart(item)}
                                     style={{

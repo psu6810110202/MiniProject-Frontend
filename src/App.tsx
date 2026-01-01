@@ -712,7 +712,7 @@ const Footer: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('all_products')}</Link>
               <Link to="/preorder" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('preorder')}</Link>
-              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('vinyl_figures')}</Link>
+              <Link to="/regular-products" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>Regular Products</Link>
             </div>
           </div>
 
@@ -744,7 +744,7 @@ import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
-
+import RegularProducts from './pages/RegularProducts';
 
 import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
@@ -774,6 +774,7 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/call-center" element={<CallCenter />} />
             <Route path="/customer-chat" element={<CustomerChat />} />

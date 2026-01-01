@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { productAPI, type Product } from '../services/api';
+import { preorderItems } from '../data/preorderData';
+import { regularProducts } from '../data/regularProducts';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,18 +25,21 @@ const ProductDetail: React.FC = () => {
       ? parseInt(item.price.replace('฿', '').replace(',', '')) || 0
       : (item.price || 0);
 
+    // Check if this is a pre-order item
+    const isPreOrderItem = item.deposit !== undefined || item.releaseDate !== undefined;
+
     return {
       product_id: item.id?.toString() || 'unknown',
       name: item.name,
-      description: `${item.name} - High quality ${item.category} from ${item.fandom} collection. Perfect for collectors and fans.`,
+      description: `${item.name} - High quality ${item.category || 'collectible'} from ${item.fandom || 'Exclusive'} collection. Perfect for collectors and fans.`,
       price: numericPrice,
-      category: item.category,
-      fandom: item.fandom,
+      category: item.category || (isPreOrderItem ? 'Pre-Order' : 'Regular'),
+      fandom: item.fandom || 'Exclusive',
       image: item.image,
-      stock: Math.floor(Math.random() * 50) + 10, // Random stock for demo
-      is_preorder: Math.random() > 0.7, // Random pre-order for demo
-      release_date: new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      deposit_amount: Math.floor(numericPrice * 0.2),
+      stock: isPreOrderItem ? 100 : (item.stock || Math.floor(Math.random() * 50) + 10),
+      is_preorder: isPreOrderItem,
+      release_date: item.releaseDate || new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      deposit_amount: item.deposit || Math.floor(numericPrice * 0.2),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -50,40 +55,58 @@ const ProductDetail: React.FC = () => {
     try {
       setLoading(true);
 
-      // First try to find in ProductContext
-      const contextItem = items.find(item =>
-        item.id?.toString() === productId
-      );
-
-      if (contextItem) {
-        const convertedProduct = convertItemToProduct(contextItem);
+      // Try pre-order data first (for pre-order items)
+      const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
+      
+      if (preOrderItem) {
+        const convertedProduct = convertItemToProduct(preOrderItem);
         setProduct(convertedProduct);
         setError(null);
       } else {
-        // Try API
-        try {
-          const data = await productAPI.getById(productId);
-          setProduct(data);
+        // Try regular products data (for regular items)
+        const regularProduct = regularProducts.find(item => item.id.toString() === productId);
+        
+        if (regularProduct) {
+          const convertedProduct = convertItemToProduct(regularProduct);
+          setProduct(convertedProduct);
           setError(null);
-        } catch (apiError) {
-          // Use fallback data
-          const fallbackProduct: Product = {
-            product_id: productId,
-            name: 'DomPort Exclusive Figure - Limited Edition',
-            description: 'Premium quality collectible figure from DomPort. This exclusive limited edition features detailed craftsmanship and comes with official certificate of authenticity.',
-            price: 2590,
-            category: 'Vinyl Figures',
-            fandom: 'DomPort Original',
-            image: '/api/placeholder/400/400',
-            stock: 50,
-            is_preorder: true,
-            release_date: '2026-02-15',
-            deposit_amount: 500,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          setProduct(fallbackProduct);
-          setError('Using demo data - product not found in catalog or API');
+        } else {
+          // Then try ProductContext
+          const contextItem = items.find(item =>
+            item.id?.toString() === productId
+          );
+
+          if (contextItem) {
+            const convertedProduct = convertItemToProduct(contextItem);
+            setProduct(convertedProduct);
+            setError(null);
+          } else {
+            // Try API
+            try {
+              const data = await productAPI.getById(productId);
+              setProduct(data);
+              setError(null);
+            } catch (apiError) {
+              // Use fallback data
+              const fallbackProduct: Product = {
+                product_id: productId,
+                name: 'DomPort Exclusive Figure - Limited Edition',
+                description: 'Premium quality collectible figure from DomPort. This exclusive limited edition features detailed craftsmanship and comes with official certificate of authenticity.',
+                price: 2590,
+                category: 'Vinyl Figures',
+                fandom: 'DomPort Original',
+                image: '/api/placeholder/400/400',
+                stock: 50,
+                is_preorder: false,
+                release_date: '2026-02-15',
+                deposit_amount: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+              setProduct(fallbackProduct);
+              setError('Using demo data - product not found in catalog or API');
+            }
+          }
         }
       }
     } catch (err) {
@@ -162,6 +185,11 @@ const ProductDetail: React.FC = () => {
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
           }
         `}</style>
       </div>
@@ -309,19 +337,61 @@ const ProductDetail: React.FC = () => {
                 {product.name}
               </h1>
 
-              {product.is_preorder && (
-                <span style={{
-                  padding: '6px 12px',
-                  background: '#FF5722',
-                  color: 'white',
-                  borderRadius: '20px',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                  verticalAlign: 'middle',
-                  alignSelf: 'center'
-                }}>
-                  PRE-ORDER
-                </span>
+              {product.is_preorder ? (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <span style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                    color: 'white',
+                    borderRadius: '25px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold',
+                    verticalAlign: 'middle',
+                    alignSelf: 'center',
+                    boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
+                    animation: 'pulse 2s infinite'
+                  }}>
+                    🔥 PRE-ORDER EXCLUSIVE
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    background: 'rgba(255, 87, 34, 0.1)',
+                    color: '#FF5722',
+                    borderRadius: '15px',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    border: '1px solid #FF5722'
+                  }}>
+                    LIMITED EDITION
+                  </span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <span style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                    color: 'white',
+                    borderRadius: '25px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold',
+                    verticalAlign: 'middle',
+                    alignSelf: 'center',
+                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                  }}>
+                    ✅ IN STOCK - READY TO SHIP
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    background: 'rgba(76, 175, 80, 0.1)',
+                    color: '#4CAF50',
+                    borderRadius: '15px',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    border: '1px solid #4CAF50'
+                  }}>
+                    IMMEDIATE DELIVERY
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -330,36 +400,195 @@ const ProductDetail: React.FC = () => {
           <div style={{
             fontSize: '2rem',
             fontWeight: 'bold',
-            color: '#FF5722',
-            marginBottom: '30px'
+            color: product.is_preorder ? '#FF5722' : '#4CAF50',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '15px'
           }}>
-            ฿{product.price.toLocaleString()}
+            <div>
+              ฿{product.price.toLocaleString()}
+            </div>
+            {product.is_preorder && (
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: 'normal'
+              }}>
+                <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
+                <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
+                <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                  (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
+                </div>
+              </div>
+            )}
+            {!product.is_preorder && (
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#666',
+                fontWeight: 'normal'
+              }}>
+                <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>REGULAR PRICE</div>
+                <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                  Ships within 2-3 business days
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Pre-Order Information */}
+          {/* Product Type Header */}
+          <div style={{
+            background: product.is_preorder ? 
+              'linear-gradient(135deg, rgba(255, 87, 34, 0.15), rgba(255, 87, 34, 0.05))' : 
+              'linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.05))',
+            border: `2px solid ${product.is_preorder ? '#FF5722' : '#4CAF50'}`,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '30px',
+            textAlign: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+              <span style={{ fontSize: '2rem' }}>
+                {product.is_preorder ? '🚀' : '📦'}
+              </span>
+              <div>
+                <h2 style={{
+                  margin: '0 0 5px 0',
+                  fontSize: '1.5rem',
+                  fontWeight: 'bold',
+                  color: product.is_preorder ? '#FF5722' : '#4CAF50'
+                }}>
+                  {product.is_preorder ? 'PRE-ORDER PRODUCT' : 'REGULAR PRODUCT'}
+                </h2>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.9rem',
+                  color: product.is_preorder ? '#E64A19' : '#45a049'
+                }}>
+                  {product.is_preorder ? 
+                    'Reserve now and secure your limited edition item before it\'s gone!' : 
+                    'Available now for immediate shipping to your doorstep.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Information Section */}
           {product.is_preorder && (
             <div style={{
-              background: 'rgba(255, 87, 34, 0.1)',
-              border: '1px solid #FF5722',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '30px'
+              background: 'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(230, 74, 25, 0.05))',
+              border: '2px solid #FF5722',
+              borderRadius: '16px',
+              padding: '25px',
+              marginBottom: '30px',
+              boxShadow: '0 8px 24px rgba(255, 87, 34, 0.15)'
             }}>
               <h3 style={{
-                margin: '0 0 15px 0',
+                margin: '0 0 20px 0',
                 color: '#FF5722',
-                fontSize: '1.1rem'
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                textAlign: 'center'
               }}>
-                📅 Pre-Order Information
+                🚀 Pre-Order Details
               </h3>
-              <div style={{ marginBottom: '10px' }}>
-                <strong>Release Date:</strong> {formatDate(product.release_date!)}
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px',
+                marginBottom: '20px'
+              }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 87, 34, 0.2)'
+                }}>
+                  <div style={{ fontSize: '0.85rem', color: '#999', marginBottom: '5px' }}>📅 Release Date</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#FF5722' }}>
+                    {formatDate(product.release_date!)}
+                  </div>
+                </div>
+                
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 87, 34, 0.2)'
+                }}>
+                  <div style={{ fontSize: '0.85rem', color: '#999', marginBottom: '5px' }}>⏰ Expected</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#FF5722' }}>
+                    {getRelativeTime(product.release_date!)}
+                  </div>
+                </div>
               </div>
-              <div style={{ marginBottom: '10px' }}>
-                <strong>Expected:</strong> {getRelativeTime(product.release_date!)}
+              
+              <div style={{
+                background: 'rgba(255, 87, 34, 0.05)',
+                padding: '15px',
+                borderRadius: '12px',
+                border: '1px dashed #FF5722'
+              }}>
+                <div style={{ fontSize: '0.85rem', color: '#999', marginBottom: '5px' }}>💰 Payment Plan</div>
+                <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+                  Deposit: ฿{product.deposit_amount?.toLocaleString()} (20%)
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '5px' }}>
+                  Remaining ฿{Math.round(product.price * 0.8).toLocaleString()} due on release
+                </div>
               </div>
-              <div>
-                <strong>Deposit Required:</strong> ฿{product.deposit_amount?.toLocaleString()}
+            </div>
+          )}
+
+          {!product.is_preorder && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(69, 160, 73, 0.05))',
+              border: '2px solid #4CAF50',
+              borderRadius: '16px',
+              padding: '25px',
+              marginBottom: '30px',
+              boxShadow: '0 8px 24px rgba(76, 175, 80, 0.15)'
+            }}>
+              <h3 style={{
+                margin: '0 0 20px 0',
+                color: '#4CAF50',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                textAlign: 'center'
+              }}>
+                📦 In-Stock Details
+              </h3>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '20px'
+              }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(76, 175, 80, 0.2)'
+                }}>
+                  <div style={{ fontSize: '0.85rem', color: '#999', marginBottom: '5px' }}>📦 Stock Status</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#4CAF50' }}>
+                    {product.stock} units available
+                  </div>
+                </div>
+                
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(76, 175, 80, 0.2)'
+                }}>
+                  <div style={{ fontSize: '0.85rem', color: '#999', marginBottom: '5px' }}>🚚 Delivery</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#4CAF50' }}>
+                    Ships in 2-3 days
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -443,28 +672,38 @@ const ProductDetail: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' : '#FF5722',
+                background: addingToCart ? '#4CAF50' : 
+                         product.is_preorder ? 'linear-gradient(135deg, #FF5722, #E64A19)' : 
+                         '#FF5722',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
-                transition: 'background 0.2s',
-                opacity: product.stock === 0 ? 0.5 : 1
+                transition: 'all 0.2s',
+                opacity: product.stock === 0 ? 0.5 : 1,
+                boxShadow: product.is_preorder ? '0 4px 16px rgba(255, 87, 34, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
                 if (!addingToCart && product.stock > 0) {
-                  e.currentTarget.style.background = '#E64A19';
+                  e.currentTarget.style.background = product.is_preorder ? 
+                    'linear-gradient(135deg, #E64A19, #D84315)' : '#E64A19';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!addingToCart) {
-                  e.currentTarget.style.background = '#FF5722';
+                  e.currentTarget.style.background = product.is_preorder ? 
+                    'linear-gradient(135deg, #FF5722, #E64A19)' : '#FF5722';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : (product.is_preorder ? 'Pre-Order Now' : 'Add to Cart')}
+              {addingToCart ? '✓ Added to Cart' : 
+               product.stock === 0 ? 'Out of Stock' : 
+               (product.is_preorder ? '🚀 Pre-Order Now' : '🛒 Add to Cart')
+              }
             </button>
 
             <button

@@ -1,40 +1,8 @@
-import { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { preorderItems, type PreOrderItem } from '../data/preorderData';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useCart } from '../contexts/CartContext';
+import { regularProducts } from '../data/regularProducts';
 
-interface PreOrderProps {
-    addPoints: (amount: number) => void;
-}
-
-const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
-    const { t } = useLanguage();
-    const { addToCart, cartItems, purchasedItems } = useCart();
-    // Independent state for this page's visual interactions
-    const [hoveredId, setHoveredId] = useState<number | null>(null);
-
-    const handlePreOrder = (item: PreOrderItem) => {
-        // Check if item is already in cart or purchased (Limit 1 per account)
-        if (cartItems.some(cartItem => cartItem.id === item.id) || purchasedItems.includes(item.id)) {
-            alert('You can only pre-order 1 unit of this item per account.');
-            return;
-        }
-
-        // Add to cart
-        addToCart({
-            id: item.id,
-            name: item.name,
-            price: `฿${item.price.toLocaleString()}`,
-            category: 'Pre-Order',
-            fandom: 'Exclusive',
-            image: item.image
-        });
-
-        // Award points silently
-        addPoints(50);
-    };
-
+const RegularProducts: React.FC = () => {
     return (
         <div style={{
             padding: '40px 20px',
@@ -46,15 +14,15 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                 <h1 style={{
                     fontSize: '3rem',
                     fontWeight: '900',
-                    background: 'linear-gradient(90deg, #FF5722, #FFC107)',
+                    background: 'linear-gradient(90deg, #4CAF50, #45a049)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     marginBottom: '10px'
                 }}>
-                    {t('exclusive_preorders')}
+                    In Stock Products
                 </h1>
                 <p style={{ color: '#aaa', fontSize: '1.2rem' }}>
-                    {t('preorder_subtitle')}
+                    Ready to ship immediately - Order now!
                 </p>
             </div>
 
@@ -65,20 +33,26 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                 maxWidth: '1200px',
                 margin: '0 auto'
             }}>
-                {preorderItems.map((item) => (
+                {regularProducts.map((item) => (
                     <div
                         key={item.id}
-                        onMouseEnter={() => setHoveredId(item.id)}
-                        onMouseLeave={() => setHoveredId(null)}
                         style={{
                             background: '#252525',
                             borderRadius: '20px',
                             overflow: 'hidden',
                             position: 'relative',
-                            transform: hoveredId === item.id ? 'translateY(-10px)' : 'translateY(0)',
-                            boxShadow: hoveredId === item.id ? '0 15px 30px rgba(255, 87, 34, 0.3)' : '0 4px 10px rgba(0,0,0,0.3)',
+                            transform: 'translateY(0)',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
                             transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
                             border: '1px solid #333'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-10px)';
+                            e.currentTarget.style.boxShadow = '0 15px 30px rgba(76, 175, 80, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
                         }}
                     >
                         <div style={{ position: 'relative', height: '350px', overflow: 'hidden' }}>
@@ -89,8 +63,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                     width: '100%',
                                     height: '100%',
                                     objectFit: 'cover',
-                                    transition: 'transform 0.5s',
-                                    transform: hoveredId === item.id ? 'scale(1.1)' : 'scale(1)'
+                                    transition: 'transform 0.5s'
                                 }}
                             />
                             <div style={{
@@ -100,11 +73,11 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 padding: '5px 12px',
                                 borderRadius: '20px',
                                 fontSize: '0.9rem',
-                                color: '#FFC107',
+                                color: '#4CAF50',
                                 fontWeight: 'bold',
-                                border: '1px solid #FFC107'
+                                border: '1px solid #4CAF50'
                             }}>
-                                {t('release_date')}: {item.releaseDate}
+                                ✅ IN STOCK
                             </div>
                         </div>
 
@@ -113,7 +86,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 to={`/product/${item.id}`}
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.color = '#FF5722';
+                                    e.currentTarget.style.color = '#4CAF50';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.color = 'inherit';
@@ -133,21 +106,20 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '20px' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', color: '#888' }}>{t('total_price')}</div>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>฿{item.price.toLocaleString()}</div>
+                                    <div style={{ fontSize: '0.9rem', color: '#888' }}>Price</div>
+                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4CAF50' }}>฿{item.price.toLocaleString()}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.9rem', color: '#ff7043' }}>{t('deposit')}</div>
-                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#FF5722' }}>฿{item.deposit.toLocaleString()}</div>
+                                    <div style={{ fontSize: '0.9rem', color: '#4CAF50' }}>Stock</div>
+                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#4CAF50' }}>{item.stock}</div>
                                 </div>
                             </div>
 
                             <button
-                                onClick={() => handlePreOrder(item)}
                                 style={{
                                     width: '100%',
                                     padding: '12px',
-                                    background: 'linear-gradient(45deg, #FF5722, #F4511E)',
+                                    background: 'linear-gradient(45deg, #4CAF50, #45a049)',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '10px',
@@ -161,7 +133,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
                                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                             >
-                                {t('preorder_now')}
+                                View Details
                             </button>
                         </div>
                     </div>
@@ -171,4 +143,4 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     );
 };
 
-export default PreOrder;
+export default RegularProducts;

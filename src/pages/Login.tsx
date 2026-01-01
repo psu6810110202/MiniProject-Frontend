@@ -67,12 +67,22 @@ const Login: React.FC = () => {
 
         } catch (err: any) {
             console.error('Login Error:', err);
-            // Fallback for demo users if backend is down (Optional, remove before production)
+            // Fallback for demo users with persistence simulation
+            const getPersistedUser = (defaultUser: any) => {
+                try {
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    // If user exists in DB, use it (preserving points). Else use default (0 points).
+                    return db[defaultUser.id] || defaultUser;
+                } catch { return defaultUser; }
+            };
+
             if (formData.username === 'demo' && formData.password === '1234') {
-                login('mock-user-token', { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 100 }, rememberMe);
+                const defaultUser = { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 0 };
+                login('mock-user-token', getPersistedUser(defaultUser), rememberMe);
                 navigate('/');
             } else if (formData.username === 'admin' && formData.password === 'admin') {
-                login('mock-admin-token', { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 999 }, rememberMe);
+                const defaultAdmin = { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 0 };
+                login('mock-admin-token', getPersistedUser(defaultAdmin), rememberMe);
                 navigate('/');
             } else {
                 setError(err.message || 'Invalid email or username or password');

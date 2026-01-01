@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { type Order } from '../data/mockOrders';
 
 const Checkout: React.FC = () => {
-    const { t } = useLanguage();
-    const { cartItems, totalAmount, clearCart, addToHistory } = useCart();
-    const { isLoggedIn, user } = useAuth();
+
+    const { cartItems, totalAmount, clearCart, addToHistory, addOrder } = useCart();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -55,6 +56,26 @@ const Checkout: React.FC = () => {
 
         // Add items to purchased history
         addToHistory(cartItems);
+
+        // Create Order Object
+        const newOrder: Order = {
+            id: `ORD-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            items: cartItems.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: Number(item.price.replace(/[^0-9.-]+/g, ""))
+            })),
+            total: totalAmount
+        };
+        addOrder(newOrder);
+
+        // Update User Points (e.g., 1 point per 100 THB)
+        if (user && updateUser) {
+            const pointsEarned = Math.floor(totalAmount / 100);
+            updateUser({ ...user, points: (user.points || 0) + pointsEarned });
+        }
 
         // Mock Success
         clearCart();

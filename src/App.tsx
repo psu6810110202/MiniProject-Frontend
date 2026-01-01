@@ -14,20 +14,16 @@ import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
-import { usePoints } from './hooks/usePoints';
+
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
 
 // --- Navbar Component ---
-interface NavbarProps {
-  points: number;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ points }) => {
+const Navbar: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
-  const { isLoggedIn, role, logout } = useAuth();
+  const { isLoggedIn, role, logout, user } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -174,7 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
                 <div style={{ padding: '15px 20px', borderBottom: '1px solid #333', background: 'rgba(255,87,34,0.1)' }}>
                   <div style={{ color: '#aaa', fontSize: '0.8rem', marginBottom: '5px' }}>Your Points</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF5722', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    <span>💎</span> {points}
+                    <span>💎</span> {user?.points || 0}
                   </div>
                 </div>
               )}
@@ -751,18 +747,17 @@ import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
-  const { points, addPoints } = usePoints();
 
   return (
     <Router>
       <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
-        <Navbar points={points} />
+        <Navbar />
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
-            <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
+            <Route path="/preorder" element={<PreOrder />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
 

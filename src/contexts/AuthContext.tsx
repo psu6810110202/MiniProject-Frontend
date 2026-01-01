@@ -46,6 +46,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setToken(savedToken);
             if (savedUserStr) {
                 const savedUser = JSON.parse(savedUserStr);
+
+                // Migration: Reset points for mock users if they match old defaults
+                if ((savedUser.id === 'mock-1' && savedUser.points === 100) ||
+                    (savedUser.id === 'mock-2' && savedUser.points === 999)) {
+                    savedUser.points = 0;
+                    if (localStorage.getItem('user')) localStorage.setItem('user', JSON.stringify(savedUser));
+                    if (sessionStorage.getItem('user')) sessionStorage.setItem('user', JSON.stringify(savedUser));
+                }
+
                 setUser(savedUser);
                 setRole(savedUser.role);
             }
@@ -53,6 +62,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         setIsLoading(false);
     }, []);
+
+    // Auto-save Mock User changes to DB
+    useEffect(() => {
+        if (user && String(user.id).startsWith('mock-')) {
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                // Only update if changed
+                if (JSON.stringify(db[user.id]) !== JSON.stringify(user)) {
+                    db[user.id] = user;
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                }
+            } catch (e) {
+                console.error('Auto-save mock DB failed', e);
+            }
+        }
+    }, [user]);
 
     const login = (newToken: string, newUser: User, rememberMe: boolean) => {
         setToken(newToken);
@@ -71,12 +96,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const updateUser = (updatedUser: User) => {
         setUser(updatedUser);
-        // Update storage as well
+
+        // Update session storage
         if (localStorage.getItem('user')) {
             localStorage.setItem('user', JSON.stringify(updatedUser));
         }
         if (sessionStorage.getItem('user')) {
             sessionStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+
+        // Update Mock Database (Persistent across Logouts)
+        try {
+            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+            db[updatedUser.id] = updatedUser;
+            localStorage.setItem('mock_users_db', JSON.stringify(db));
+        } catch (e) {
+            console.error('Failed to update mock DB', e);
         }
     };
 

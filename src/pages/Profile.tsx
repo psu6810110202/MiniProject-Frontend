@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { usePoints } from '../hooks/usePoints';
+
 import { useAuth } from '../contexts/AuthContext';
-import { mockOrders } from '../data/mockOrders';
+import { useCart } from '../contexts/CartContext';
+
 import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import SearchableSelect from '../components/SearchableSelect';
@@ -11,8 +12,9 @@ import { useProducts } from '../contexts/ProductContext';
 
 const Profile: React.FC = () => {
     const { t } = useLanguage();
-    const { points } = usePoints();
+
     const { user, updateUser, token, logout } = useAuth();
+    const { userOrders } = useCart();
     const { items, likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom, fandomImages } = useProducts();
     const navigate = useNavigate();
 
@@ -226,14 +228,7 @@ const Profile: React.FC = () => {
         marginBottom: '15px'
     };
 
-    const selectStyle = {
-        ...inputStyle,
-        appearance: 'none' as const,
-        backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF5722%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right .7em top 50%',
-        backgroundSize: '.65em auto',
-    };
+
 
     const labelStyle = {
         display: 'block',
@@ -318,7 +313,7 @@ const Profile: React.FC = () => {
                         }}>
                             <span style={{ fontSize: '1.2rem' }}>💎</span>
                             <span style={{ color: '#FFC107', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                {points} {t('points')}
+                                {user?.points || 0} {t('points')}
                             </span>
                         </div>
                     </div>
@@ -466,66 +461,70 @@ const Profile: React.FC = () => {
 
             {/* Orders & Tracking Section */}
             <div>
-                <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
-                    {t('order_history')}
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '20px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    📦 {t('order_history')}
                 </h2>
 
                 <div style={{ display: 'grid', gap: '15px' }}>
-                    {mockOrders.map((order) => (
-                        <div
-                            key={order.id}
-                            onClick={() => navigate(`/profile/orders/${order.id}`)}
-                            style={{
-                                background: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                padding: '20px',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s, box-shadow 0.2s',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                            }}
-                        >
-                            <div>
-                                <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>Order #{order.id}</h3>
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
-                            </div>
+                    {userOrders.length === 0 ? (
+                        <p style={{ color: 'var(--text-muted)' }}>No orders found.</p>
+                    ) : (
+                        userOrders.map((order) => (
+                            <div
+                                key={order.id}
+                                onClick={() => navigate(`/profile/orders/${order.id}`, { state: { order } })}
+                                style={{
+                                    background: 'var(--card-bg)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '12px',
+                                    padding: '20px',
+                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s, box-shadow 0.2s',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                }}
+                            >
+                                <div>
+                                    <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>Order #{order.id}</h3>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
+                                </div>
 
-                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.total.toLocaleString()}</div>
-                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
-                                </div>
-                                <div style={{
-                                    padding: '5px 12px',
-                                    borderRadius: '15px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'bold',
-                                    backgroundColor: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
-                                        order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
-                                            order.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
-                                    color: order.status === 'delivered' ? '#4CAF50' :
-                                        order.status === 'shipped' ? '#2196F3' :
-                                            order.status === 'cancelled' ? '#f44336' : '#FFC107'
-                                }}>
-                                    {getStatusText(order.status)}
-                                </div>
-                                <div style={{ color: 'var(--text-muted)' }}>
-                                    &gt;
+                                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.total.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
+                                    </div>
+                                    <div style={{
+                                        padding: '5px 12px',
+                                        borderRadius: '15px',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 'bold',
+                                        backgroundColor: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
+                                            order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
+                                                order.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+                                        color: order.status === 'delivered' ? '#4CAF50' :
+                                            order.status === 'shipped' ? '#2196F3' :
+                                                order.status === 'cancelled' ? '#f44336' : '#FFC107'
+                                    }}>
+                                        {getStatusText(order.status)}
+                                    </div>
+                                    <div style={{ color: 'var(--text-muted)' }}>
+                                        &gt;
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        )))
+                    }
                 </div>
             </div>
 

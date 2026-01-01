@@ -3,18 +3,15 @@ import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
 
-interface PreOrderProps {
-    addPoints: (amount: number) => void;
-}
-
-const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
+const PreOrder: React.FC = () => {
     const { t } = useLanguage();
     const { addToCart, cartItems, purchasedItems } = useCart();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
     const handlePreOrder = (item: PreOrderItem) => {
-        // Check if item is already in cart or purchased (Limit 1 per account)
+        // Rule: Pre-order limit 1 unit per ID (Account) as per requirements
+        // Checks both current cart and purchase history
         if (cartItems.some(cartItem => cartItem.id === item.id) || purchasedItems.includes(item.id)) {
             alert('You can only pre-order 1 unit of this item per account.');
             return;
@@ -29,9 +26,6 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
             fandom: 'Exclusive',
             image: item.image
         });
-
-        // Award points silently
-        addPoints(50);
     };
 
     return (

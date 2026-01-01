@@ -93,8 +93,8 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           </span>
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
-          <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
+          <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
           <Link to="/timeline" style={linkStyle}>Timeline</Link>
           {role === 'admin' && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { productAPI, type Product } from '../services/api';
@@ -8,6 +8,7 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
   const { items } = useProducts();
+  const navigate = useNavigate();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -279,44 +280,49 @@ const ProductDetail: React.FC = () => {
 
         {/* Product Information */}
         <div>
-          {/* Pre-Order Badge */}
-          {product.is_preorder && (
-            <div style={{
-              display: 'inline-block',
-              background: '#FF5722',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '20px',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              marginBottom: '20px'
-            }}>
-              🎯 PRE-ORDER
-            </div>
-          )}
-
           {/* Product Name */}
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            marginBottom: '15px',
-            color: 'var(--text-main)',
-            lineHeight: '1.2'
-          }}>
-            {product.name}
-          </h1>
-
-          {/* Product Meta */}
-          <div style={{
-            display: 'flex',
-            gap: '20px',
-            marginBottom: '20px',
-            fontSize: '0.9rem',
-            color: 'var(--text-muted)'
-          }}>
-            <span>📦 {product.category}</span>
-            <span>🎨 {product.fandom}</span>
-            <span>📊 Stock: {product.stock} units</span>
+          {/* Product Name with Pre-Order Badge */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+              <h1 
+                onClick={() => navigate(`/product/${product.product_id}`)}
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
+                  margin: '0',
+                  color: 'var(--text-main)',
+                  lineHeight: '1.2',
+                  cursor: 'pointer',
+                  transition: 'color 0.2s',
+                  display: 'inline-block'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#FF5722';
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-main)';
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                {product.name}
+              </h1>
+              
+              {product.is_preorder && (
+                <span style={{
+                  padding: '6px 12px',
+                  background: '#FF5722',
+                  color: 'white',
+                  borderRadius: '20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  verticalAlign: 'middle',
+                  alignSelf: 'center'
+                }}>
+                  PRE-ORDER
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Price */}
@@ -481,7 +487,7 @@ const ProductDetail: React.FC = () => {
                 e.currentTarget.style.color = '#FF5722';
               }}
             >
-              ❤️ Save
+              ❤️
             </button>
           </div>
 
@@ -498,10 +504,35 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Product ID:</strong> {product.product_id}</div>
               <div><strong>Category:</strong> {product.category}</div>
               <div><strong>Fandom:</strong> {product.fandom}</div>
-              <div><strong>Availability:</strong> {product.stock > 0 ? 'In Stock' : 'Out of Stock'}</div>
+              <div><strong>Stock:</strong> {product.stock} units</div>
+              <div><strong>Product ID:</strong> {product.product_id}</div>
+            </div>
+          </div>
+
+          {/* Material Information */}
+          <div style={{
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '20px',
+            marginTop: '20px'
+          }}>
+            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '10px',
+              fontSize: '0.9rem',
+              color: 'var(--text-muted)'
+            }}>
+              <div><strong>Material:</strong> Premium PVC Vinyl</div>
+              <div><strong>Height:</strong> 18 cm</div>
+              <div><strong>Weight:</strong> 450g</div>
+              <div><strong>Base:</strong> 7cm x 5cm</div>
+              <div><strong>Paint:</strong> Hand-painted details</div>
+              <div><strong>Packaging:</strong> Collector's box</div>
+              <div><strong>Authenticity:</strong> Certificate included</div>
+              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
             </div>
           </div>
         </div>

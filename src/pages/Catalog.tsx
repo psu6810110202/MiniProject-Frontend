@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
@@ -8,6 +8,7 @@ const Catalog: React.FC = () => {
     const { t } = useLanguage();
     const { items } = useProducts();
     const { addToCart } = useCart();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFandom, setSelectedFandom] = useState('All');
 
@@ -147,26 +148,28 @@ const Catalog: React.FC = () => {
                                 <span style={{ fontSize: '0.8rem', color: '#FF5722', fontWeight: 'bold', textTransform: 'uppercase' }}>
                                     {item.fandom}
                                 </span>
-                                <h3 style={{ margin: '5px 0 10px 0', fontSize: '1.2rem' }}>{item.name}</h3>
+                                <h3 
+                                    onClick={() => navigate(`/product/${item.id}`)}
+                                    style={{ 
+                                        margin: '5px 0 10px 0', 
+                                        fontSize: '1.2rem',
+                                        cursor: 'pointer',
+                                        transition: 'color 0.2s',
+                                        display: 'inline-block'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.color = '#FF5722';
+                                        e.currentTarget.style.textDecoration = 'underline';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.color = 'var(--text-main)';
+                                        e.currentTarget.style.textDecoration = 'none';
+                                    }}
+                                >{item.name}</h3>
                                 <div style={{ fontSize: '0.9rem', color: '#888' }}>{item.category}</div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>
-                                <Link 
-                                    to={`/product/${item.id}`}
-                                    style={{
-                                        padding: '8px 15px',
-                                        background: '#333',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        textDecoration: 'none',
-                                        display: 'inline-block'
-                                    }}
-                                >
-                                    {t('view_details')}
-                                </Link>
                                 <button
                                     onClick={() => handleAddToCart(item)}
                                     style={{
@@ -175,8 +178,7 @@ const Catalog: React.FC = () => {
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        marginLeft: '10px'
+                                        cursor: 'pointer'
                                     }}
                                 >
                                     {t('add_to_cart') || 'Add'}

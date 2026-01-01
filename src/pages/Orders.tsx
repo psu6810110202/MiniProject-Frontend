@@ -517,7 +517,8 @@ const Orders: React.FC = () => {
                                     fontSize: '0.9rem',
                                     fontWeight: 'bold',
                                     transition: 'all 0.3s ease',
-                                    width: '100%'
+                                    width: '100%',
+                                    marginBottom: '10px'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'scale(1.02)';
@@ -530,6 +531,35 @@ const Orders: React.FC = () => {
                             >
                                 🏭 View Production Timeline →
                             </button>
+
+                            {/* Process Payment Button */}
+                            {order.status === 'pending' && (
+                                <button
+                                    onClick={() => navigate('/payment')}
+                                    style={{
+                                        padding: '12px 20px',
+                                        background: 'linear-gradient(135deg, #4CAF50, #66BB6A)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 'bold',
+                                        transition: 'all 0.3s ease',
+                                        width: '100%'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(76,175,80,0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
+                                    💳 Create Process Payment →
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>

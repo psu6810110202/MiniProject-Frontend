@@ -108,9 +108,11 @@ const ProductDetail: React.FC = () => {
             image: product.image
         });
       
-      // Show success feedback
+      // Show success feedback and navigate to cart
       setTimeout(() => {
         setAddingToCart(false);
+        // Navigate to cart after adding
+        navigate('/cart');
       }, 1000);
     } catch (err) {
       console.error('Failed to add to cart:', err);
@@ -463,7 +465,7 @@ const ProductDetail: React.FC = () => {
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : (product.is_preorder ? 'Pre-Order Now' : 'Add to Cart')}
             </button>
 
             <button

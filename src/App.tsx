@@ -8,6 +8,7 @@ import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
 import Orders from './pages/Orders';
 import OrderTimeline from './pages/OrderTimeline';
+import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
@@ -753,6 +754,7 @@ function App() {
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/login" element={<Login />} />

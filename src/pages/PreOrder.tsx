@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCart } from '../contexts/CartContext';
 
 interface PreOrderProps {
     addPoints: (amount: number) => void;
@@ -8,12 +9,23 @@ interface PreOrderProps {
 
 const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     const { t } = useLanguage();
+    const { addToCart } = useCart();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
     const handlePreOrder = (item: PreOrderItem) => {
         const confirm = window.confirm(`Pre-order ${item.name}?\nDeposit: ฿${item.deposit}`);
         if (confirm) {
+            // Add to cart
+            addToCart({
+                id: item.id,
+                name: item.name,
+                price: `฿${item.price.toLocaleString()}`,
+                category: 'Pre-Order',
+                fandom: 'Exclusive',
+                image: item.image
+            });
+            
             // Simulate API call
             setTimeout(() => {
                 alert(`Pre-order Successful!\nYou earned 50 points for your deposit.`);

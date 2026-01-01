@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { mockItems, type Item } from '../data/mockItem';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
+import { useAuth } from './AuthContext';
 
 interface ProductContextType {
     items: Item[];
@@ -25,18 +26,55 @@ interface ProductContextType {
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
+// ... (Pre-existing imports like mockItems, etc)
+
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
+    const userId = user?.id || 'guest';
+    const getStorageKey = (key: string) => `${key}_${userId}`;
+
     const [items, setItems] = useState<Item[]>(mockItems);
     const [preOrders, setPreOrders] = useState<PreOrderItem[]>(preorderItems);
-    // Initialize fandoms from unique items, but keep it as state so we can add empty ones
     const [fandoms, setFandoms] = useState<string[]>(() => Array.from(new Set(mockItems.map(i => i.fandom))));
 
     const [fandomImages, setFandomImages] = useState<Record<string, string>>({});
 
     // --- Like System ---
-    // Initialize with some dummy data for demonstration
-    const [likedProductIds, setLikedProductIds] = useState<number[]>([1, 2]);
-    const [likedFandoms, setLikedFandoms] = useState<string[]>(['Demon Slayer']);
+    const [likedProductIds, setLikedProductIds] = useState<number[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('likedProductIds'));
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+    const [likedFandoms, setLikedFandoms] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('likedFandoms'));
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+
+    // Load Likes when user changes
+    useEffect(() => {
+        try {
+            const savedProducts = localStorage.getItem(getStorageKey('likedProductIds'));
+            const savedFandoms = localStorage.getItem(getStorageKey('likedFandoms'));
+            setLikedProductIds(savedProducts ? JSON.parse(savedProducts) : []);
+            setLikedFandoms(savedFandoms ? JSON.parse(savedFandoms) : []);
+        } catch (e) { }
+    }, [userId]);
+
+    // Save Likes
+    useEffect(() => {
+        if (likedProductIds.length > 0 || localStorage.getItem(getStorageKey('likedProductIds'))) {
+            localStorage.setItem(getStorageKey('likedProductIds'), JSON.stringify(likedProductIds));
+        }
+    }, [likedProductIds]);
+
+    useEffect(() => {
+        if (likedFandoms.length > 0 || localStorage.getItem(getStorageKey('likedFandoms'))) {
+            localStorage.setItem(getStorageKey('likedFandoms'), JSON.stringify(likedFandoms));
+        }
+    }, [likedFandoms]);
 
     const toggleLikeProduct = (id: number) => {
         setLikedProductIds(prev =>

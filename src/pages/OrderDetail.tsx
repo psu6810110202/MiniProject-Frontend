@@ -1,12 +1,15 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { mockOrders } from '../data/mockOrders';
+import { useCart } from '../contexts/CartContext';
+import { type OrderItem } from '../data/mockOrders';
 
 const OrderDetail: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t } = useLanguage();
+    const { userOrders } = useCart();
 
     const getTrackingUrl = (carrier: string, trackingNumber: string) => {
         switch (carrier) {
@@ -23,7 +26,9 @@ const OrderDetail: React.FC = () => {
         }
     };
 
-    const order = mockOrders.find(o => o.id === orderId);
+    // Try finding order in passed state or context
+    const stateOrder = location.state?.order;
+    const order = stateOrder || userOrders.find(o => o.id === orderId);
 
     if (!order) {
         return (
@@ -53,8 +58,15 @@ const OrderDetail: React.FC = () => {
 
     // Tracking Stepper Component
     const TrackingStepper = ({ status }: { status: string }) => {
-        const steps = ['pending', 'shipped', 'delivered'];
-        const currentStepIndex = steps.indexOf(status);
+        const steps = ['pending', 'confirmed', 'shipped', 'delivered'];
+        const currentStepIndex = steps.indexOf(status) === -1 ? (status === 'pending' ? 0 : status === 'shipped' ? 2 : status === 'delivered' ? 3 : 0) : steps.indexOf(status);
+        // Note: Logic above handles if 'confirmed' is not a real status in use yet, mapping shipped/delivered correctly. 
+        // Actually simpler: 
+        // If status 'shipped', indexOf is 2. If 'delivered' 3. If 'pending' 0. 
+        // Only if I use a status NOT in list (like cancelled) it breaks. 
+        // But mockOrders uses 'pending', 'shipped', 'delivered'. So indexOf is fine for those.
+        // Just need to ensure 'confirmed' status never happens? Or if it happens it works.
+
         const isCancelled = status === 'cancelled';
 
         if (isCancelled) return <div style={{ color: '#f44336', fontWeight: 'bold' }}>{getStatusText('cancelled')}</div>;
@@ -62,7 +74,13 @@ const OrderDetail: React.FC = () => {
         return (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '30px', marginBottom: '30px' }}>
                 {steps.map((step, index) => {
+                    // Logic to treat 'confirmed' as done if status is shipped/delivered
+                    // If status is 'pending' (idx 0), 'confirmed' (idx 1) is NOT active.
+                    // If status is 'shipped' (idx 2), 'confirmed' (idx 1) IS active.
+                    // This works naturally with indexOf and <= comparison.
+
                     const isActive = index <= currentStepIndex;
+
                     return (
                         <div key={step} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
                             {/* Line connector */}
@@ -96,7 +114,7 @@ const OrderDetail: React.FC = () => {
                                 {isActive ? '✓' : ''}
                             </div>
                             <span style={{ fontSize: '0.9rem', marginTop: '10px', color: isActive ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                                {getStatusText(step)}
+                                {step === 'pending' ? 'Waiting for Staff Confirmation' : step === 'confirmed' ? 'Confirmed' : getStatusText(step)}
                             </span>
                         </div>
                     );
@@ -106,13 +124,52 @@ const OrderDetail: React.FC = () => {
     };
 
     const getProductionSteps = () => {
+        const isConfirmed = order.status !== 'pending' && order.status !== 'cancelled';
+        const isShipped = order.status === 'shipped' || order.status === 'delivered';
+        const isDelivered = order.status === 'delivered';
+
+        // Helper to format date or show placeholder
+        const getDate = (condition: boolean, offsetDays: number = 0) => {
+            if (!condition) return 'Upcoming';
+            if (order.date) {
+                const d = new Date(order.date);
+                d.setDate(d.getDate() + offsetDays);
+                return d.toISOString().split('T')[0];
+            }
+            return '-';
+        };
+
         return [
-            { step: 'design', label: 'Design', status: 'completed' as const, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-            { step: 'molding', label: 'Molding', status: 'completed' as const, date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-            { step: 'painting', label: 'Painting', status: 'in_progress' as const, date: new Date().toISOString().split('T')[0] },
-            { step: 'quality_check', label: 'Quality Check', status: 'upcoming' as const, date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-            { step: 'packaging', label: 'Packaging', status: 'upcoming' as const, date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
-            { step: 'shipping', label: 'Shipping', status: 'upcoming' as const, date: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }
+            {
+                step: 'start_production',
+                label: 'Start Production',
+                status: (isConfirmed || isShipped || isDelivered) ? 'completed' : 'upcoming',
+                date: getDate(isConfirmed, 1)
+            },
+            {
+                step: 'production_completed',
+                label: 'Production Completed',
+                status: (isShipped || isDelivered) ? 'completed' : (isConfirmed ? 'in_progress' : 'upcoming'),
+                date: getDate(isShipped, 14)
+            },
+            {
+                step: 'shipping_to_th',
+                label: 'Shipping to Thailand',
+                status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
+                date: getDate(isShipped, 20)
+            },
+            {
+                step: 'arrived_th',
+                label: 'Arrived in Thailand',
+                status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
+                date: getDate(isShipped, 25)
+            },
+            {
+                step: 'domestic_shipping',
+                label: 'Start Domestic Shipping',
+                status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
+                date: getDate(isShipped, 27)
+            }
         ];
     };
 
@@ -321,7 +378,7 @@ const OrderDetail: React.FC = () => {
                 <h3 style={{ color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '15px', marginBottom: '20px' }}>Items</h3>
 
                 <div style={{ display: 'grid', gap: '15px' }}>
-                    {order.items.map((item, idx) => (
+                    {order.items.map((item: OrderItem, idx: number) => (
                         <div key={idx} style={{
                             display: 'flex',
                             justifyContent: 'space-between',

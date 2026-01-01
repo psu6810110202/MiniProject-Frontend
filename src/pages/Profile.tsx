@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { usePoints } from '../hooks/usePoints';
+
 import { useAuth } from '../contexts/AuthContext';
-import { mockOrders } from '../data/mockOrders';
+import { useCart } from '../contexts/CartContext';
+
 import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import SearchableSelect from '../components/SearchableSelect';
 
 import { useProducts } from '../contexts/ProductContext';
+import AdminDashboard from './AdminDashboard';
 
 const Profile: React.FC = () => {
     const { t } = useLanguage();
-    const { points } = usePoints();
+
     const { user, updateUser, token, logout } = useAuth();
+    const { userOrders } = useCart();
     const { items, likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom, fandomImages } = useProducts();
     const navigate = useNavigate();
 
@@ -47,6 +50,7 @@ const Profile: React.FC = () => {
 
     // State for form
     const [formData, setFormData] = useState<{
+        username: string;
         name: string;
         phone: string;
         house_number: string;
@@ -58,6 +62,7 @@ const Profile: React.FC = () => {
         twitter?: string;
         line?: string;
     }>({
+        username: '',
         name: '',
         phone: '',
         house_number: '',
@@ -72,6 +77,11 @@ const Profile: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Fetch Thai Address Data
     useEffect(() => {
@@ -94,6 +104,7 @@ const Profile: React.FC = () => {
     useEffect(() => {
         if (user) {
             setFormData({
+                username: user.username || '',
                 name: user.name || '',
                 phone: user.phone || '',
                 house_number: user.house_number || '',
@@ -110,6 +121,25 @@ const Profile: React.FC = () => {
 
     const handleConfirmDelete = async () => {
         if (!user || !token) return;
+
+        // Mock User Deletion
+        if (String(user.id).startsWith('mock-')) {
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                delete db[user.id];
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+
+                // Clean up related data
+                localStorage.removeItem(`cartItems_${user.id}`);
+                localStorage.removeItem(`purchasedItems_${user.id}`);
+                localStorage.removeItem(`userOrders_${user.id}`);
+                localStorage.removeItem(`likedProductIds_${user.id}`);
+                localStorage.removeItem(`likedFandoms_${user.id}`);
+            } catch (e) { console.error(e); }
+            logout();
+            navigate('/login');
+            return;
+        }
 
         try {
             const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
@@ -179,6 +209,26 @@ const Profile: React.FC = () => {
         if (!user || !token) return;
         setIsLoading(true);
 
+        // Mock User Update (Client-side)
+        if (String(user.id).startsWith('mock-')) {
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                const updatedUser: any = { ...user, ...formData };
+
+                db[user.id] = updatedUser;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+
+                updateUser(updatedUser);
+                setIsEditing(false);
+                alert('Profile updated successfully!');
+            } catch (e) {
+                console.error("Mock update failed", e);
+                alert("Failed to update profile");
+            }
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
                 method: 'PATCH',
@@ -209,6 +259,82 @@ const Profile: React.FC = () => {
         }
     };
 
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        setIsLoading(true);
+
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match');
+            setIsLoading(false);
+            return;
+        }
+
+        // Mock Only Logic for Password (since real backend API wasn't provided for password change)
+        if (String(user.id).startsWith('mock-')) {
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                const updatedUser: any = { ...user };
+                updatedUser.password = newPassword;
+
+                db[user.id] = updatedUser;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+
+                // updateUser(updatedUser); // No need to update context for password
+                setIsChangingPassword(false);
+                setNewPassword('');
+                setConfirmPassword('');
+                alert('Password changed successfully!');
+            } catch (e) {
+                alert("Failed to change password");
+            }
+        } else {
+            // Save locally first (Fallback persistence)
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                const overrideUser: any = { ...user, password: newPassword };
+                db[user.id] = overrideUser;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+            } catch (e) {
+                console.error("Local save failed", e);
+            }
+
+            // Attempt to update password via API for real users
+            try {
+                const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ password: newPassword })
+                });
+
+                // Check success even if API fails/is partial
+                if (response.ok) {
+                    setIsChangingPassword(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    alert('Password changed successfully!');
+                } else {
+                    // Even if backend fails, we rely on local override for this session/login
+                    console.warn("Backend rejected, but local override saved.");
+                    setIsChangingPassword(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    alert('Password changed successfully (Local Override)!');
+                }
+            } catch (e) {
+                // Network error? We still have local override
+                setIsChangingPassword(false);
+                setNewPassword('');
+                setConfirmPassword('');
+                alert('Password saved locally (Backend unavailable).');
+            }
+        }
+        setIsLoading(false);
+    };
+
     const getStatusText = (status: string) => {
         return t(`status_${status}`);
     };
@@ -226,14 +352,7 @@ const Profile: React.FC = () => {
         marginBottom: '15px'
     };
 
-    const selectStyle = {
-        ...inputStyle,
-        appearance: 'none' as const,
-        backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FF5722%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right .7em top 50%',
-        backgroundSize: '.65em auto',
-    };
+
 
     const labelStyle = {
         display: 'block',
@@ -258,7 +377,7 @@ const Profile: React.FC = () => {
     return (
         <div style={{
             padding: '40px 20px',
-            maxWidth: '1000px',
+            maxWidth: user?.role === 'admin' ? '1200px' : '900px',
             margin: '0 auto',
             minHeight: '80vh',
             display: 'flex',
@@ -280,8 +399,10 @@ const Profile: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '30px', flexWrap: 'wrap', justifyContent: 'space-between', width: '100%' }}>
                     <div style={{ flex: 1, minWidth: '300px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                            <div>
-                                <h1 style={{ color: 'var(--text-main)', marginBottom: '5px', marginTop: 0 }}>{user?.name}</h1>
+                            <div style={{ flex: 1 }}>
+                                <h2 style={{ fontSize: '2rem', marginBottom: '5px', color: 'var(--text-main)' }}>
+                                    {user?.username || user?.name}
+                                </h2>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{user?.email}</p>
                                 {/* Social Links Display or Edit */}
                                 {!isEditing && (
@@ -292,18 +413,37 @@ const Profile: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                            <button
-                                onClick={() => setIsEditing(!isEditing)}
-                                style={{
-                                    padding: '8px 20px',
-                                    background: isEditing ? '#555' : '#FF5722',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer'
-                                }}>
-                                {isEditing ? 'Cancel' : 'Edit Profile'}
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'end' }}>
+                                <button
+                                    onClick={() => { setIsEditing(!isEditing); setIsChangingPassword(false); }}
+                                    style={{
+                                        padding: '8px 20px',
+                                        background: isEditing ? '#555' : '#FF5722',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        width: '100%'
+                                    }}>
+                                    {isEditing ? 'Cancel' : 'Edit Profile'}
+                                </button>
+                                {!isEditing && (
+                                    <button
+                                        onClick={() => setIsChangingPassword(!isChangingPassword)}
+                                        style={{
+                                            padding: '8px 20px',
+                                            background: isChangingPassword ? '#555' : '#333',
+                                            color: 'white',
+                                            border: '1px solid #555',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            width: '100%'
+                                        }}>
+                                        {isChangingPassword ? 'Cancel' : 'Change Password'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div style={{
@@ -318,7 +458,7 @@ const Profile: React.FC = () => {
                         }}>
                             <span style={{ fontSize: '1.2rem' }}>💎</span>
                             <span style={{ color: '#FFC107', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                {points} {t('points')}
+                                {user?.points || 0} {t('points')}
                             </span>
                         </div>
                     </div>
@@ -331,14 +471,23 @@ const Profile: React.FC = () => {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
+                                <label style={labelStyle}>Username</label>
+                                <input name="username" value={formData.username} onChange={handleAddressChange} style={inputStyle} required />
+                            </div>
+                            <div>
                                 <label style={labelStyle}>Full Name</label>
                                 <input name="name" value={formData.name} onChange={handleAddressChange} style={inputStyle} required />
                             </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                             <div>
                                 <label style={labelStyle}>Phone</label>
                                 <input name="phone" value={formData.phone} onChange={handleAddressChange} style={inputStyle} placeholder="+66..." />
                             </div>
                         </div>
+
+
 
                         <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>Social Media</h4>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
@@ -452,6 +601,113 @@ const Profile: React.FC = () => {
                     </form>
                 )}
 
+                {/* Password Change Form */}
+                {isChangingPassword && (
+                    <form onSubmit={handlePasswordSubmit} style={{ marginTop: '30px', paddingTop: '30px', borderTop: '1px solid var(--border-color)' }}>
+                        <h3 style={{ color: 'var(--text-main)', marginBottom: '20px' }}>Change Password</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div>
+                                <label style={labelStyle}>New Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showNewPassword ? 'text' : 'password'}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        style={{ ...inputStyle, paddingRight: '40px' }}
+                                        placeholder="New password"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: '#888',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {showNewPassword ? (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                                            </svg>
+                                        ) : (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Confirm Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        style={{ ...inputStyle, paddingRight: '40px' }}
+                                        placeholder="Confirm new password"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '10px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: '#888',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                                            </svg>
+                                        ) : (
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                style={{
+                                    padding: '12px 30px',
+                                    background: '#FF5722',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: 'bold',
+                                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                                }}>
+                                {isLoading ? 'Saving...' : 'Update Password'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
                 {/* Display Address if not editing */}
                 {!isEditing && (user?.house_number || user?.province) && (
                     <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
@@ -464,257 +720,271 @@ const Profile: React.FC = () => {
 
             </div>
 
+            {user?.role === 'admin' && <AdminDashboard />}
+
             {/* Orders & Tracking Section */}
-            <div>
-                <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
-                    {t('order_history')}
-                </h2>
+            {user?.role !== 'admin' && (
+                <div>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '20px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        📦 {t('order_history')}
+                    </h2>
 
-                <div style={{ display: 'grid', gap: '15px' }}>
-                    {mockOrders.map((order) => (
-                        <div
-                            key={order.id}
-                            onClick={() => navigate(`/profile/orders/${order.id}`)}
-                            style={{
-                                background: 'var(--card-bg)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                padding: '20px',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s, box-shadow 0.2s',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                            }}
-                        >
-                            <div>
-                                <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>Order #{order.id}</h3>
-                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
-                            </div>
+                    <div style={{ display: 'grid', gap: '15px' }}>
+                        {userOrders.length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)' }}>No orders found.</p>
+                        ) : (
+                            userOrders.map((order) => (
+                                <div
+                                    key={order.id}
+                                    onClick={() => navigate(`/profile/orders/${order.id}`, { state: { order } })}
+                                    style={{
+                                        background: 'var(--card-bg)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '12px',
+                                        padding: '20px',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                    }}
+                                >
+                                    <div>
+                                        <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>Order #{order.id}</h3>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
+                                    </div>
 
-                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.total.toLocaleString()}</div>
-                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
+                                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.total.toLocaleString()}</div>
+                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
+                                        </div>
+                                        <div style={{
+                                            padding: '5px 12px',
+                                            borderRadius: '15px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 'bold',
+                                            backgroundColor: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
+                                                order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
+                                                    order.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+                                            color: order.status === 'delivered' ? '#4CAF50' :
+                                                order.status === 'shipped' ? '#2196F3' :
+                                                    order.status === 'cancelled' ? '#f44336' : '#FFC107'
+                                        }}>
+                                            {getStatusText(order.status)}
+                                        </div>
+                                        <div style={{ color: 'var(--text-muted)' }}>
+                                            &gt;
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{
-                                    padding: '5px 12px',
-                                    borderRadius: '15px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'bold',
-                                    backgroundColor: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
-                                        order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
-                                            order.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
-                                    color: order.status === 'delivered' ? '#4CAF50' :
-                                        order.status === 'shipped' ? '#2196F3' :
-                                            order.status === 'cancelled' ? '#f44336' : '#FFC107'
-                                }}>
-                                    {getStatusText(order.status)}
-                                </div>
-                                <div style={{ color: 'var(--text-muted)' }}>
-                                    &gt;
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                            )))
+                        }
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Favorites Section */}
-            <div style={{ marginTop: '40px' }}>
-                <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
-                    My Favorites
-                </h2>
+            {user?.role !== 'admin' && (
+                <div style={{ marginTop: '40px' }}>
+                    <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
+                        My Favorites
+                    </h2>
 
-                <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
-                    <button
-                        onClick={() => setActiveTab('products')}
-                        style={{
-                            padding: '10px 20px',
-                            background: 'transparent',
-                            border: 'none',
-                            borderBottom: activeTab === 'products' ? '2px solid #FF5722' : '2px solid transparent',
-                            color: activeTab === 'products' ? '#FF5722' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            transition: 'color 0.2s'
-                        }}
-                    >
-                        Liked Products
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('fandoms')}
-                        style={{
-                            padding: '10px 20px',
-                            background: 'transparent',
-                            border: 'none',
-                            borderBottom: activeTab === 'fandoms' ? '2px solid #FF5722' : '2px solid transparent',
-                            color: activeTab === 'fandoms' ? '#FF5722' : 'var(--text-muted)',
-                            cursor: 'pointer',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            transition: 'color 0.2s'
-                        }}
-                    >
-                        Liked Fandoms
-                    </button>
-                </div>
+                    <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
+                        <button
+                            onClick={() => setActiveTab('products')}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderBottom: activeTab === 'products' ? '2px solid #FF5722' : '2px solid transparent',
+                                color: activeTab === 'products' ? '#FF5722' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                transition: 'color 0.2s'
+                            }}
+                        >
+                            Liked Products
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('fandoms')}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderBottom: activeTab === 'fandoms' ? '2px solid #FF5722' : '2px solid transparent',
+                                color: activeTab === 'fandoms' ? '#FF5722' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                transition: 'color 0.2s'
+                            }}
+                        >
+                            Liked Fandoms
+                        </button>
+                    </div>
 
-                {activeTab === 'products' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                        {favoriteProducts.length > 0 ? (
-                            favoriteProducts.map(item => (
-                                <div key={item.id} style={{
-                                    background: 'var(--card-bg)',
-                                    borderRadius: '12px',
-                                    padding: '15px',
-                                    border: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s'
-                                }}
-                                    onClick={() => navigate(`/product/${item.id}`)}
-                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                >
-                                    <div style={{ height: '180px', marginBottom: '10px', borderRadius: '8px', overflow: 'hidden' }}>
-                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {activeTab === 'products' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                            {favoriteProducts.length > 0 ? (
+                                favoriteProducts.map(item => (
+                                    <div key={item.id} style={{
+                                        background: 'var(--card-bg)',
+                                        borderRadius: '12px',
+                                        padding: '15px',
+                                        border: '1px solid var(--border-color)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                        onClick={() => navigate(`/product/${item.id}`)}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ height: '180px', marginBottom: '10px', borderRadius: '8px', overflow: 'hidden' }}>
+                                            <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                        <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-main)' }}>{item.name}</h4>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                                            <span style={{ color: '#FF5722', fontWeight: 'bold' }}>{item.price}</span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleLikeProduct(item.id);
+                                                }}
+                                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            >
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-main)' }}>{item.name}</h4>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                                        <span style={{ color: '#FF5722', fontWeight: 'bold' }}>{item.price}</span>
+                                ))
+                            ) : (
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                    No favorite products yet.
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'fandoms' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                            {favoriteFandomList.length > 0 ? (
+                                favoriteFandomList.map((fandomName, index) => (
+                                    <div key={index} style={{
+                                        background: 'var(--card-bg)',
+                                        borderRadius: '12px',
+                                        padding: '15px',
+                                        border: '1px solid var(--border-color)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                        onClick={() => navigate(`/catalog?fandom=${encodeURIComponent(fandomName)}`)}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', marginBottom: '15px', border: '3px solid #FF5722' }}>
+                                            <img
+                                                src={fandomImages[fandomName] || items.find(i => i.fandom === fandomName)?.image || '/placeholder.png'}
+                                                alt={fandomName}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        </div>
+                                        <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)', textAlign: 'center' }}>{fandomName}</h3>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                toggleLikeProduct(item.id);
+                                                toggleLikeFandom(fandomName);
                                             }}
-                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                            style={{
+                                                padding: '8px 16px',
+                                                background: 'rgba(255, 68, 68, 0.1)',
+                                                color: '#ff4444',
+                                                border: '1px solid #ff4444',
+                                                borderRadius: '20px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.9rem'
+                                            }}
                                         >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                            </svg>
+                                            Unlike
                                         </button>
                                     </div>
+                                ))
+                            ) : (
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                    No favorite fandoms yet.
                                 </div>
-                            ))
-                        ) : (
-                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                                No favorite products yet.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === 'fandoms' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                        {favoriteFandomList.length > 0 ? (
-                            favoriteFandomList.map((fandomName, index) => (
-                                <div key={index} style={{
-                                    background: 'var(--card-bg)',
-                                    borderRadius: '12px',
-                                    padding: '15px',
-                                    border: '1px solid var(--border-color)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s'
-                                }}
-                                    onClick={() => navigate(`/catalog?fandom=${encodeURIComponent(fandomName)}`)}
-                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                >
-                                    <div style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', marginBottom: '15px', border: '3px solid #FF5722' }}>
-                                        <img
-                                            src={fandomImages[fandomName] || items.find(i => i.fandom === fandomName)?.image || '/placeholder.png'}
-                                            alt={fandomName}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
-                                    </div>
-                                    <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)', textAlign: 'center' }}>{fandomName}</h3>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleLikeFandom(fandomName);
-                                        }}
-                                        style={{
-                                            padding: '8px 16px',
-                                            background: 'rgba(255, 68, 68, 0.1)',
-                                            color: '#ff4444',
-                                            border: '1px solid #ff4444',
-                                            borderRadius: '20px',
-                                            cursor: 'pointer',
-                                            fontSize: '0.9rem'
-                                        }}
-                                    >
-                                        Unlike
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                                No favorite fandoms yet.
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-            <div style={{
-                marginTop: '40px',
-                borderTop: '1px solid var(--border-color)',
-                paddingTop: '20px',
-                display: 'flex',
-                justifyContent: 'center'
-            }}>
-                <button
-                    type="button"
-                    onClick={handleDeleteClick}
-                    style={{
-                        padding: '12px 30px',
-                        background: 'transparent',
-                        color: '#f44336',
-                        border: '1px solid #f44336',
-                        borderRadius: '8px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+            {user?.role !== 'admin' && (
+                <>
+                    <div style={{
+                        marginTop: '40px',
+                        borderTop: '1px solid var(--border-color)',
+                        paddingTop: '20px',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f44336';
-                        e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#f44336';
-                    }}
-                >
-                    ⚠️ Delete Account
-                </button>
-            </div>
+                        justifyContent: 'center'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={handleDeleteClick}
+                            style={{
+                                padding: '12px 30px',
+                                background: 'transparent',
+                                color: '#f44336',
+                                border: '1px solid #f44336',
+                                borderRadius: '8px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f44336';
+                                e.currentTarget.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = '#f44336';
+                            }}
+                        >
+                            ⚠️ Delete Account
+                        </button>
+                    </div>
 
-            <ConfirmationModal
-                isOpen={showDeleteModal}
-                onClose={() => setShowDeleteModal(false)}
-                onConfirm={handleConfirmDelete}
-                title="Delete Account"
-                message="Are you sure you want to delete your account? This action cannot be undone and you will lose all your data."
-                confirmText="Delete"
-                isDangerous={true}
-            />
+                    <ConfirmationModal
+                        isOpen={showDeleteModal}
+                        onClose={() => setShowDeleteModal(false)}
+                        onConfirm={handleConfirmDelete}
+                        title="Delete Account"
+                        message="Are you sure you want to delete your account? This action cannot be undone and you will lose all your data."
+                        confirmText="Delete"
+                        isDangerous={true}
+                    />
+                </>
+            )}
         </div >
     );
 };

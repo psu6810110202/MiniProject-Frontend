@@ -6,21 +6,35 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
+<<<<<<< HEAD
+=======
+import CallCenter from './pages/CallCenter';
+import CustomerChat from './pages/CustomerChat';
+import StaffDashboard from './pages/StaffDashBoard';
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
+<<<<<<< HEAD
 import Checkout from './pages/Checkout';
 import CallCenter from './pages/CallCenter';
 import CustomerChat from './pages/CustomerChat';
 import StaffDashboard from './pages/StaffDashboard';
 import { usePoints } from './hooks/usePoints';
+=======
+import UserManager from './pages/UserManager';
+import PreOrderManager from './pages/PreOrderManager';
+import Checkout from './pages/Checkout';
+
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
 
 // --- Navbar Component ---
+<<<<<<< HEAD
 interface NavbarProps {
   points: number;
 }
@@ -32,6 +46,15 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
   const navigate = useNavigate();
 
   // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
+=======
+const Navbar: React.FC = () => {
+  const { t, language, setLanguage } = useLanguage();
+  const { isLoggedIn, logout, user } = useAuth();
+  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
+  const navigate = useNavigate();
+
+  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์เ
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
   const [theme, setTheme] = useState('dark');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -100,9 +123,14 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
+<<<<<<< HEAD
           {role === 'admin' && (
             <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
           )}
+=======
+
+
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         </div>
       </div>
 
@@ -173,7 +201,11 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
                 <div style={{ padding: '15px 20px', borderBottom: '1px solid #333', background: 'rgba(255,87,34,0.1)' }}>
                   <div style={{ color: '#aaa', fontSize: '0.8rem', marginBottom: '5px' }}>Your Points</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF5722', fontWeight: 'bold', fontSize: '1.2rem' }}>
+<<<<<<< HEAD
                     <span>💎</span> {points}
+=======
+                    <span>💎</span> {user?.points || 0}
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
                   </div>
                 </div>
               )}
@@ -712,7 +744,11 @@ const Footer: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('all_products')}</Link>
               <Link to="/preorder" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('preorder')}</Link>
+<<<<<<< HEAD
               <Link to="/regular-products" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>Regular Products</Link>
+=======
+              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('vinyl_figures')}</Link>
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
             </div>
           </div>
 
@@ -730,7 +766,11 @@ const Footer: React.FC = () => {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+<<<<<<< HEAD
               <Link to="/call-center" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
+=======
+              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
               <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</a>
             </div>
           </div>
@@ -744,26 +784,68 @@ import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
+<<<<<<< HEAD
 import RegularProducts from './pages/RegularProducts';
+=======
+
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 
 import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
+<<<<<<< HEAD
   const { points, addPoints } = usePoints();
+=======
+  const { isLoggedIn, logout, user } = useAuth();
+  const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
+
+  // Auto-kick if blacklisted while logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const checkBlacklistStatus = () => {
+        try {
+          const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+          const currentUser = db[user.id];
+          if (currentUser && currentUser.isBlacklisted) {
+            setShowBlacklistKickModal(true);
+            logout();
+          }
+        } catch (e) {
+          console.error("Blacklist check failed", e);
+        }
+      };
+
+      checkBlacklistStatus();
+      const interval = setInterval(checkBlacklistStatus, 3000); // Check every 3 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, user, logout]);
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 
   return (
     <Router>
       <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
+<<<<<<< HEAD
         <Navbar points={points} />
+=======
+        <Navbar />
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
+<<<<<<< HEAD
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
+=======
+            <Route path="/preorder" element={<PreOrder />} />
+            <Route path="/creators" element={<AllFandom />} />
+            <Route path="/updates" element={<Updates />} />
+
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
@@ -771,6 +853,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
+<<<<<<< HEAD
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -779,10 +862,95 @@ function App() {
             <Route path="/call-center" element={<CallCenter />} />
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/staff-dashboard" element={<StaffDashboard />} />
+=======
+            <Route path="/admin/users" element={<UserManager />} />
+            <Route path="/admin/preorders" element={<PreOrderManager />} />
+            <Route path="/admin/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
+            <Route path="/admin/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />
+            <Route path="/admin/fandoms" element={<FandomList />} />
+            <Route path="/admin/fandom/:name" element={<FandomManager />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/call-center" element={<CallCenter />} />
+            <Route path="/customer-chat" element={<CustomerChat />} />
+            <Route path="/staff-dashboard" element={<StaffDashboard />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
           </Routes>
         </div>
         <Footer />
       </div>
+<<<<<<< HEAD
+=======
+
+      {/* Global Blacklist Kick Popup */}
+      {showBlacklistKickModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1a1a1a',
+            padding: '40px',
+            borderRadius: '24px',
+            maxWidth: '450px',
+            width: '100%',
+            textAlign: 'center',
+            border: '2px solid #FF5722',
+            boxShadow: '0 20px 50px rgba(255, 87, 34, 0.3)',
+            animation: 'popInGlobal 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+          }}>
+            <div style={{
+              width: '80px', height: '80px', background: 'rgba(255, 87, 34, 0.1)',
+              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px', color: '#FF5722'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <h2 style={{ color: '#FF5722', marginBottom: '15px', fontSize: '1.8rem' }}>บัญชีของคุณถูกระงับ</h2>
+            <p style={{
+              color: document.documentElement.getAttribute('data-theme') === 'light' ? '#333' : '#e0e0e0',
+              fontSize: '1.1rem',
+              lineHeight: '1.6',
+              marginBottom: '30px',
+              fontWeight: '500'
+            }}>
+              คุณถูก Blacklist ข้อหาผิดกฎที่คุณได้ตกลงและยอมรับไว้กับทางระบบ
+            </p>
+            <button
+              onClick={() => {
+                setShowBlacklistKickModal(false);
+                window.location.href = '/login';
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: '#FF5722',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              ตกลง
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes popInGlobal {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+>>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
     </Router>
   );
 }

@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type Item } from '../data/mockItem';
+import { type Order } from '../data/mockOrders';
+import { useAuth } from './AuthContext';
 
 export interface CartItem extends Item {
     quantity: number;
@@ -15,12 +17,71 @@ interface CartContextType {
     totalItems: number;
     purchasedItems: number[];
     addToHistory: (items: CartItem[]) => void;
+    userOrders: Order[];
+    addOrder: (order: Order) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const { user } = useAuth();
+    const userId = user?.id || 'guest';
+
+    // Helper keys based on current user
+    const getStorageKey = (key: string) => `${key}_${userId}`;
+
+    const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('cartItems'));
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+    const [purchasedItems, setPurchasedItems] = useState<number[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('purchasedItems'));
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+    const [userOrders, setUserOrders] = useState<Order[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('userOrders'));
+            return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+    });
+
+    // Load data when user changes (handling login/logout)
+    useEffect(() => {
+        try {
+            const savedCart = localStorage.getItem(getStorageKey('cartItems'));
+            const savedPurchased = localStorage.getItem(getStorageKey('purchasedItems'));
+            const savedOrders = localStorage.getItem(getStorageKey('userOrders'));
+
+            setCartItems(savedCart ? JSON.parse(savedCart) : []);
+            setPurchasedItems(savedPurchased ? JSON.parse(savedPurchased) : []);
+            setUserOrders(savedOrders ? JSON.parse(savedOrders) : []);
+        } catch (error) {
+            console.error('Failed to load cart data', error);
+        }
+    }, [userId]);
+
+    // Save data when it changes
+    useEffect(() => {
+        if (cartItems.length > 0 || localStorage.getItem(getStorageKey('cartItems'))) {
+            localStorage.setItem(getStorageKey('cartItems'), JSON.stringify(cartItems));
+        }
+    }, [cartItems]); // Save logic depends on scope
+
+    useEffect(() => {
+        if (purchasedItems.length > 0 || localStorage.getItem(getStorageKey('purchasedItems'))) {
+            localStorage.setItem(getStorageKey('purchasedItems'), JSON.stringify(purchasedItems));
+        }
+    }, [purchasedItems]);
+
+    useEffect(() => {
+        if (userOrders.length > 0 || localStorage.getItem(getStorageKey('userOrders'))) {
+            localStorage.setItem(getStorageKey('userOrders'), JSON.stringify(userOrders));
+        }
+    }, [userOrders]);
 
     const addToCart = (item: Item) => {
         setCartItems(prev => {
@@ -61,17 +122,20 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return acc + (parsePrice(item.price) * item.quantity);
     }, 0);
 
-    const [purchasedItems, setPurchasedItems] = useState<number[]>([]);
-
     const addToHistory = (items: CartItem[]) => {
         const ids = items.map(i => i.id);
         setPurchasedItems(prev => [...prev, ...ids]);
     };
 
+    const addOrder = (order: Order) => {
+        setUserOrders(prev => [order, ...prev]);
+    };
+
     return (
         <CartContext.Provider value={{
             cartItems, addToCart, removeFromCart, clearCart, updateQuantity, totalAmount, totalItems,
-            purchasedItems, addToHistory
+            purchasedItems, addToHistory,
+            userOrders, addOrder
         }}>
             {children}
         </CartContext.Provider>

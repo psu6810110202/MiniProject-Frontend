@@ -68,6 +68,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, []);
 
     const login = (newToken: string, newUser: User, rememberMe: boolean) => {
+        // Clear both storages first to avoid cross-pollution from previous sessions
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('user');
+
         setToken(newToken);
         setUser(newUser);
         setRole(newUser.role);

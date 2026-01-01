@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const Checkout: React.FC = () => {
     const { t } = useLanguage();
     const { cartItems, totalAmount, clearCart } = useCart();
-    const { isLoggedIn } = useAuth(); // We might use user info here later
+    const { isLoggedIn, user } = useAuth();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -16,6 +16,26 @@ const Checkout: React.FC = () => {
         address: '',
         paymentMethod: 'creditCard'
     });
+
+    // Populate form with user data if available
+    React.useEffect(() => {
+        if (user) {
+            const addressParts = [
+                user.house_number,
+                user.sub_district,
+                user.district,
+                user.province,
+                user.postal_code
+            ].filter(Boolean); // Filter out empty strings/undefined
+
+            setForm(prev => ({
+                ...prev,
+                name: user.name || '',
+                phone: user.phone || '',
+                address: addressParts.join(' ') || user.address || ''
+            }));
+        }
+    }, [user]);
 
     const [step, setStep] = useState(1); // 1: Info, 2: Payment, 3: Complete
 
@@ -26,6 +46,7 @@ const Checkout: React.FC = () => {
     const handleNext = (e: React.FormEvent) => {
         e.preventDefault();
         setStep(step + 1);
+        window.scrollTo(0, 0);
     };
 
     const handlePlaceOrder = () => {
@@ -35,6 +56,7 @@ const Checkout: React.FC = () => {
         // Mock Success
         clearCart();
         setStep(3);
+        window.scrollTo(0, 0);
         // After a few seconds redirect to orders or home
         setTimeout(() => {
             navigate('/orders');

@@ -1,10 +1,30 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: 'user' | 'admin';
+    points: number;
+    phone?: string;
+    address?: string;
+    house_number?: string;
+    sub_district?: string;
+    district?: string;
+    province?: string;
+    postal_code?: string;
+    facebook?: string;
+    twitter?: string;
+    line?: string;
+}
+
 interface AuthContextType {
     isLoggedIn: boolean;
     token: string | null;
+    user: User | null;
     role: 'user' | 'admin' | null;
-    login: (token: string, role: 'user' | 'admin', rememberMe: boolean) => void;
+    login: (token: string, user: User, rememberMe: boolean) => void;
+    updateUser: (user: User) => void;
     logout: () => void;
 }
 
@@ -13,43 +33,62 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [user, setUser] = useState<User | null>(null);
     const [role, setRole] = useState<'user' | 'admin' | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
         // Check for token on mount
         const savedToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-        const savedRole = (localStorage.getItem('role') || sessionStorage.getItem('role')) as 'user' | 'admin';
+        const savedUserStr = localStorage.getItem('user') || sessionStorage.getItem('user');
 
         if (savedToken) {
             setToken(savedToken);
-            setRole(savedRole || 'user'); // Default to user if not found but token exists
+            if (savedUserStr) {
+                const savedUser = JSON.parse(savedUserStr);
+                setUser(savedUser);
+                setRole(savedUser.role);
+            }
             setIsLoggedIn(true);
         }
         setIsLoading(false);
     }, []);
 
-    const login = (newToken: string, newRole: 'user' | 'admin', rememberMe: boolean) => {
+    const login = (newToken: string, newUser: User, rememberMe: boolean) => {
         setToken(newToken);
-        setRole(newRole);
+        setUser(newUser);
+        setRole(newUser.role);
         setIsLoggedIn(true);
+
         if (rememberMe) {
             localStorage.setItem('access_token', newToken);
-            localStorage.setItem('role', newRole);
+            localStorage.setItem('user', JSON.stringify(newUser));
         } else {
             sessionStorage.setItem('access_token', newToken);
-            sessionStorage.setItem('role', newRole);
+            sessionStorage.setItem('user', JSON.stringify(newUser));
+        }
+    };
+
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
+        // Update storage as well
+        if (localStorage.getItem('user')) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        if (sessionStorage.getItem('user')) {
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
         }
     };
 
     const logout = () => {
         setToken(null);
         setRole(null);
+        setUser(null);
         setIsLoggedIn(false);
         localStorage.removeItem('access_token');
-        localStorage.removeItem('role');
+        localStorage.removeItem('user');
         sessionStorage.removeItem('access_token');
-        sessionStorage.removeItem('role');
+        sessionStorage.removeItem('user');
     };
 
     if (isLoading) {
@@ -58,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, token, role, login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, token, user, role, login, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

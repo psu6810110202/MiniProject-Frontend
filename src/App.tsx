@@ -10,6 +10,7 @@ import Orders from './pages/Orders';
 import OrderTimeline from './pages/OrderTimeline';
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
+import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
 import { usePoints } from './hooks/usePoints';
@@ -735,7 +736,6 @@ import AllFandom from './pages/AllFandom';
 
 import ProductionTimeline from './pages/ProductionTimeline';
 import ProductDetail from './pages/ProductDetail';
-
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -756,6 +756,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

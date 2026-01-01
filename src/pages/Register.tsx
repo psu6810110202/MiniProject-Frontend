@@ -73,7 +73,7 @@ const Register: React.FC = () => {
             if (data.access_token) {
                 // Assuming the backend returns { access_token, user: { role, ... } }
                 // The backend was modified to return login result which includes access_token and user object
-                login(data.access_token, data.user?.role || 'user', true);
+                login(data.access_token, data.user, true);
                 alert('Registration successful!');
                 navigate('/');
             } else {

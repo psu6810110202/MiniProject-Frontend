@@ -59,7 +59,7 @@ const Login: React.FC = () => {
             }
 
             if (data.access_token) {
-                login(data.access_token, data.user?.role || 'user', rememberMe);
+                login(data.access_token, data.user, rememberMe);
                 navigate('/');
             } else {
                 throw new Error('No access token received');
@@ -69,10 +69,10 @@ const Login: React.FC = () => {
             console.error('Login Error:', err);
             // Fallback for demo users if backend is down (Optional, remove before production)
             if (formData.username === 'demo' && formData.password === '1234') {
-                login('mock-user-token', 'user', rememberMe);
+                login('mock-user-token', { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 100 }, rememberMe);
                 navigate('/');
             } else if (formData.username === 'admin' && formData.password === 'admin') {
-                login('mock-admin-token', 'admin', rememberMe);
+                login('mock-admin-token', { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 999 }, rememberMe);
                 navigate('/');
             } else {
                 setError(err.message || 'Invalid email or username or password');

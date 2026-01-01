@@ -10,6 +10,8 @@ export interface Order {
     status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
     items: OrderItem[];
     total: number;
+    carrier?: 'Thailand Post' | 'Kerry Express' | 'Flash Express' | 'J&T Express';
+    trackingNumber?: string;
 }
 
 export const mockOrders: Order[] = [
@@ -21,7 +23,9 @@ export const mockOrders: Order[] = [
             { name: 'Skullpanda The Mare of Animals', quantity: 1, price: 550 },
             { name: 'Labubu The Monsters', quantity: 2, price: 890 },
         ],
-        total: 2330
+        total: 2330,
+        carrier: 'Thailand Post',
+        trackingNumber: 'TH123456789TH'
     },
     {
         id: 'ORD-002',
@@ -30,7 +34,9 @@ export const mockOrders: Order[] = [
         items: [
             { name: 'Hirono Little Mischief', quantity: 1, price: 450 },
         ],
-        total: 450
+        total: 450,
+        carrier: 'Kerry Express',
+        trackingNumber: 'KERDO12345678'
     },
     {
         id: 'ORD-003',

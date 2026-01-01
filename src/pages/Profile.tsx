@@ -7,11 +7,19 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import SearchableSelect from '../components/SearchableSelect';
 
+import { useProducts } from '../contexts/ProductContext';
+
 const Profile: React.FC = () => {
     const { t } = useLanguage();
     const { points } = usePoints();
     const { user, updateUser, token, logout } = useAuth();
+    const { items, likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom, fandomImages } = useProducts();
     const navigate = useNavigate();
+
+    // Favorites Logic
+    const [activeTab, setActiveTab] = useState<'products' | 'fandoms'>('products');
+    const favoriteProducts = items.filter(item => likedProductIds.includes(item.id));
+    const favoriteFandomList = likedFandoms;
 
     interface ThaiSubDistrict {
         id: number;
@@ -521,7 +529,147 @@ const Profile: React.FC = () => {
                 </div>
             </div>
 
-            {/* Delete Account Section */}
+            {/* Favorites Section */}
+            <div style={{ marginTop: '40px' }}>
+                <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
+                    My Favorites
+                </h2>
+
+                <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
+                    <button
+                        onClick={() => setActiveTab('products')}
+                        style={{
+                            padding: '10px 20px',
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: activeTab === 'products' ? '2px solid #FF5722' : '2px solid transparent',
+                            color: activeTab === 'products' ? '#FF5722' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            transition: 'color 0.2s'
+                        }}
+                    >
+                        Liked Products
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('fandoms')}
+                        style={{
+                            padding: '10px 20px',
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: activeTab === 'fandoms' ? '2px solid #FF5722' : '2px solid transparent',
+                            color: activeTab === 'fandoms' ? '#FF5722' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            transition: 'color 0.2s'
+                        }}
+                    >
+                        Liked Fandoms
+                    </button>
+                </div>
+
+                {activeTab === 'products' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                        {favoriteProducts.length > 0 ? (
+                            favoriteProducts.map(item => (
+                                <div key={item.id} style={{
+                                    background: 'var(--card-bg)',
+                                    borderRadius: '12px',
+                                    padding: '15px',
+                                    border: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s'
+                                }}
+                                    onClick={() => navigate(`/product/${item.id}`)}
+                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    <div style={{ height: '180px', marginBottom: '10px', borderRadius: '8px', overflow: 'hidden' }}>
+                                        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </div>
+                                    <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-main)' }}>{item.name}</h4>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                                        <span style={{ color: '#FF5722', fontWeight: 'bold' }}>{item.price}</span>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleLikeProduct(item.id);
+                                            }}
+                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                        >
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                No favorite products yet.
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'fandoms' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                        {favoriteFandomList.length > 0 ? (
+                            favoriteFandomList.map((fandomName, index) => (
+                                <div key={index} style={{
+                                    background: 'var(--card-bg)',
+                                    borderRadius: '12px',
+                                    padding: '15px',
+                                    border: '1px solid var(--border-color)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s'
+                                }}
+                                    onClick={() => navigate(`/catalog?fandom=${encodeURIComponent(fandomName)}`)}
+                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                >
+                                    <div style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', marginBottom: '15px', border: '3px solid #FF5722' }}>
+                                        <img
+                                            src={fandomImages[fandomName] || items.find(i => i.fandom === fandomName)?.image || '/placeholder.png'}
+                                            alt={fandomName}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    </div>
+                                    <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)', textAlign: 'center' }}>{fandomName}</h3>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleLikeFandom(fandomName);
+                                        }}
+                                        style={{
+                                            padding: '8px 16px',
+                                            background: 'rgba(255, 68, 68, 0.1)',
+                                            color: '#ff4444',
+                                            border: '1px solid #ff4444',
+                                            borderRadius: '20px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem'
+                                        }}
+                                    >
+                                        Unlike
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                No favorite fandoms yet.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
             <div style={{
                 marginTop: '40px',
                 borderTop: '1px solid var(--border-color)',

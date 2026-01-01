@@ -8,6 +8,21 @@ const OrderDetail: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
 
+    const getTrackingUrl = (carrier: string, trackingNumber: string) => {
+        switch (carrier) {
+            case 'Thailand Post':
+                return `https://track.thailandpost.co.th/?trackNumber=${trackingNumber}`;
+            case 'Kerry Express':
+                return `https://th.kerryexpress.com/th/track/?track=${trackingNumber}`;
+            case 'Flash Express':
+                return `https://www.flashexpress.co.th/tracking/?se=${trackingNumber}`;
+            case 'J&T Express':
+                return `https://www.jtexpress.co.th/track?billcode=${trackingNumber}`;
+            default:
+                return '#';
+        }
+    };
+
     const order = mockOrders.find(o => o.id === orderId);
 
     if (!order) {
@@ -90,6 +105,26 @@ const OrderDetail: React.FC = () => {
         );
     };
 
+    const getProductionSteps = () => {
+        return [
+            { step: 'design', label: 'Design', status: 'completed' as const, date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+            { step: 'molding', label: 'Molding', status: 'completed' as const, date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+            { step: 'painting', label: 'Painting', status: 'in_progress' as const, date: new Date().toISOString().split('T')[0] },
+            { step: 'quality_check', label: 'Quality Check', status: 'upcoming' as const, date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+            { step: 'packaging', label: 'Packaging', status: 'upcoming' as const, date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] },
+            { step: 'shipping', label: 'Shipping', status: 'upcoming' as const, date: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }
+        ];
+    };
+
+    const getProductionStatusColor = (status: string) => {
+        switch (status) {
+            case 'completed': return '#4CAF50';
+            case 'in_progress': return '#FF9800';
+            case 'upcoming': return '#2196F3';
+            default: return '#666';
+        }
+    };
+
     return (
         <div style={{
             padding: '40px 20px',
@@ -141,8 +176,146 @@ const OrderDetail: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Shipment Tracking Section */}
+                {order.carrier && order.trackingNumber && (
+                    <div style={{
+                        marginTop: '30px',
+                        marginBottom: '10px',
+                        padding: '20px',
+                        background: 'rgba(33, 150, 243, 0.1)',
+                        border: '1px solid #2196F3',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center'
+                    }}>
+                        <h3 style={{ margin: '0 0 15px 0', color: '#2196F3', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            🚚 Track Your Shipment
+                        </h3>
+                        <div style={{ fontSize: '1.1rem', marginBottom: '10px', color: 'var(--text-main)' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Carrier:</span> <strong>{order.carrier}</strong>
+                        </div>
+                        <div style={{ fontSize: '1.2rem', marginBottom: '20px', color: 'var(--text-main)', letterSpacing: '1px', background: 'rgba(0,0,0,0.2)', padding: '10px 20px', borderRadius: '8px' }}>
+                            {order.trackingNumber}
+                        </div>
+                        <a
+                            href={getTrackingUrl(order.carrier, order.trackingNumber)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                padding: '12px 24px',
+                                background: '#2196F3',
+                                color: 'white',
+                                textDecoration: 'none',
+                                borderRadius: '30px',
+                                fontWeight: 'bold',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(33, 150, 243, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(33, 150, 243, 0.3)';
+                            }}
+                        >
+                            Track on {order.carrier} Website →
+                        </a>
+                    </div>
+                )}
+
                 <div style={{ margin: '40px 0' }}>
                     <TrackingStepper status={order.status} />
+                </div>
+
+                {/* Production Timeline Section (Show for mock demo or if preorder) */}
+                <div style={{
+                    marginTop: '20px',
+                    marginBottom: '40px',
+                    padding: '30px',
+                    background: 'rgba(255,255,255,0.02)',
+                    borderRadius: '15px',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                }}>
+                    <h3 style={{ margin: '0 0 30px 0', color: 'var(--text-main)' }}>🏭 Production Timeline</h3>
+                    <div style={{ position: 'relative' }}>
+                        {getProductionSteps().map((step, index) => (
+                            <div key={step.step} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                marginBottom: index < getProductionSteps().length - 1 ? '30px' : '0'
+                            }}>
+                                {/* Timeline Dot */}
+                                <div style={{
+                                    width: '28px',
+                                    height: '28px',
+                                    borderRadius: '50%',
+                                    backgroundColor: getProductionStatusColor(step.status),
+                                    border: step.status === 'in_progress' ? '3px solid #FF5722' : `3px solid ${getProductionStatusColor(step.status)}`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    position: 'relative',
+                                    zIndex: 2,
+                                    flexShrink: 0
+                                }}>
+                                    {step.status === 'completed' && (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                                        </svg>
+                                    )}
+                                    {step.status === 'in_progress' && (
+                                        <div style={{
+                                            width: '10px',
+                                            height: '10px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'white',
+                                            animation: 'pulse 2s infinite'
+                                        }} />
+                                    )}
+                                </div>
+
+                                {/* Timeline Line */}
+                                {index < getProductionSteps().length - 1 && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        left: '14px',
+                                        top: '28px',
+                                        width: '2px', // Thin line
+                                        height: '35px', // Adjusted height matches margin
+                                        backgroundColor: step.status === 'completed' ? '#4CAF50' : '#333',
+                                        transform: 'translateX(-50%)'
+                                    }} />
+                                )}
+
+                                {/* Step Content */}
+                                <div style={{ marginLeft: '20px', flex: 1 }}>
+                                    <div style={{
+                                        fontWeight: 'bold',
+                                        color: step.status === 'completed' || step.status === 'in_progress' ? 'var(--text-main)' : 'var(--text-muted)',
+                                        fontSize: '1rem'
+                                    }}>
+                                        {step.label}
+                                    </div>
+                                    <div style={{
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.9rem',
+                                        marginTop: '5px'
+                                    }}>
+                                        {step.status === 'completed' ? `Completed: ${step.date}` :
+                                            step.status === 'in_progress' ? `Target: ${step.date}` :
+                                                `Expected: ${step.date}`}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <h3 style={{ color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '15px', marginBottom: '20px' }}>Items</h3>
@@ -180,7 +353,16 @@ const OrderDetail: React.FC = () => {
                     Total: ฿{order.total.toLocaleString()}
                 </div>
 
+
+
             </div>
+            <style>{`
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

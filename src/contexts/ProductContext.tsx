@@ -17,6 +17,10 @@ interface ProductContextType {
     addPreOrder: (item: PreOrderItem) => void;
     updatePreOrder: (item: PreOrderItem) => void;
     deletePreOrder: (id: number) => void;
+    likedProductIds: number[];
+    likedFandoms: string[];
+    toggleLikeProduct: (id: number) => void;
+    toggleLikeFandom: (name: string) => void;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -28,6 +32,23 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     const [fandoms, setFandoms] = useState<string[]>(() => Array.from(new Set(mockItems.map(i => i.fandom))));
 
     const [fandomImages, setFandomImages] = useState<Record<string, string>>({});
+
+    // --- Like System ---
+    // Initialize with some dummy data for demonstration
+    const [likedProductIds, setLikedProductIds] = useState<number[]>([1, 2]);
+    const [likedFandoms, setLikedFandoms] = useState<string[]>(['Demon Slayer']);
+
+    const toggleLikeProduct = (id: number) => {
+        setLikedProductIds(prev =>
+            prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
+        );
+    };
+
+    const toggleLikeFandom = (name: string) => {
+        setLikedFandoms(prev =>
+            prev.includes(name) ? prev.filter(f => f !== name) : [...prev, name]
+        );
+    };
 
     const addItem = (item: Item) => {
         setItems([...items, item]);
@@ -99,7 +120,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             items, fandoms, fandomImages, preOrders,
             addItem, updateItem, deleteItem,
             addFandom, deleteFandom, updateFandomName, setFandomImage,
-            addPreOrder, updatePreOrder, deletePreOrder
+            addPreOrder, updatePreOrder, deletePreOrder,
+            likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom
         }}>
             {children}
         </ProductContext.Provider>

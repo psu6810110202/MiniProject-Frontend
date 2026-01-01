@@ -7,7 +7,8 @@ import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
 import Orders from './pages/Orders';
-import OrderTimeline from './pages/OrderTimeline';
+
+
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
@@ -99,7 +100,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
-          <Link to="/timeline" style={linkStyle}>Timeline</Link>
+
           {role === 'admin' && (
             <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
           )}
@@ -720,7 +721,7 @@ const Footer: React.FC = () => {
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
-              <Link to="/orders" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</Link>
+              <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</a>
             </div>
           </div>
         </div>
@@ -734,7 +735,7 @@ import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
 
-import ProductionTimeline from './pages/ProductionTimeline';
+
 import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
 
@@ -764,8 +765,8 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/timeline" element={<ProductionTimeline />} />
-            <Route path="/order-timeline" element={<OrderTimeline />} />
+
+
             <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>

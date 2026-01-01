@@ -48,7 +48,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-    const parsePrice = (priceStr: string) => {
+    const parsePrice = (priceStr: string | number) => {
+        if (typeof priceStr === 'number') return priceStr;
+        if (typeof priceStr !== 'string') return 0;
         // Remove currency symbol and commas
         return Number(priceStr.replace(/[^0-9.-]+/g, ""));
     };

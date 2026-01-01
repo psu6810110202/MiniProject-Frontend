@@ -6,7 +6,7 @@ import { useCart } from '../contexts/CartContext';
 
 const Catalog: React.FC = () => {
     const { t } = useLanguage();
-    const { items } = useProducts();
+    const { items, likedProductIds, toggleLikeProduct } = useProducts();
     const { addToCart } = useCart();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
@@ -130,8 +130,10 @@ const Catalog: React.FC = () => {
                         border: '1px solid rgba(255,255,255,0.1)',
                         transition: 'transform 0.2s',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        cursor: 'pointer' // Add cursor pointer
                     }}
+                        onClick={() => navigate(`/product/${item.id}`)} // Navigate on card click
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                     >
@@ -145,44 +147,64 @@ const Catalog: React.FC = () => {
                         <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <div>
                                 {/* Display Fandom instead of Category */}
-                                <span style={{ fontSize: '0.8rem', color: '#FF5722', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                <span style={{ display: 'block', fontSize: '0.8rem', color: '#FF5722', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '5px' }}>
                                     {item.fandom}
                                 </span>
-                                <h3 
-                                    onClick={() => navigate(`/product/${item.id}`)}
-                                    style={{ 
-                                        margin: '5px 0 10px 0', 
+                                <h3
+                                    style={{
+                                        margin: '5px 0 10px 0',
                                         fontSize: '1.2rem',
-                                        cursor: 'pointer',
                                         transition: 'color 0.2s',
                                         display: 'inline-block'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.color = '#FF5722';
-                                        e.currentTarget.style.textDecoration = 'underline';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.color = 'var(--text-main)';
-                                        e.currentTarget.style.textDecoration = 'none';
                                     }}
                                 >{item.name}</h3>
                                 <div style={{ fontSize: '0.9rem', color: '#888' }}>{item.category}</div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>
-                                <button
-                                    onClick={() => handleAddToCart(item)}
-                                    style={{
-                                        padding: '8px 15px',
-                                        background: '#FF5722',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    {t('add_to_cart') || 'Add'}
-                                </button>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleLikeProduct(item.id);
+                                        }}
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: '5px'
+                                        }}
+                                    >
+                                        {likedProductIds.includes(item.id) ? (
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                            </svg>
+                                        ) : (
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                            </svg>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleAddToCart(item);
+                                        }}
+                                        style={{
+                                            padding: '8px 15px',
+                                            background: '#FF5722',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '5px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {t('add_to_cart') || 'Add'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

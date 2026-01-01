@@ -7,9 +7,9 @@ import { productAPI, type Product } from '../services/api';
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
-  const { items } = useProducts();
+  const { items, likedProductIds, toggleLikeProduct } = useProducts();
   const navigate = useNavigate();
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,10 +19,10 @@ const ProductDetail: React.FC = () => {
 
   // Convert Item to Product format
   const convertItemToProduct = (item: any): Product => {
-    const numericPrice = typeof item.price === 'string' 
+    const numericPrice = typeof item.price === 'string'
       ? parseInt(item.price.replace('฿', '').replace(',', '')) || 0
       : (item.price || 0);
-    
+
     return {
       product_id: item.id?.toString() || 'unknown',
       name: item.name,
@@ -49,12 +49,12 @@ const ProductDetail: React.FC = () => {
   const loadProduct = async (productId: string) => {
     try {
       setLoading(true);
-      
+
       // First try to find in ProductContext
-      const contextItem = items.find(item => 
+      const contextItem = items.find(item =>
         item.id?.toString() === productId
       );
-      
+
       if (contextItem) {
         const convertedProduct = convertItemToProduct(contextItem);
         setProduct(convertedProduct);
@@ -96,23 +96,22 @@ const ProductDetail: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (!product) return;
-    
+
     setAddingToCart(true);
     try {
+      const safeId = isNaN(Number(product.product_id)) ? Date.now() : Number(product.product_id);
       addToCart({
-            id: Number(product.product_id),
-            name: product.name,
-            price: `฿${product.price.toLocaleString()}`,
-            category: product.category,
-            fandom: product.fandom,
-            image: product.image
-        });
-      
-      // Show success feedback and navigate to cart
+        id: safeId,
+        name: product.name,
+        price: `฿${product.price.toLocaleString()}`,
+        category: product.category,
+        fandom: product.fandom,
+        image: product.image
+      });
+
+      // Show success feedback
       setTimeout(() => {
         setAddingToCart(false);
-        // Navigate to cart after adding
-        navigate('/cart');
       }, 1000);
     } catch (err) {
       console.error('Failed to add to cart:', err);
@@ -144,15 +143,15 @@ const ProductDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        padding: '40px', 
+      <div style={{
+        padding: '40px',
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
         <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>Loading product details...</div>
-        <div style={{ 
-          width: '40px', 
-          height: '40px', 
+        <div style={{
+          width: '40px',
+          height: '40px',
           border: '4px solid #f3f3f3',
           borderTop: '4px solid #FF5722',
           borderRadius: '50%',
@@ -171,8 +170,8 @@ const ProductDetail: React.FC = () => {
 
   if (!product) {
     return (
-      <div style={{ 
-        padding: '40px', 
+      <div style={{
+        padding: '40px',
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
@@ -232,8 +231,8 @@ const ProductDetail: React.FC = () => {
             border: '1px solid var(--border-color)',
             marginBottom: '20px'
           }}>
-            <img 
-              src={product.image} 
+            <img
+              src={product.image}
               alt={product.name}
               style={{
                 width: '100%',
@@ -266,8 +265,8 @@ const ProductDetail: React.FC = () => {
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <img 
-                  src={product.image} 
+                <img
+                  src={product.image}
                   alt={`View ${index + 1}`}
                   style={{
                     width: '100%',
@@ -286,7 +285,7 @@ const ProductDetail: React.FC = () => {
           {/* Product Name with Pre-Order Badge */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-              <h1 
+              <h1
                 onClick={() => navigate(`/product/${product.product_id}`)}
                 style={{
                   fontSize: '2rem',
@@ -309,7 +308,7 @@ const ProductDetail: React.FC = () => {
               >
                 {product.name}
               </h1>
-              
+
               {product.is_preorder && (
                 <span style={{
                   padding: '6px 12px',
@@ -469,27 +468,37 @@ const ProductDetail: React.FC = () => {
             </button>
 
             <button
+              onClick={() => {
+                if (product?.product_id) toggleLikeProduct(Number(product.product_id));
+              }}
               style={{
-                padding: '15px 30px',
+                width: '60px', // Fixed width for square look
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0', // Reset padding
                 background: 'transparent',
-                color: '#FF5722',
                 border: '2px solid #FF5722',
                 borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#FF5722';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.background = 'rgba(255, 87, 34, 0.1)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#FF5722';
               }}
             >
-              ❤️
+              {product && likedProductIds.includes(Number(product.product_id)) ? (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              ) : (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              )}
             </button>
           </div>
 

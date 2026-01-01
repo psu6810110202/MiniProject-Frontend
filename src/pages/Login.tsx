@@ -8,12 +8,53 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [formData, setFormData] = useState({ username: '', password: '' });
-    const [error, setError] = useState('');
-    const [rememberMe, setRememberMe] = useState(true); // Default to true for better UX
-    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string>('');
+    const [rememberMe, setRememberMe] = useState<boolean>(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
     // ✅ 1. เพิ่มตัวแปรสำหรับตรวจจับ Theme (Dark/Light)
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+    // ตรวจจับการเปลี่ยนแปลงใน localStorage (เผื่อเปลี่ยนจากหน้าอื่นแล้วกลับมา)
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setTheme(localStorage.getItem('theme') || 'dark');
+        };
+        window.addEventListener('storage', handleStorageChange);
+
+        // DEBUG: Help user find their password
+        const db = localStorage.getItem('mock_users_db');
+        if (db) {
+            console.log("%c=== SAVED ACCOUNTS (MOCK DB) ===", "color: lime; font-size: 14px; font-weight: bold;");
+            const parsed = JSON.parse(db);
+            // Table view for easy reading
+            console.table(Object.values(parsed).map((u: any) => ({
+                id: u.id,
+                username: u.username || u.name,
+                email: u.email,
+                password: u.password // Show password so they can recover it
+            })));
+        }
+
+        // Restore Admin if missing (Prevent lockout)
+        const currentDB = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+        if (!currentDB['mock-2']) {
+            currentDB['mock-2'] = {
+                id: 'mock-2',
+                username: 'admin',
+                name: 'Admin User',
+                email: 'admin@example.com',
+                role: 'admin',
+                points: 9999,
+                password: 'admin',
+                isBlacklisted: false
+            };
+            localStorage.setItem('mock_users_db', JSON.stringify(currentDB));
+            console.log("Restored Admin User to Mock DB");
+        }
+
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     // ฟังก์ชันคอยเช็คว่า Navbar มีการเปลี่ยนโหมดหรือยัง (เช็คทุก 0.1 วินาที)
     useEffect(() => {
@@ -59,6 +100,7 @@ const Login: React.FC = () => {
             }
 
             if (data.access_token) {
+                // alert('Backend Login Successful. Real Session Active.'); // Debug
                 login(data.access_token, data.user, rememberMe);
                 navigate('/');
             } else {
@@ -71,21 +113,85 @@ const Login: React.FC = () => {
             const getPersistedUser = (defaultUser: any) => {
                 try {
                     const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                    // If user exists in DB, use it (preserving points). Else use default (0 points).
-                    return db[defaultUser.id] || defaultUser;
+                    const saved = db[defaultUser.id];
+                    // Merge saved data with default to ensure integrity while keeping persisted points
+                    return saved ? { ...defaultUser, ...saved } : defaultUser;
                 } catch { return defaultUser; }
             };
 
-            if (formData.username === 'demo' && formData.password === '1234') {
+            const saveToMockDB = (user: any) => {
+                try {
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    db[user.id] = user; // Update or add the user
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                } catch (e) {
+                    console.error("Failed to save to mock DB", e);
+                }
+            };
+
+            if (formData.username === 'demo') {
                 const defaultUser = { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 0 };
-                login('mock-user-token', getPersistedUser(defaultUser), rememberMe);
-                navigate('/');
-            } else if (formData.username === 'admin' && formData.password === 'admin') {
+                const userToLogin = getPersistedUser(defaultUser);
+
+                // Check password (default or updated)
+                const validPass = userToLogin.password || '1234';
+
+                if (userToLogin.isBlacklisted) {
+                    setError('Your account has been suspended. Please contact support.');
+                    setLoading(false);
+                    return;
+                }
+
+                if (formData.password === validPass) {
+                    saveToMockDB(userToLogin);
+                    login('mock-user-token', userToLogin, rememberMe);
+                    navigate('/');
+                } else {
+                    setError('Invalid password');
+                }
+            } else if (formData.username === 'admin') {
                 const defaultAdmin = { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 0 };
-                login('mock-admin-token', getPersistedUser(defaultAdmin), rememberMe);
-                navigate('/');
+                const userToLogin = getPersistedUser(defaultAdmin);
+
+                const validPass = userToLogin.password || 'admin';
+                if (formData.password === validPass) {
+                    saveToMockDB(userToLogin);
+                    alert('⚠️ Backend Connection Failed. Using Mock Admin Session. (Delete will fail)');
+                    login('mock-admin-token', userToLogin, rememberMe);
+                    navigate('/');
+                } else {
+                    setError('Invalid password');
+                }
             } else {
-                setError(err.message || 'Invalid email or username or password');
+                // Fallback: Check local override for Real Users who changed password locally
+                let localLoginSuccess = false;
+                try {
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    // Find user matching username/email AND password
+                    const foundUser = Object.values(db).find((u: any) =>
+                        (u.email === formData.username || u.name === formData.username || u.username === formData.username) &&
+                        u.password === formData.password
+                    );
+
+                    if (foundUser) {
+                        if ((foundUser as any).isBlacklisted) {
+                            setError('Your account has been suspended. Please contact support.');
+                            setLoading(false);
+                            return;
+                        }
+
+                        saveToMockDB(foundUser);
+                        login('mock-override-token', foundUser as any, rememberMe);
+                        navigate('/');
+                        localLoginSuccess = true;
+                    }
+                } catch (e) {
+                    console.error("Local override check failed", e);
+                }
+
+                if (!localLoginSuccess) {
+                    setError(err.message || 'Invalid email or username or password');
+                }
             }
         } finally {
             setLoading(false);
@@ -212,14 +318,44 @@ const Login: React.FC = () => {
 
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>{t('password')}</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            style={inputStyle}
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                style={{ ...inputStyle, paddingRight: '40px' }}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: isDark ? '#a0a0a0' : '#888',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                {showPassword ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.9rem', color: isDark ? '#a0a0a0' : '#666', textAlign: 'left' }}>

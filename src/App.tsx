@@ -23,7 +23,7 @@ import { useCart } from './contexts/CartContext';
 // --- Navbar Component ---
 const Navbar: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
-  const { isLoggedIn, role, logout, user } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -97,9 +97,7 @@ const Navbar: React.FC = () => {
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
 
-          {role === 'admin' && (
-            <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
-          )}
+
         </div>
       </div>
 

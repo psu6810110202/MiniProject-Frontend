@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, type ReactNode }
 
 interface User {
     id: string;
+    username?: string;
     name: string;
     email: string;
     role: 'user' | 'admin';
@@ -63,27 +64,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setIsLoading(false);
     }, []);
 
-    // Auto-save Mock User changes to DB
-    useEffect(() => {
-        if (user && String(user.id).startsWith('mock-')) {
-            try {
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                // Only update if changed
-                if (JSON.stringify(db[user.id]) !== JSON.stringify(user)) {
-                    db[user.id] = user;
-                    localStorage.setItem('mock_users_db', JSON.stringify(db));
-                }
-            } catch (e) {
-                console.error('Auto-save mock DB failed', e);
-            }
-        }
-    }, [user]);
-
     const login = (newToken: string, newUser: User, rememberMe: boolean) => {
         setToken(newToken);
         setUser(newUser);
         setRole(newUser.role);
         setIsLoggedIn(true);
+
+        // Sync mock users to local DB on login to ensure persistence
+        if (newUser && String(newUser.id).startsWith('mock-')) {
+            try {
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                db[newUser.id] = newUser;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+            } catch (e) {
+                console.error('Failed to sync login to mock DB', e);
+            }
+        }
 
         if (rememberMe) {
             localStorage.setItem('access_token', newToken);

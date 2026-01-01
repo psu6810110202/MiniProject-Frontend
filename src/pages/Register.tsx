@@ -11,12 +11,15 @@ const Register: React.FC = () => {
 
     const [formData, setFormData] = useState({
         username: '',
+        name: '',
         email: '',
         password: '',
-        confirmPassword: '',
+        confirmPassword: ''
     });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // ✅ 1. เพิ่ม Logic ตรวจจับ Theme (Dark/Light) เหมือนหน้า Login
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -57,7 +60,8 @@ const Register: React.FC = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    name: formData.username,
+                    name: formData.username, // Use username as name since input was removed
+                    username: formData.username,
                     email: formData.email,
                     password: formData.password,
                 }),
@@ -200,6 +204,8 @@ const Register: React.FC = () => {
                 )}
 
                 <form onSubmit={handleRegister}>
+
+
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>{t('username')}</label>
                         <input
@@ -230,30 +236,90 @@ const Register: React.FC = () => {
 
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>{t('password')}</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            style={inputStyle}
-                            required
-                            onFocus={(e) => e.target.style.borderColor = '#FF5722'}
-                            onBlur={(e) => e.target.style.borderColor = isDark ? '#444' : '#ddd'}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                style={{ ...inputStyle, paddingRight: '40px' }}
+                                required
+                                onFocus={(e) => e.target.style.borderColor = '#FF5722'}
+                                onBlur={(e) => e.target.style.borderColor = isDark ? '#444' : '#ddd'}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: isDark ? '#a0a0a0' : '#888',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                {showPassword ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>{t('confirm_password')}</label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            style={inputStyle}
-                            required
-                            onFocus={(e) => e.target.style.borderColor = '#FF5722'}
-                            onBlur={(e) => e.target.style.borderColor = isDark ? '#444' : '#ddd'}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                style={{ ...inputStyle, paddingRight: '40px' }}
+                                required
+                                onFocus={(e) => e.target.style.borderColor = '#FF5722'}
+                                onBlur={(e) => e.target.style.borderColor = isDark ? '#444' : '#ddd'}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: isDark ? '#a0a0a0' : '#888',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                {showConfirmPassword ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <button

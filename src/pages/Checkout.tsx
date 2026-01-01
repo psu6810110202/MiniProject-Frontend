@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Checkout: React.FC = () => {
     const { t } = useLanguage();
-    const { cartItems, totalAmount, clearCart } = useCart();
+    const { cartItems, totalAmount, clearCart, addToHistory } = useCart();
     const { isLoggedIn, user } = useAuth();
     const navigate = useNavigate();
 
@@ -53,13 +53,16 @@ const Checkout: React.FC = () => {
         // Here you would typically call your backend API to place the order
         console.log('Order Placed:', { ...form, items: cartItems, total: totalAmount });
 
+        // Add items to purchased history
+        addToHistory(cartItems);
+
         // Mock Success
         clearCart();
         setStep(3);
         window.scrollTo(0, 0);
-        // After a few seconds redirect to orders or home
+        // After a few seconds redirect to profile
         setTimeout(() => {
-            navigate('/orders');
+            navigate('/profile');
         }, 3000);
     };
 
@@ -158,7 +161,7 @@ const Checkout: React.FC = () => {
                             <div style={{ fontSize: '5rem', marginBottom: '20px' }}>✅</div>
                             <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}>Order Placed Successfully!</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Thank you for shopping with DomPort.</p>
-                            <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Redirecting you to orders...</p>
+                            <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Redirecting you to profile...</p>
                         </div>
                     )}
 

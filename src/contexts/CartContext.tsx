@@ -13,6 +13,8 @@ interface CartContextType {
     updateQuantity: (id: number, quantity: number) => void;
     totalAmount: number;
     totalItems: number;
+    purchasedItems: number[];
+    addToHistory: (items: CartItem[]) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -59,9 +61,17 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return acc + (parsePrice(item.price) * item.quantity);
     }, 0);
 
+    const [purchasedItems, setPurchasedItems] = useState<number[]>([]);
+
+    const addToHistory = (items: CartItem[]) => {
+        const ids = items.map(i => i.id);
+        setPurchasedItems(prev => [...prev, ...ids]);
+    };
+
     return (
         <CartContext.Provider value={{
-            cartItems, addToCart, removeFromCart, clearCart, updateQuantity, totalAmount, totalItems
+            cartItems, addToCart, removeFromCart, clearCart, updateQuantity, totalAmount, totalItems,
+            purchasedItems, addToHistory
         }}>
             {children}
         </CartContext.Provider>

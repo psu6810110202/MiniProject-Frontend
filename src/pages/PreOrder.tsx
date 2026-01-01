@@ -9,29 +9,29 @@ interface PreOrderProps {
 
 const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     const { t } = useLanguage();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems, purchasedItems } = useCart();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
     const handlePreOrder = (item: PreOrderItem) => {
-        const confirm = window.confirm(`Pre-order ${item.name}?\nDeposit: ฿${item.deposit}`);
-        if (confirm) {
-            // Add to cart
-            addToCart({
-                id: item.id,
-                name: item.name,
-                price: `฿${item.price.toLocaleString()}`,
-                category: 'Pre-Order',
-                fandom: 'Exclusive',
-                image: item.image
-            });
-            
-            // Simulate API call
-            setTimeout(() => {
-                alert(`Pre-order Successful!\nYou earned 50 points for your deposit.`);
-                addPoints(50); // Award points
-            }, 500);
+        // Check if item is already in cart or purchased (Limit 1 per account)
+        if (cartItems.some(cartItem => cartItem.id === item.id) || purchasedItems.includes(item.id)) {
+            alert('You can only pre-order 1 unit of this item per account.');
+            return;
         }
+
+        // Add to cart
+        addToCart({
+            id: item.id,
+            name: item.name,
+            price: `฿${item.price.toLocaleString()}`,
+            category: 'Pre-Order',
+            fandom: 'Exclusive',
+            image: item.image
+        });
+
+        // Award points silently
+        addPoints(50);
     };
 
     return (

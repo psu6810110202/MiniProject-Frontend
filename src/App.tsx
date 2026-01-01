@@ -6,7 +6,7 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
-import Orders from './pages/Orders';
+
 
 
 import Payment from './pages/Payment';
@@ -326,7 +326,18 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                             <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ background: '#333', border: 'none', color: 'white', width: '25px', height: '25px', borderRadius: '5px', cursor: 'pointer' }}>-</button>
                             <span style={{ color: 'var(--text-main)' }}>{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ background: '#333', border: 'none', color: 'white', width: '25px', height: '25px', borderRadius: '5px', cursor: 'pointer' }}>+</button>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={item.category === 'Pre-Order'}
+                              title={item.category === 'Pre-Order' ? 'Limit 1 per account' : ''}
+                              style={{
+                                background: item.category === 'Pre-Order' ? '#1a1a1a' : '#333',
+                                border: item.category === 'Pre-Order' ? '1px solid #333' : 'none',
+                                color: item.category === 'Pre-Order' ? '#555' : 'white',
+                                width: '25px', height: '25px', borderRadius: '5px',
+                                cursor: item.category === 'Pre-Order' ? 'not-allowed' : 'pointer'
+                              }}
+                            >+</button>
                             <button onClick={() => removeFromCart(item.id)} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: '0.8rem' }}>Remove</button>
                           </div>
                         </div>
@@ -754,7 +765,7 @@ function App() {
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
-            <Route path="/orders" element={<Orders />} />
+
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />

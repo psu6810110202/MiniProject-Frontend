@@ -3,7 +3,11 @@ import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
 
-const PreOrder: React.FC = () => {
+interface PreOrderProps {
+    addPoints?: (amount: number) => void;
+}
+
+const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     const { t } = useLanguage();
     const { addToCart, cartItems, purchasedItems } = useCart();
     // Independent state for this page's visual interactions
@@ -26,6 +30,14 @@ const PreOrder: React.FC = () => {
             fandom: 'Exclusive',
             image: item.image
         });
+
+        // Award points for pre-ordering
+        if (addPoints) {
+            addPoints(50);
+            alert(`Pre-order added! You've earned 50 bonus points! 💎`);
+        } else {
+            alert(`${item.name} added to cart!`);
+        }
     };
 
     return (

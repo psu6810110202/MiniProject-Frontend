@@ -12,6 +12,7 @@ const Login: React.FC = () => {
     const [rememberMe, setRememberMe] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const [showBlacklistModal, setShowBlacklistModal] = useState(false);
 
     // ✅ 1. เพิ่มตัวแปรสำหรับตรวจจับ Theme (Dark/Light)
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -137,7 +138,7 @@ const Login: React.FC = () => {
                 const validPass = userToLogin.password || '1234';
 
                 if (userToLogin.isBlacklisted) {
-                    setError('Your account has been suspended. Please contact support.');
+                    setShowBlacklistModal(true);
                     setLoading(false);
                     return;
                 }
@@ -175,7 +176,7 @@ const Login: React.FC = () => {
 
                     if (foundUser) {
                         if ((foundUser as any).isBlacklisted) {
-                            setError('Your account has been suspended. Please contact support.');
+                            setShowBlacklistModal(true);
                             setLoading(false);
                             return;
                         }
@@ -384,6 +385,75 @@ const Login: React.FC = () => {
                     {t('dont_have_account')} <Link to="/register" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>{t('sign_up')}</Link>
                 </p>
             </div>
+
+            {/* Blacklist Popup Modal */}
+            {showBlacklistModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 3000, padding: '20px'
+                }}>
+                    <div style={{
+                        background: isDark ? '#1a1a1a' : '#ffffff',
+                        padding: '40px',
+                        borderRadius: '24px',
+                        maxWidth: '450px',
+                        width: '100%',
+                        textAlign: 'center',
+                        border: '2px solid #FF5722',
+                        boxShadow: '0 20px 50px rgba(255, 87, 34, 0.3)',
+                        animation: 'popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                    }}>
+                        <div style={{
+                            width: '80px', height: '80px', background: 'rgba(255, 87, 34, 0.1)',
+                            borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 20px', color: '#FF5722'
+                        }}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h2 style={{ color: '#FF5722', marginBottom: '15px', fontSize: '1.8rem' }}>บัญชีของคุณถูกระงับ</h2>
+                        <p style={{
+                            color: isDark ? '#e0e0e0' : '#333',
+                            fontSize: '1.1rem',
+                            lineHeight: '1.6',
+                            marginBottom: '30px',
+                            fontWeight: '500'
+                        }}>
+                            คุณถูก Blacklist ข้อหาผิดกฎที่คุณได้ตกลงและยอมรับไว้กับทางระบบ
+                        </p>
+                        <button
+                            onClick={() => setShowBlacklistModal(false)}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: '#FF5722',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#e64a19'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#FF5722'}
+                        >
+                            ตกลง
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes popIn {
+                    0% { transform: scale(0.8); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };

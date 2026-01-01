@@ -13,6 +13,8 @@ import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
+import UserManager from './pages/UserManager';
+import PreOrderManager from './pages/PreOrderManager';
 import Checkout from './pages/Checkout';
 
 import { useLanguage } from './contexts/LanguageContext';
@@ -27,7 +29,7 @@ const Navbar: React.FC = () => {
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
-  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
+  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์เ
   const [theme, setTheme] = useState('dark');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -745,6 +747,30 @@ import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
+  const { isLoggedIn, logout, user } = useAuth();
+  const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
+
+  // Auto-kick if blacklisted while logged in
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const checkBlacklistStatus = () => {
+        try {
+          const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+          const currentUser = db[user.id];
+          if (currentUser && currentUser.isBlacklisted) {
+            setShowBlacklistKickModal(true);
+            logout();
+          }
+        } catch (e) {
+          console.error("Blacklist check failed", e);
+        }
+      };
+
+      checkBlacklistStatus();
+      const interval = setInterval(checkBlacklistStatus, 3000); // Check every 3 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, user, logout]);
 
   return (
     <Router>
@@ -766,6 +792,10 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManager />} />
+            <Route path="/admin/preorders" element={<PreOrderManager />} />
+            <Route path="/admin/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
+            <Route path="/admin/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -776,6 +806,75 @@ function App() {
         </div>
         <Footer />
       </div>
+
+      {/* Global Blacklist Kick Popup */}
+      {showBlacklistKickModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1a1a1a',
+            padding: '40px',
+            borderRadius: '24px',
+            maxWidth: '450px',
+            width: '100%',
+            textAlign: 'center',
+            border: '2px solid #FF5722',
+            boxShadow: '0 20px 50px rgba(255, 87, 34, 0.3)',
+            animation: 'popInGlobal 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+          }}>
+            <div style={{
+              width: '80px', height: '80px', background: 'rgba(255, 87, 34, 0.1)',
+              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px', color: '#FF5722'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <h2 style={{ color: '#FF5722', marginBottom: '15px', fontSize: '1.8rem' }}>บัญชีของคุณถูกระงับ</h2>
+            <p style={{
+              color: document.documentElement.getAttribute('data-theme') === 'light' ? '#333' : '#e0e0e0',
+              fontSize: '1.1rem',
+              lineHeight: '1.6',
+              marginBottom: '30px',
+              fontWeight: '500'
+            }}>
+              คุณถูก Blacklist ข้อหาผิดกฎที่คุณได้ตกลงและยอมรับไว้กับทางระบบ
+            </p>
+            <button
+              onClick={() => {
+                setShowBlacklistKickModal(false);
+                window.location.href = '/login';
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: '#FF5722',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              ตกลง
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes popInGlobal {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </Router>
   );
 }

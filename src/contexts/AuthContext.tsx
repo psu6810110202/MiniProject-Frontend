@@ -40,25 +40,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         // Check for token on mount
-        const savedToken = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-        const savedUserStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        // 1. First check SessionStorage (for non-remembered sessions)
+        let savedToken = sessionStorage.getItem('access_token');
+        let savedUserStr = sessionStorage.getItem('user');
 
-        if (savedToken) {
+        // 2. If not in SessionStorage, check LocalStorage (for remembered sessions)
+        if (!savedToken) {
+            savedToken = localStorage.getItem('access_token');
+            savedUserStr = localStorage.getItem('user');
+        }
+
+        if (savedToken && savedUserStr) {
             setToken(savedToken);
-            if (savedUserStr) {
-                const savedUser = JSON.parse(savedUserStr);
+            const savedUser = JSON.parse(savedUserStr);
 
-                // Migration: Reset points for mock users if they match old defaults
-                if ((savedUser.id === 'mock-1' && savedUser.points === 100) ||
-                    (savedUser.id === 'mock-2' && savedUser.points === 999)) {
-                    savedUser.points = 0;
-                    if (localStorage.getItem('user')) localStorage.setItem('user', JSON.stringify(savedUser));
-                    if (sessionStorage.getItem('user')) sessionStorage.setItem('user', JSON.stringify(savedUser));
-                }
-
-                setUser(savedUser);
-                setRole(savedUser.role);
+            // Migration: Reset points for mock users if they match old defaults
+            if ((savedUser.id === 'mock-1' && savedUser.points === 100) ||
+                (savedUser.id === 'mock-2' && savedUser.points === 999)) {
+                savedUser.points = 0;
             }
+
+            setUser(savedUser);
+            setRole(savedUser.role);
             setIsLoggedIn(true);
         }
         setIsLoading(false);

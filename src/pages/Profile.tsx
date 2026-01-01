@@ -377,7 +377,7 @@ const Profile: React.FC = () => {
     return (
         <div style={{
             padding: '40px 20px',
-            maxWidth: '1200px',
+            maxWidth: user?.role === 'admin' ? '1200px' : '900px',
             margin: '0 auto',
             minHeight: '80vh',
             display: 'flex',

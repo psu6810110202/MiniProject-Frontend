@@ -7,6 +7,7 @@ import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
 import Orders from './pages/Orders';
+import OrderTimeline from './pages/OrderTimeline';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
@@ -760,7 +761,7 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/timeline" element={<ProductionTimeline />} />
+            <Route path="/timeline" element={<OrderTimeline />} />
             <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>

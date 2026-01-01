@@ -11,6 +11,9 @@ import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
+import CallCenter from './pages/CallCenter';
+import CustomerChat from './pages/CustomerChat';
+import StaffDashboard from './pages/StaffDashboard';
 import { usePoints } from './hooks/usePoints';
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
@@ -727,7 +730,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
+              <Link to="/call-center" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
               <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</a>
             </div>
           </div>
@@ -772,6 +775,9 @@ function App() {
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/call-center" element={<CallCenter />} />
+            <Route path="/customer-chat" element={<CustomerChat />} />
+            <Route path="/staff-dashboard" element={<StaffDashboard />} />
           </Routes>
         </div>
         <Footer />

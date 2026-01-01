@@ -6,9 +6,9 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
-
-
-
+import CallCenter from './pages/CallCenter';
+import CustomerChat from './pages/CustomerChat';
+import StaffDashboard from './pages/StaffDashBoard';
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
@@ -799,8 +799,9 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
-
-
+            <Route path="/call-center" element={<CallCenter />} />
+            <Route path="/customer-chat" element={<CustomerChat />} />
+            <Route path="/staff-dashboard" element={<StaffDashboard />} />
             <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>

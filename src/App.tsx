@@ -6,9 +6,6 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
-
-
-
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
@@ -100,7 +97,6 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
-
           {role === 'admin' && (
             <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
           )}
@@ -765,7 +761,6 @@ function App() {
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
-
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
@@ -776,8 +771,6 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
-
-
             <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>

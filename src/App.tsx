@@ -764,7 +764,8 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/timeline" element={<OrderTimeline />} />
+            <Route path="/timeline" element={<ProductionTimeline />} />
+            <Route path="/order-timeline" element={<OrderTimeline />} />
             <Route path="/product/:id" element={<ProductDetail />} />
           </Routes>
         </div>

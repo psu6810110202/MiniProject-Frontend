@@ -18,14 +18,11 @@ const translations: Record<Language, Translations> = {
         orders: 'Orders',
         login: 'Login',
         logout: 'Logout',
-<<<<<<< HEAD
         // Call Center
-=======
         welcome: 'Welcome to',
         description: 'Your ultimate gateway to the fandom universe.',
         explore: 'Explore Now',
         points: 'pts',
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         call_center: 'Call Center',
         help_center: 'Help center',
         help_center_desc: 'We are here to help you 24/7',
@@ -47,11 +44,6 @@ const translations: Record<Language, Translations> = {
         create_ticket: 'Create Ticket',
         live_chat: 'Live Chat',
         call_us: 'Call Us',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Staff Dashboard
         staff_dashboard: 'Staff Dashboard',
         staff_dashboard_desc: 'Manage customer support and staff members',
@@ -80,11 +72,6 @@ const translations: Record<Language, Translations> = {
         staff_typing_response: 'I understand. Let me help you with that.',
         please_login: 'Please login to access this feature',
         go_to_login: 'Go to Login',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Status
         status_open: 'Open',
         status_in_progress: 'In Progress',
@@ -92,21 +79,11 @@ const translations: Record<Language, Translations> = {
         status_closed: 'Closed',
         status_active: 'Active',
         status_waiting: 'Waiting',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Priority
         priority_low: 'Low',
         priority_medium: 'Medium',
         priority_high: 'High',
         priority_urgent: 'Urgent',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Categories
         category_general: 'General',
         category_shipping: 'Shipping',
@@ -114,22 +91,12 @@ const translations: Record<Language, Translations> = {
         category_product: 'Product',
         category_account: 'Account',
         category_technical: 'Technical',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Staff
         support_staff: 'Support Staff',
         admin: 'Administrator',
         last_seen: 'Last Seen',
         full_name: 'Full Name',
         role: 'Role',
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         // Access
         access_denied: 'Access Denied',
         admin_only: 'This page is for administrators only',

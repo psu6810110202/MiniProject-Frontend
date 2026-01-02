@@ -54,15 +54,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setToken(savedToken);
             const savedUser = JSON.parse(savedUserStr);
 
-            // Migration: Reset points for mock users if they match old defaults
-            if ((savedUser.id === 'mock-1' && savedUser.points === 100) ||
-                (savedUser.id === 'mock-2' && savedUser.points === 999)) {
-                savedUser.points = 0;
+            // Check if user is soft-deleted
+            if (savedUser.deletedAt) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user');
+                sessionStorage.removeItem('access_token');
+                sessionStorage.removeItem('user');
+                setToken(null);
+                setUser(null);
+                setRole(null);
+                setIsLoggedIn(false);
+            } else {
+                // Migration: Reset points for mock users if they match old defaults
+                setUser(savedUser);
+                setRole(savedUser.role);
+                setIsLoggedIn(true);
             }
-
-            setUser(savedUser);
-            setRole(savedUser.role);
-            setIsLoggedIn(true);
         }
         setIsLoading(false);
     }, []);
@@ -79,8 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setRole(newUser.role);
         setIsLoggedIn(true);
 
-        // Sync mock users to local DB on login to ensure persistence
-        if (newUser && String(newUser.id).startsWith('mock-')) {
+        // Sync ALL users to local DB on login to ensure persistence (Frontend-First State)
+        if (newUser) {
             try {
                 const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
                 db[newUser.id] = newUser;

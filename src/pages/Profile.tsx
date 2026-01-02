@@ -122,19 +122,15 @@ const Profile: React.FC = () => {
     const handleConfirmDelete = async () => {
         if (!user || !token) return;
 
-        // Mock User Deletion
-        if (String(user.id).startsWith('mock-')) {
+        // Mock User Deletion (Soft Delete)
+        if (String(user.id).startsWith('mock-') || String(user.id)) { // Apply to all users for consistency in this demo
             try {
                 const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                delete db[user.id];
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-
-                // Clean up related data
-                localStorage.removeItem(`cartItems_${user.id}`);
-                localStorage.removeItem(`purchasedItems_${user.id}`);
-                localStorage.removeItem(`userOrders_${user.id}`);
-                localStorage.removeItem(`likedProductIds_${user.id}`);
-                localStorage.removeItem(`likedFandoms_${user.id}`);
+                if (db[user.id]) {
+                    // Soft Delete: Mark with timestamp instead of removing
+                    db[user.id].deletedAt = new Date().toISOString();
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                }
             } catch (e) { console.error(e); }
             logout();
             navigate('/login');

@@ -6,55 +6,41 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
-<<<<<<< HEAD
-=======
-import CallCenter from './pages/CallCenter';
-import CustomerChat from './pages/CustomerChat';
-import StaffDashboard from './pages/StaffDashBoard';
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import AdminDashboard from './pages/AdminDashboard';
-<<<<<<< HEAD
 import Checkout from './pages/Checkout';
 import CallCenter from './pages/CallCenter';
 import CustomerChat from './pages/CustomerChat';
 import StaffDashboard from './pages/StaffDashboard';
 import { usePoints } from './hooks/usePoints';
-=======
+
 import UserManager from './pages/UserManager';
 import PreOrderManager from './pages/PreOrderManager';
-import Checkout from './pages/Checkout';
 
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
 
 // --- Navbar Component ---
-<<<<<<< HEAD
 interface NavbarProps {
   points: number;
 }
 
+// Remove NavbarProps interface as it is no longer needed
+// interface NavbarProps {
+//   points: number;
+// }
+
 const Navbar: React.FC<NavbarProps> = ({ points }) => {
   const { t, language, setLanguage } = useLanguage();
-  const { isLoggedIn, role, logout } = useAuth();
+  const { isLoggedIn, role, logout, user } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
   // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
-=======
-const Navbar: React.FC = () => {
-  const { t, language, setLanguage } = useLanguage();
-  const { isLoggedIn, logout, user } = useAuth();
-  const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
-  const navigate = useNavigate();
-
-  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์เ
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
   const [theme, setTheme] = useState('dark');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -123,14 +109,6 @@ const Navbar: React.FC = () => {
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
           <Link to="/creators" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
-<<<<<<< HEAD
-          {role === 'admin' && (
-            <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>Admin Dashboard</Link>
-          )}
-=======
-
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         </div>
       </div>
 
@@ -201,11 +179,7 @@ const Navbar: React.FC = () => {
                 <div style={{ padding: '15px 20px', borderBottom: '1px solid #333', background: 'rgba(255,87,34,0.1)' }}>
                   <div style={{ color: '#aaa', fontSize: '0.8rem', marginBottom: '5px' }}>Your Points</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF5722', fontWeight: 'bold', fontSize: '1.2rem' }}>
-<<<<<<< HEAD
                     <span>💎</span> {points}
-=======
-                    <span>💎</span> {user?.points || 0}
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
                   </div>
                 </div>
               )}
@@ -744,11 +718,7 @@ const Footer: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('all_products')}</Link>
               <Link to="/preorder" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('preorder')}</Link>
-<<<<<<< HEAD
               <Link to="/regular-products" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>Regular Products</Link>
-=======
-              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('vinyl_figures')}</Link>
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
             </div>
           </div>
 
@@ -766,11 +736,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-<<<<<<< HEAD
               <Link to="/call-center" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
-=======
-              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
               <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</a>
             </div>
           </div>
@@ -784,19 +750,14 @@ import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
-<<<<<<< HEAD
 import RegularProducts from './pages/RegularProducts';
-=======
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 
 import ProductDetail from './pages/ProductDetail';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
-<<<<<<< HEAD
   const { points, addPoints } = usePoints();
-=======
+
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
 
@@ -821,31 +782,20 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, user, logout]);
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
 
   return (
     <Router>
       <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
-<<<<<<< HEAD
+
         <Navbar points={points} />
-=======
-        <Navbar />
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
-<<<<<<< HEAD
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
-=======
-            <Route path="/preorder" element={<PreOrder />} />
-            <Route path="/creators" element={<AllFandom />} />
-            <Route path="/updates" element={<Updates />} />
-
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
@@ -853,16 +803,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
-<<<<<<< HEAD
-            <Route path="/admin/fandoms" element={<FandomList />} />
-            <Route path="/admin/fandom/:name" element={<FandomManager />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/regular-products" element={<RegularProducts />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/call-center" element={<CallCenter />} />
-            <Route path="/customer-chat" element={<CustomerChat />} />
-            <Route path="/staff-dashboard" element={<StaffDashboard />} />
-=======
             <Route path="/admin/users" element={<UserManager />} />
             <Route path="/admin/preorders" element={<PreOrderManager />} />
             <Route path="/admin/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
@@ -870,17 +810,16 @@ function App() {
             <Route path="/admin/fandoms" element={<FandomList />} />
             <Route path="/admin/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/call-center" element={<CallCenter />} />
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/staff-dashboard" element={<StaffDashboard />} />
             <Route path="/product/:id" element={<ProductDetail />} />
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
+
           </Routes>
         </div>
         <Footer />
       </div>
-<<<<<<< HEAD
-=======
 
       {/* Global Blacklist Kick Popup */}
       {showBlacklistKickModal && (
@@ -950,7 +889,7 @@ function App() {
             100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
->>>>>>> ce5247acd0af640dafc87b8aa34c27fc5cdb17a3
+
     </Router>
   );
 }

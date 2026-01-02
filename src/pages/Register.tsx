@@ -60,7 +60,7 @@ const Register: React.FC = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    name: formData.username, // Use username as name since input was removed
+                    name: '', // Leave Full Name empty as per request
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,

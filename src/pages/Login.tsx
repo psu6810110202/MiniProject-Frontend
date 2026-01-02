@@ -101,8 +101,23 @@ const Login: React.FC = () => {
             }
 
             if (data.access_token) {
-                // alert('Backend Login Successful. Real Session Active.'); // Debug
-                login(data.access_token, data.user, rememberMe);
+                // Feature: Frontend Persistence for State (Points) even for Backend Users
+                // If backend is stateless/restarts, we trust our local cache for 'points'
+                let userToUse = data.user;
+                try {
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    // Find matching user in local DB (by ID or Email to be safe)
+                    const localUser = db[userToUse.id] || Object.values(db).find((u: any) => u.email === userToUse.email);
+
+                    if (localUser) {
+                        console.log("Restoring local state for backend user:", localUser.username);
+                        userToUse = { ...userToUse, points: localUser.points };
+                    }
+                } catch (e) {
+                    console.error("Failed to merge local state", e);
+                }
+
+                login(data.access_token, userToUse, rememberMe);
                 navigate('/');
             } else {
                 throw new Error('No access token received');
@@ -132,9 +147,10 @@ const Login: React.FC = () => {
 
             if (formData.username === 'demo') {
                 const defaultUser = { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 0 };
+                // Logic Fix: Load from DB first, if not exists then use default
                 const userToLogin = getPersistedUser(defaultUser);
 
-                // Check password (default or updated)
+                // Check password (use the one from DB if exists, else default)
                 const validPass = userToLogin.password || '1234';
 
                 if (userToLogin.isBlacklisted) {
@@ -151,7 +167,8 @@ const Login: React.FC = () => {
                     setError('Invalid password');
                 }
             } else if (formData.username === 'admin') {
-                const defaultAdmin = { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 0 };
+                const defaultAdmin = { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 9999 };
+                // Logic Fix: Load from DB first, if not exists then use default
                 const userToLogin = getPersistedUser(defaultAdmin);
 
                 const validPass = userToLogin.password || 'admin';

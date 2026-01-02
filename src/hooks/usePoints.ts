@@ -1,36 +1,25 @@
-import { useState, useEffect } from 'react';
-
-const POINTS_KEY = 'user_points';
+import { useAuth } from '../contexts/AuthContext';
 
 export const usePoints = () => {
-    const [points, setPoints] = useState<number>(0);
+    const { user, updateUser } = useAuth();
 
-    useEffect(() => {
-        // Load points from local storage on mount
-        const savedPoints = localStorage.getItem(POINTS_KEY);
-        if (savedPoints) {
-            setPoints(parseInt(savedPoints, 10));
-        }
-    }, []);
+    // Condition 2: Separation of Data (Points depend on the logged-in user)
+    // Condition 3: Reset on Recreate (If a user is new/re-created, they start with 0 or defined default)
+    const points = user?.points || 0;
 
     const addPoints = (amount: number) => {
-        setPoints((prev) => {
-            const newPoints = prev + amount;
-            localStorage.setItem(POINTS_KEY, newPoints.toString());
-            return newPoints;
-        });
+        // Condition 1: Login Persistence (Updates the central user object which AuthContext persists)
+        if (user) {
+            updateUser({ ...user, points: (user.points || 0) + amount });
+        }
     };
 
     const spendPoints = (amount: number) => {
-        setPoints((prev) => {
-            if (prev >= amount) {
-                const newPoints = prev - amount;
-                localStorage.setItem(POINTS_KEY, newPoints.toString());
-                return newPoints;
-            }
-            return prev; // Not enough points
-        });
+        if (user && (user.points || 0) >= amount) {
+            updateUser({ ...user, points: (user.points || 0) - amount });
+        }
     };
 
     return { points, addPoints, spendPoints };
 };
+

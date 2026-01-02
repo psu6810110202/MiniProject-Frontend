@@ -14,11 +14,32 @@ const UserManager: React.FC = () => {
         }
     }, [role, navigate]);
 
-    // Load users from mock DB
+    // Load users from API
     useEffect(() => {
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        setUsers(Object.values(db));
-    }, []);
+        const fetchUsers = async () => {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch('http://localhost:3000/api/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUsers(data);
+                } else {
+                    console.error('Failed to fetch users from API');
+                    // Fallback to mock DB if API fails (optional, good for dev)
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    setUsers(Object.values(db));
+                    if (role === 'admin') alert('⚠️ Backend Connection Failed. Using Mock Admin Session.');
+                }
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                setUsers(Object.values(db));
+            }
+        };
+        fetchUsers();
+    }, [role]);
 
 
 

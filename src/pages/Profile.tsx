@@ -246,12 +246,14 @@ const Profile: React.FC = () => {
 
             if (response.ok) {
                 const updatedUserData = await response.json();
-                // Merge formData to ensure new fields (facebookName, etc.) are saved locally 
-                // even if backend doesn't support/return them yet.
-                updateUser({ ...user, ...updatedUserData, ...formData });
+                updateUser({ ...user, ...updatedUserData });
                 setIsEditing(false);
                 alert('Profile updated successfully!');
                 window.scrollTo(0, 0);
+            } else if (response.status === 401) {
+                alert('Session expired. Please log in again.');
+                logout();
+                navigate('/login');
             } else {
                 const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
                 console.error("Update failed:", errorData);

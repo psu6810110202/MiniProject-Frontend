@@ -241,7 +241,7 @@ const Profile: React.FC = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ ...formData, points: user.points || 0 })
             });
 
             if (response.ok) {

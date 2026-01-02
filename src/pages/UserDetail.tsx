@@ -15,17 +15,41 @@ const UserDetail: React.FC = () => {
             return;
         }
 
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        const foundUser = db[id as string];
+        const fetchUser = async () => {
+            const token = localStorage.getItem('access_token');
+            try {
+                // Try fetching from API first
+                const response = await fetch(`http://localhost:3000/api/users/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-        if (foundUser) {
-            setUser(foundUser);
-            const orders = JSON.parse(localStorage.getItem(`userOrders_${foundUser.id}`) || '[]');
-            setUserOrders(orders);
-        } else {
-            alert('User not found');
-            navigate('/admin/users');
-        }
+                if (response.ok) {
+                    const userData = await response.json();
+                    setUser(userData);
+                    // Mock orders for now/load from local if existing
+                    const orders = JSON.parse(localStorage.getItem(`userOrders_${userData.id}`) || '[]');
+                    setUserOrders(orders);
+                } else {
+                    throw new Error('API fetch failed');
+                }
+            } catch (error) {
+                console.warn('Fetching user from API failed, trying local mock DB');
+                // Fallback to local
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                const foundUser = db[id as string];
+
+                if (foundUser) {
+                    setUser(foundUser);
+                    const orders = JSON.parse(localStorage.getItem(`userOrders_${foundUser.id}`) || '[]');
+                    setUserOrders(orders);
+                } else {
+                    alert('User not found');
+                    navigate('/admin/users');
+                }
+            }
+        };
+
+        fetchUser();
     }, [id, role, navigate]);
 
     const handleToggleBlacklist = () => {

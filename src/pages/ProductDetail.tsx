@@ -387,7 +387,7 @@ const ProductDetail: React.FC = () => {
                     boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
                     animation: 'pulse 2s infinite'
                   }}>
-                    🔥 PRE-ORDER EXCLUSIVE
+                     PRE-ORDER EXCLUSIVE
                   </span>
                   <span style={{
                     padding: '6px 12px',
@@ -402,7 +402,7 @@ const ProductDetail: React.FC = () => {
                   </span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{
                     padding: '8px 16px',
                     background: 'linear-gradient(135deg, #4CAF50, #45a049)',
@@ -427,6 +427,35 @@ const ProductDetail: React.FC = () => {
                   }}>
                     IMMEDIATE DELIVERY
                   </span>
+                  {/* Category & Fandom Tags */}
+                  <div style={{
+                    padding: '6px 12px',
+                    background: 'linear-gradient(135deg, #2196F3, #1976D2)',
+                    color: 'white',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
+                  }}>
+                     {product.category}
+                  </div>
+                  <div style={{
+                    padding: '6px 12px',
+                    background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
+                    color: 'white',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)'
+                  }}>
+                     {product.fandom}
+                  </div>
                 </div>
               )}
             </div>
@@ -471,103 +500,6 @@ const ProductDetail: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Category & Fandom Tags */}
-          <div style={{
-            display: 'flex',
-            gap: '10px',
-            marginBottom: '20px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
-              padding: '6px 12px',
-              background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-              color: 'white',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
-            }}>
-              📁 {product.category}
-            </div>
-            <div style={{
-              padding: '6px 12px',
-              background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
-              color: 'white',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)'
-            }}>
-              🎭 {product.fandom}
-            </div>
-            {product.is_preorder && (
-              <div style={{
-                padding: '6px 12px',
-                background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                color: 'white',
-                borderRadius: '20px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                boxShadow: '0 2px 8px rgba(255, 87, 34, 0.3)'
-              }}>
-                🚀 Pre-Order
-              </div>
-            )}
-          </div>
-
-          {/* Product Type & Status */}
-          <div style={{
-            background: product.is_preorder ? 
-              'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 87, 34, 0.05))' : 
-              'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))',
-            border: `1px solid ${product.is_preorder ? '#FF5722' : '#4CAF50'}`,
-            borderRadius: '12px',
-            padding: '15px',
-            marginBottom: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.5rem' }}>
-                {product.is_preorder ? '🚀' : '📦'}
-              </span>
-              <div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                  color: product.is_preorder ? '#FF5722' : '#4CAF50'
-                }}>
-                  {product.is_preorder ? 'PRE-ORDER' : 'IN STOCK'}
-                </div>
-                <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                  {product.is_preorder ? 
-                    `Release: ${formatDate(product.release_date!)}` : 
-                    `Ships in 2-3 days`
-                  }
-                </div>
-              </div>
-            </div>
-            {product.is_preorder && (
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>Deposit</div>
-                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#FF5722' }}>
-                  ฿{product.deposit_amount?.toLocaleString()}
-                </div>
-              </div>
-            )}
-          </div>
-
 
           {/* Description */}
           <div style={{ marginBottom: '20px' }}>
@@ -678,7 +610,7 @@ const ProductDetail: React.FC = () => {
             >
               {addingToCart ? '✓ Added to Cart' : 
                product.stock === 0 ? 'Out of Stock' : 
-               (product.is_preorder ? '🚀 Pre-Order Now' : '🛒 Add to Cart')
+               (product.is_preorder ? ' Pre-Order Now' : ' Add to Cart')
               }
             </button>
 
@@ -730,8 +662,6 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Category:</strong> {product.category}</div>
-              <div><strong>Fandom:</strong> {product.fandom}</div>
               <div><strong>Stock:</strong> {product.stock} units</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
             </div>

@@ -330,33 +330,35 @@ const PreOrderDetail: React.FC = () => {
                 {product.name}
               </h1>
 
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <span style={{
-                  padding: '8px 16px',
-                  background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                  color: 'white',
-                  borderRadius: '25px',
-                  fontSize: '0.85rem',
-                  fontWeight: 'bold',
-                  verticalAlign: 'middle',
-                  alignSelf: 'center',
-                  boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
-                  animation: 'pulse 2s infinite'
-                }}>
-                  🔥 PRE-ORDER EXCLUSIVE
-                </span>
-                <span style={{
-                  padding: '6px 12px',
-                  background: 'rgba(255, 87, 34, 0.1)',
-                  color: '#FF5722',
-                  borderRadius: '15px',
-                  fontSize: '0.75rem',
-                  fontWeight: 'bold',
-                  border: '1px solid #FF5722'
-                }}>
-                  LIMITED EDITION
-                </span>
-              </div>
+              {product.is_preorder ? (
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <span style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                    color: 'white',
+                    borderRadius: '25px',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold',
+                    verticalAlign: 'middle',
+                    alignSelf: 'center',
+                    boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
+                    animation: 'pulse 2s infinite'
+                  }}>
+                    PRE-ORDER EXCLUSIVE
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    background: 'rgba(255, 87, 34, 0.1)',
+                    color: '#FF5722',
+                    borderRadius: '15px',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    border: '1px solid #FF5722'
+                  }}>
+                    LIMITED EDITION
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -382,91 +384,6 @@ const PreOrderDetail: React.FC = () => {
               <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
               <div style={{ fontSize: '0.8rem', color: '#999' }}>
                 (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
-              </div>
-            </div>
-          </div>
-
-          {/* Category & Fandom Tags */}
-          <div style={{
-            display: 'flex',
-            gap: '10px',
-            marginBottom: '20px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
-              padding: '6px 12px',
-              background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-              color: 'white',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
-            }}>
-              📁 {product.category}
-            </div>
-            <div style={{
-              padding: '6px 12px',
-              background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
-              color: 'white',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)'
-            }}>
-              🎭 {product.fandom}
-            </div>
-            <div style={{
-              padding: '6px 12px',
-              background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-              color: 'white',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 2px 8px rgba(255, 87, 34, 0.3)'
-            }}>
-              🚀 Pre-Order
-            </div>
-          </div>
-
-          {/* Pre-Order Status */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 87, 34, 0.05))',
-            border: '1px solid #FF5722',
-            borderRadius: '12px',
-            padding: '15px',
-            marginBottom: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.5rem' }}>🚀</span>
-              <div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                  color: '#FF5722'
-                }}>
-                  PRE-ORDER EXCLUSIVE
-                </div>
-                <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                  Release: {formatDate(product.release_date!)}
-                </div>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.8rem', color: '#999' }}>Deposit</div>
-              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#FF5722' }}>
-                ฿{product.deposit_amount?.toLocaleString()}
               </div>
             </div>
           </div>
@@ -520,7 +437,7 @@ const PreOrderDetail: React.FC = () => {
                 {quantity}
               </div>
               <button
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                 style={{
                   padding: '10px 15px',
                   border: 'none',
@@ -534,7 +451,7 @@ const PreOrderDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: 10 units (pre-order limit)
+              Max: {product.stock} units
             </span>
           </div>
 
@@ -546,7 +463,7 @@ const PreOrderDetail: React.FC = () => {
           }}>
             <button
               onClick={handleAddToCart}
-              disabled={addingToCart}
+              disabled={addingToCart || product.stock === 0}
               style={{
                 flex: 1,
                 padding: '15px 30px',
@@ -556,12 +473,13 @@ const PreOrderDetail: React.FC = () => {
                 borderRadius: '8px',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                cursor: addingToCart ? 'not-allowed' : 'pointer',
+                cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
+                opacity: product.stock === 0 ? 0.5 : 1,
                 boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
               }}
               onMouseEnter={(e) => {
-                if (!addingToCart) {
+                if (!addingToCart && product.stock > 0) {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #E64A19, #D84315)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
@@ -573,7 +491,7 @@ const PreOrderDetail: React.FC = () => {
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : '🚀 Pre-Order Now'}
+              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : ' Pre-Order Now'}
             </button>
 
             <button
@@ -601,11 +519,11 @@ const PreOrderDetail: React.FC = () => {
             >
               {product && likedProductIds.includes(Number(product.product_id)) ? (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0-7.78z"></path>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
               ) : (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0-7.78z"></path>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
               )}
             </button>
@@ -616,7 +534,7 @@ const PreOrderDetail: React.FC = () => {
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>Pre-Order Details</h4>
+            <h4 style={{ marginBottom: '15px' }}>Product Details</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -624,12 +542,33 @@ const PreOrderDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Category:</strong> {product.category}</div>
-              <div><strong>Fandom:</strong> {product.fandom}</div>
-              <div><strong>Stock:</strong> Unlimited (Pre-Order)</div>
+              <div><strong>Stock:</strong> {product.stock} units</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
-              <div><strong>Release Date:</strong> {formatDate(product.release_date!)}</div>
-              <div><strong>Deposit Required:</strong> ฿{product.deposit_amount?.toLocaleString()}</div>
+            </div>
+          </div>
+
+          {/* Material Information */}
+          <div style={{
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '20px',
+            marginTop: '20px'
+          }}>
+            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '10px',
+              fontSize: '0.9rem',
+              color: 'var(--text-muted)'
+            }}>
+              <div><strong>Material:</strong> Premium PVC Vinyl</div>
+              <div><strong>Height:</strong> 18 cm</div>
+              <div><strong>Weight:</strong> 450g</div>
+              <div><strong>Base:</strong> 7cm x 5cm</div>
+              <div><strong>Paint:</strong> Hand-painted details</div>
+              <div><strong>Packaging:</strong> Collector's box</div>
+              <div><strong>Authenticity:</strong> Certificate included</div>
+              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
             </div>
           </div>
         </div>

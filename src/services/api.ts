@@ -48,6 +48,15 @@ export interface Payment {
   created_at: string;
 }
 
+export interface Shipment {
+  shipment_id: string;
+  order_id: string;
+  provider: string;
+  tracking_number: string;
+  label_url: string;
+  created_at: string;
+}
+
 export interface TimelineEvent {
   event_id: string;
   product_id?: string;
@@ -137,6 +146,12 @@ class APIService {
     return this.request<Order>(`/orders/${id}`);
   }
 
+  async createShippingLabel(orderId: string): Promise<Shipment> {
+    return this.request<Shipment>(`/orders/${orderId}/shipping-label`, {
+      method: 'POST',
+    });
+  }
+
   async createOrder(order: Partial<Order>): Promise<Order> {
     return this.request<Order>('/orders', {
       method: 'POST',
@@ -195,6 +210,7 @@ export const orderAPI = {
   getAll: () => api.getOrders(),
   getById: (id: string) => api.getOrderById(id),
   create: (order: Partial<Order>) => api.createOrder(order),
+  createShippingLabel: (orderId: string) => api.createShippingLabel(orderId),
 };
 
 export const paymentAPI = {

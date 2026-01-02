@@ -19,6 +19,7 @@ import { usePoints } from './hooks/usePoints';
 import UserManager from './pages/UserManager';
 import UserDetail from './pages/UserDetail';
 import PreOrderManager from './pages/PreOrderManager';
+import PreOrderDetail from './pages/PreOrderDetail';
 
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
@@ -795,6 +796,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
+            <Route path="/preorder/:id" element={<PreOrderDetail />} />
+            <Route path="/regular-products" element={<RegularProducts />} />
+            <Route path="/regular-products/:id" element={<ProductDetail />} />
             <Route path="/creators" element={<AllFandom />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/payment" element={<Payment />} />

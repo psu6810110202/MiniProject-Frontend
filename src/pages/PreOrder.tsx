@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
@@ -11,6 +11,7 @@ interface PreOrderProps {
 const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     const { t } = useLanguage();
     const { addToCart, cartItems, purchasedItems } = useCart();
+    const navigate = useNavigate();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
@@ -74,17 +75,28 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                 {preorderItems.map((item) => (
                     <div
                         key={item.id}
-                        onMouseEnter={() => setHoveredId(item.id)}
-                        onMouseLeave={() => setHoveredId(null)}
                         style={{
                             background: '#252525',
                             borderRadius: '20px',
                             overflow: 'hidden',
                             position: 'relative',
-                            transform: hoveredId === item.id ? 'translateY(-10px)' : 'translateY(0)',
-                            boxShadow: hoveredId === item.id ? '0 15px 30px rgba(255, 87, 34, 0.3)' : '0 4px 10px rgba(0,0,0,0.3)',
+                            transform: 'translateY(0)',
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
                             transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                            border: '1px solid #333'
+                            border: '1px solid #333',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                            console.log('Navigating to pre-order detail:', item.id, item.name);
+                            navigate(`/preorder/${item.id}`);
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-10px)';
+                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
                         }}
                     >
                         <div style={{ position: 'relative', height: '350px', overflow: 'hidden' }}>
@@ -116,7 +128,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
 
                         <div style={{ padding: '20px' }}>
                             <Link 
-                                to={`/product/${item.id}`}
+                                to={`/preorder/${item.id}`}
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.color = '#FF5722';

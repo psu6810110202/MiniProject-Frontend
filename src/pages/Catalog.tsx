@@ -133,7 +133,19 @@ const Catalog: React.FC = () => {
                         flexDirection: 'column',
                         cursor: 'pointer' // Add cursor pointer
                     }}
-                        onClick={() => navigate(`/product/${item.id}`)} // Navigate on card click
+                        onClick={() => {
+                            console.log('Navigating to product:', item.id, item.name, 'Category:', item.category);
+                            
+                            // Route based on product type
+                            if (item.category === 'Pre-Order') {
+                                navigate(`/preorder/${item.id}`);
+                            } else if (item.category === 'Regular Product') {
+                                navigate(`/regular-products/${item.id}`);
+                            } else {
+                                // Default for catalog items
+                                navigate(`/product/${item.id}`);
+                            }
+                        }} // Navigate on card click
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                     >
@@ -146,10 +158,55 @@ const Catalog: React.FC = () => {
                         </div>
                         <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <div>
-                                {/* Display Fandom instead of Category */}
-                                <span style={{ display: 'block', fontSize: '0.8rem', color: '#FF5722', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '5px' }}>
-                                    {item.fandom}
-                                </span>
+                                {/* Category & Fandom Tags */}
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px',
+                                    marginBottom: '10px',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    <div style={{
+                                        padding: '4px 8px',
+                                        background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
+                                        color: 'white',
+                                        borderRadius: '12px',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 'bold',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '3px'
+                                    }}>
+                                        🎭 {item.fandom}
+                                    </div>
+                                    <div style={{
+                                        padding: '4px 8px',
+                                        background: 'linear-gradient(135deg, #2196F3, #1976D2)',
+                                        color: 'white',
+                                        borderRadius: '12px',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 'bold',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '3px'
+                                    }}>
+                                        📁 {item.category}
+                                    </div>
+                                    {item.category === 'Pre-Order' && (
+                                        <div style={{
+                                            padding: '4px 8px',
+                                            background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                                            color: 'white',
+                                            borderRadius: '12px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '3px'
+                                        }}>
+                                            🚀 Pre-Order
+                                        </div>
+                                    )}
+                                </div>
                                 <h3
                                     style={{
                                         margin: '5px 0 10px 0',
@@ -158,7 +215,6 @@ const Catalog: React.FC = () => {
                                         display: 'inline-block'
                                     }}
                                 >{item.name}</h3>
-                                <div style={{ fontSize: '0.9rem', color: '#888' }}>{item.category}</div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>

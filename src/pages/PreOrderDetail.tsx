@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
+import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { productAPI, type Product } from '../services/api';
-import { preorderItems } from '../data/preorderData';
-import { regularProducts } from '../data/regularProducts';
+import { useLanguage } from '../contexts/LanguageContext';
 
-const ProductDetail: React.FC = () => {
+const PreOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
-  const { items, likedProductIds, toggleLikeProduct } = useProducts();
+  const { likedProductIds, toggleLikeProduct } = useProducts();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -19,27 +20,20 @@ const ProductDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // Convert Item to Product format
-  const convertItemToProduct = (item: any): Product => {
-    const numericPrice = typeof item.price === 'string'
-      ? parseInt(item.price.replace('฿', '').replace(',', '')) || 0
-      : (item.price || 0);
-
-    // Check if this is a pre-order item
-    const isPreOrderItem = item.deposit !== undefined || item.releaseDate !== undefined;
-
+  // Convert PreOrderItem to Product format
+  const convertPreOrderToProduct = (item: PreOrderItem): Product => {
     return {
-      product_id: item.id?.toString() || 'unknown',
+      product_id: item.id.toString(),
       name: item.name,
-      description: item.description || `${item.name} - High quality ${item.category || 'collectible'} from ${item.fandom || 'Exclusive'} collection. Perfect for collectors and fans.`,
-      price: numericPrice,
-      category: item.category || (isPreOrderItem ? 'Pre-Order' : 'Regular'),
-      fandom: item.fandom || 'Exclusive',
+      description: item.description || `${item.name} - Exclusive pre-order item from our premium collection. Limited availability.`,
+      price: item.price,
+      category: 'Pre-Order',
+      fandom: 'Exclusive',
       image: item.image,
-      stock: isPreOrderItem ? 100 : (item.stock || Math.floor(Math.random() * 50) + 10),
-      is_preorder: isPreOrderItem,
-      release_date: item.releaseDate || new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      deposit_amount: item.deposit || Math.floor(numericPrice * 0.2),
+      stock: 100, // Pre-orders typically have unlimited stock
+      is_preorder: true,
+      release_date: item.releaseDate,
+      deposit_amount: item.deposit,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -47,101 +41,67 @@ const ProductDetail: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      loadProduct(id);
+      loadPreOrderProduct(id);
     }
-  }, [id, items]);
+  }, [id]);
 
-  const loadProduct = async (productId: string) => {
-    console.log('Loading product with ID:', productId);
-    console.log('Available items in context:', items);
+  const loadPreOrderProduct = async (productId: string) => {
+    console.log('Loading pre-order product with ID:', productId);
     console.log('Available preorder items:', preorderItems);
-    console.log('Available regular products:', regularProducts);
     
     try {
       setLoading(true);
 
-      // First, try to find product in ProductContext items (catalog items)
-      const contextItem = items.find(item =>
-        item.id?.toString() === productId
-      );
-
-      console.log('Found context item:', contextItem);
-
-      if (contextItem) {
-        const convertedProduct = convertItemToProduct(contextItem);
-        console.log('Converted product:', convertedProduct);
-        setProduct(convertedProduct);
-        setError(null);
-        return;
-      }
-
-      // If not found in catalog, check if this might be a pre-order or regular product
-      // But only search in appropriate data sources based on context
-      let foundItem = null;
-
-      // Check pre-order items first (since they have lower IDs 1-50)
+      // Find product in pre-order items only
       const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
       console.log('Found preorder item:', preOrderItem);
-      
+
       if (preOrderItem) {
-        const convertedProduct = convertItemToProduct(preOrderItem);
+        const convertedProduct = convertPreOrderToProduct(preOrderItem);
+        console.log('Converted pre-order product:', convertedProduct);
         setProduct(convertedProduct);
         setError(null);
-        return;
-      }
-
-      // Then check regular products (IDs 101+)
-      const regularProduct = regularProducts.find(item => item.id.toString() === productId);
-      console.log('Found regular product:', regularProduct);
-      
-      if (regularProduct) {
-        const convertedProduct = convertItemToProduct(regularProduct);
-        setProduct(convertedProduct);
-        setError(null);
-        return;
-      }
-
-      // If still not found, try API as last resort
-      try {
-        console.log('Trying API...');
-        const data = await productAPI.getById(productId);
-        setProduct(data);
-        setError(null);
-        return;
-      } catch (apiError) {
-        console.log('API failed, using fallback');
-        // Use fallback data if nothing else works
-        const fallbackProduct: Product = {
-          product_id: productId,
-          name: 'Product Not Found',
-          description: 'The requested product could not be found in our catalog. Please check the product ID or return to catalog and select a valid product.',
-          price: 0,
-          category: 'Unknown',
-          fandom: 'Unknown',
-          image: '/api/placeholder/400/400',
-          stock: 0,
-          is_preorder: false,
-          release_date: new Date().toISOString().split('T')[0],
-          deposit_amount: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setProduct(fallbackProduct);
-        setError('Product not found in catalog. Please return to catalog and select a valid product.');
+      } else {
+        // Try API as fallback
+        try {
+          console.log('Trying API...');
+          const data = await productAPI.getById(productId);
+          setProduct(data);
+          setError(null);
+        } catch (apiError) {
+          console.log('API failed, using fallback');
+          const fallbackProduct: Product = {
+            product_id: productId,
+            name: 'Pre-Order Not Found',
+            description: 'The requested pre-order item could not be found. Please check the pre-order page and select a valid item.',
+            price: 0,
+            category: 'Pre-Order',
+            fandom: 'Unknown',
+            image: '/api/placeholder/400/400',
+            stock: 0,
+            is_preorder: true,
+            release_date: new Date().toISOString().split('T')[0],
+            deposit_amount: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          setProduct(fallbackProduct);
+          setError('Pre-order item not found. Please return to the pre-order page.');
+        }
       }
     } catch (err) {
-      console.error('Failed to load product:', err);
-      setError('Failed to load product');
+      console.error('Failed to load pre-order product:', err);
+      setError('Failed to load pre-order product');
       const fallbackProduct: Product = {
         product_id: productId,
-        name: 'Error Loading Product',
-        description: 'An error occurred while loading this product. Please try again later.',
+        name: 'Error Loading Pre-Order',
+        description: 'An error occurred while loading this pre-order. Please try again later.',
         price: 0,
-        category: 'Error',
+        category: 'Pre-Order',
         fandom: 'Error',
         image: '/api/placeholder/400/400',
         stock: 0,
-        is_preorder: false,
+        is_preorder: true,
         release_date: new Date().toISOString().split('T')[0],
         deposit_amount: 0,
         created_at: new Date().toISOString(),
@@ -168,7 +128,6 @@ const ProductDetail: React.FC = () => {
         image: product.image
       });
 
-      // Show success feedback
       setTimeout(() => {
         setAddingToCart(false);
       }, 1000);
@@ -207,7 +166,7 @@ const ProductDetail: React.FC = () => {
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
-        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>Loading product details...</div>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>Loading pre-order details...</div>
         <div style={{
           width: '40px',
           height: '40px',
@@ -239,8 +198,8 @@ const ProductDetail: React.FC = () => {
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
-        <h2>Product not found</h2>
-        <Link to="/catalog" style={{ color: '#FF5722' }}>Back to Catalog</Link>
+        <h2>Pre-Order Not Found</h2>
+        <Link to="/preorder" style={{ color: '#FF5722' }}>Back to Pre-Orders</Link>
       </div>
     );
   }
@@ -260,7 +219,7 @@ const ProductDetail: React.FC = () => {
       }}>
         <Link to="/" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/catalog" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Catalog</Link>
+        <Link to="/preorder" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Pre-Orders</Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
       </div>
@@ -345,12 +304,10 @@ const ProductDetail: React.FC = () => {
 
         {/* Product Information */}
         <div>
-          {/* Product Name */}
           {/* Product Name with Pre-Order Badge */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
               <h1
-                onClick={() => navigate(`/product/${product.product_id}`)}
                 style={{
                   fontSize: '2rem',
                   fontWeight: 'bold',
@@ -373,62 +330,33 @@ const ProductDetail: React.FC = () => {
                 {product.name}
               </h1>
 
-              {product.is_preorder ? (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{
-                    padding: '8px 16px',
-                    background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                    color: 'white',
-                    borderRadius: '25px',
-                    fontSize: '0.85rem',
-                    fontWeight: 'bold',
-                    verticalAlign: 'middle',
-                    alignSelf: 'center',
-                    boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
-                    animation: 'pulse 2s infinite'
-                  }}>
-                    🔥 PRE-ORDER EXCLUSIVE
-                  </span>
-                  <span style={{
-                    padding: '6px 12px',
-                    background: 'rgba(255, 87, 34, 0.1)',
-                    color: '#FF5722',
-                    borderRadius: '15px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    border: '1px solid #FF5722'
-                  }}>
-                    LIMITED EDITION
-                  </span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{
-                    padding: '8px 16px',
-                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
-                    color: 'white',
-                    borderRadius: '25px',
-                    fontSize: '0.85rem',
-                    fontWeight: 'bold',
-                    verticalAlign: 'middle',
-                    alignSelf: 'center',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
-                  }}>
-                    ✅ IN STOCK - READY TO SHIP
-                  </span>
-                  <span style={{
-                    padding: '6px 12px',
-                    background: 'rgba(76, 175, 80, 0.1)',
-                    color: '#4CAF50',
-                    borderRadius: '15px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    border: '1px solid #4CAF50'
-                  }}>
-                    IMMEDIATE DELIVERY
-                  </span>
-                </div>
-              )}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <span style={{
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                  color: 'white',
+                  borderRadius: '25px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  verticalAlign: 'middle',
+                  alignSelf: 'center',
+                  boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
+                  animation: 'pulse 2s infinite'
+                }}>
+                  🔥 PRE-ORDER EXCLUSIVE
+                </span>
+                <span style={{
+                  padding: '6px 12px',
+                  background: 'rgba(255, 87, 34, 0.1)',
+                  color: '#FF5722',
+                  borderRadius: '15px',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  border: '1px solid #FF5722'
+                }}>
+                  LIMITED EDITION
+                </span>
+              </div>
             </div>
           </div>
 
@@ -436,7 +364,7 @@ const ProductDetail: React.FC = () => {
           <div style={{
             fontSize: '2rem',
             fontWeight: 'bold',
-            color: product.is_preorder ? '#FF5722' : '#4CAF50',
+            color: '#FF5722',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'baseline',
@@ -445,31 +373,17 @@ const ProductDetail: React.FC = () => {
             <div>
               ฿{product.price.toLocaleString()}
             </div>
-            {product.is_preorder && (
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                fontWeight: 'normal'
-              }}>
-                <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
-                <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
-                </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#666',
+              fontWeight: 'normal'
+            }}>
+              <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
+              <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
+              <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
               </div>
-            )}
-            {!product.is_preorder && (
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                fontWeight: 'normal'
-              }}>
-                <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>REGULAR PRICE</div>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  Ships within 2-3 business days
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Category & Fandom Tags */}
@@ -507,30 +421,26 @@ const ProductDetail: React.FC = () => {
             }}>
               🎭 {product.fandom}
             </div>
-            {product.is_preorder && (
-              <div style={{
-                padding: '6px 12px',
-                background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                color: 'white',
-                borderRadius: '20px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                boxShadow: '0 2px 8px rgba(255, 87, 34, 0.3)'
-              }}>
-                🚀 Pre-Order
-              </div>
-            )}
+            <div style={{
+              padding: '6px 12px',
+              background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+              color: 'white',
+              borderRadius: '20px',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 2px 8px rgba(255, 87, 34, 0.3)'
+            }}>
+              🚀 Pre-Order
+            </div>
           </div>
 
-          {/* Product Type & Status */}
+          {/* Pre-Order Status */}
           <div style={{
-            background: product.is_preorder ? 
-              'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 87, 34, 0.05))' : 
-              'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05))',
-            border: `1px solid ${product.is_preorder ? '#FF5722' : '#4CAF50'}`,
+            background: 'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 87, 34, 0.05))',
+            border: '1px solid #FF5722',
             borderRadius: '12px',
             padding: '15px',
             marginBottom: '20px',
@@ -539,35 +449,27 @@ const ProductDetail: React.FC = () => {
             alignItems: 'center'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.5rem' }}>
-                {product.is_preorder ? '🚀' : '📦'}
-              </span>
+              <span style={{ fontSize: '1.5rem' }}>🚀</span>
               <div>
                 <div style={{
                   fontSize: '0.9rem',
                   fontWeight: 'bold',
-                  color: product.is_preorder ? '#FF5722' : '#4CAF50'
+                  color: '#FF5722'
                 }}>
-                  {product.is_preorder ? 'PRE-ORDER' : 'IN STOCK'}
+                  PRE-ORDER EXCLUSIVE
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                  {product.is_preorder ? 
-                    `Release: ${formatDate(product.release_date!)}` : 
-                    `Ships in 2-3 days`
-                  }
+                  Release: {formatDate(product.release_date!)}
                 </div>
               </div>
             </div>
-            {product.is_preorder && (
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>Deposit</div>
-                <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#FF5722' }}>
-                  ฿{product.deposit_amount?.toLocaleString()}
-                </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.8rem', color: '#999' }}>Deposit</div>
+              <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#FF5722' }}>
+                ฿{product.deposit_amount?.toLocaleString()}
               </div>
-            )}
+            </div>
           </div>
-
 
           {/* Description */}
           <div style={{ marginBottom: '20px' }}>
@@ -618,7 +520,7 @@ const ProductDetail: React.FC = () => {
                 {quantity}
               </div>
               <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                onClick={() => setQuantity(quantity + 1)}
                 style={{
                   padding: '10px 15px',
                   border: 'none',
@@ -632,7 +534,7 @@ const ProductDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock} units
+              Max: 10 units (pre-order limit)
             </span>
           </div>
 
@@ -644,42 +546,34 @@ const ProductDetail: React.FC = () => {
           }}>
             <button
               onClick={handleAddToCart}
-              disabled={addingToCart || product.stock === 0}
+              disabled={addingToCart}
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' : 
-                         product.is_preorder ? 'linear-gradient(135deg, #FF5722, #E64A19)' : 
-                         '#FF5722',
+                background: addingToCart ? '#4CAF50' : 'linear-gradient(135deg, #FF5722, #E64A19)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
+                cursor: addingToCart ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
-                opacity: product.stock === 0 ? 0.5 : 1,
-                boxShadow: product.is_preorder ? '0 4px 16px rgba(255, 87, 34, 0.3)' : 'none'
+                boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
               }}
               onMouseEnter={(e) => {
-                if (!addingToCart && product.stock > 0) {
-                  e.currentTarget.style.background = product.is_preorder ? 
-                    'linear-gradient(135deg, #E64A19, #D84315)' : '#E64A19';
+                if (!addingToCart) {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #E64A19, #D84315)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!addingToCart) {
-                  e.currentTarget.style.background = product.is_preorder ? 
-                    'linear-gradient(135deg, #FF5722, #E64A19)' : '#FF5722';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #FF5722, #E64A19)';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : 
-               product.stock === 0 ? 'Out of Stock' : 
-               (product.is_preorder ? '🚀 Pre-Order Now' : '🛒 Add to Cart')
-              }
+              {addingToCart ? '✓ Added to Cart' : '🚀 Pre-Order Now'}
             </button>
 
             <button
@@ -687,11 +581,11 @@ const ProductDetail: React.FC = () => {
                 if (product?.product_id) toggleLikeProduct(Number(product.product_id));
               }}
               style={{
-                width: '60px', // Fixed width for square look
+                width: '60px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '0', // Reset padding
+                padding: '0',
                 background: 'transparent',
                 border: '2px solid #FF5722',
                 borderRadius: '8px',
@@ -707,11 +601,11 @@ const ProductDetail: React.FC = () => {
             >
               {product && likedProductIds.includes(Number(product.product_id)) ? (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0-7.78z"></path>
                 </svg>
               ) : (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0-7.78z"></path>
                 </svg>
               )}
             </button>
@@ -722,7 +616,7 @@ const ProductDetail: React.FC = () => {
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>Product Details</h4>
+            <h4 style={{ marginBottom: '15px' }}>Pre-Order Details</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -732,33 +626,10 @@ const ProductDetail: React.FC = () => {
             }}>
               <div><strong>Category:</strong> {product.category}</div>
               <div><strong>Fandom:</strong> {product.fandom}</div>
-              <div><strong>Stock:</strong> {product.stock} units</div>
+              <div><strong>Stock:</strong> Unlimited (Pre-Order)</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
-            </div>
-          </div>
-
-          {/* Material Information */}
-          <div style={{
-            borderTop: '1px solid var(--border-color)',
-            paddingTop: '20px',
-            marginTop: '20px'
-          }}>
-            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '10px',
-              fontSize: '0.9rem',
-              color: 'var(--text-muted)'
-            }}>
-              <div><strong>Material:</strong> Premium PVC Vinyl</div>
-              <div><strong>Height:</strong> 18 cm</div>
-              <div><strong>Weight:</strong> 450g</div>
-              <div><strong>Base:</strong> 7cm x 5cm</div>
-              <div><strong>Paint:</strong> Hand-painted details</div>
-              <div><strong>Packaging:</strong> Collector's box</div>
-              <div><strong>Authenticity:</strong> Certificate included</div>
-              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
+              <div><strong>Release Date:</strong> {formatDate(product.release_date!)}</div>
+              <div><strong>Deposit Required:</strong> ฿{product.deposit_amount?.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -767,4 +638,4 @@ const ProductDetail: React.FC = () => {
   );
 };
 
-export default ProductDetail;
+export default PreOrderDetail;

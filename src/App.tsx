@@ -17,6 +17,7 @@ import StaffDashboard from './pages/StaffDashboard';
 import { usePoints } from './hooks/usePoints';
 
 import UserManager from './pages/UserManager';
+import UserDetail from './pages/UserDetail';
 import PreOrderManager from './pages/PreOrderManager';
 
 import { useLanguage } from './contexts/LanguageContext';
@@ -36,7 +37,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ points }) => {
   const { t, language, setLanguage } = useLanguage();
-  const { isLoggedIn, role, logout, user } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -804,6 +805,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UserManager />} />
+            <Route path="/admin/users/:id" element={<UserDetail />} />
             <Route path="/admin/preorders" element={<PreOrderManager />} />
             <Route path="/admin/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
             <Route path="/admin/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />

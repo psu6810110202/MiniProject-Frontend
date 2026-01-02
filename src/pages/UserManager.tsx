@@ -6,7 +6,6 @@ const UserManager: React.FC = () => {
     const { role } = useAuth();
     const navigate = useNavigate();
     const [users, setUsers] = useState<any[]>([]);
-    const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
     // Redirect if not admin
     useEffect(() => {
@@ -21,106 +20,11 @@ const UserManager: React.FC = () => {
         setUsers(Object.values(db));
     }, []);
 
-    const handleToggleBlacklist = () => {
-        if (!selectedUser) return;
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        if (db[selectedUser.id]) {
-            db[selectedUser.id].isBlacklisted = !db[selectedUser.id].isBlacklisted;
-            localStorage.setItem('mock_users_db', JSON.stringify(db));
 
-            // Update local state
-            setSelectedUser(db[selectedUser.id]);
-            setUsers(Object.values(db));
-        }
-    };
 
     if (role !== 'admin') return null;
 
-    // --- User Detail View ---
-    if (selectedUser) {
-        const userOrders = JSON.parse(localStorage.getItem(`userOrders_${selectedUser.id}`) || '[]');
 
-        return (
-            <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', color: 'var(--text-main)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                    <button
-                        onClick={() => setSelectedUser(null)}
-                        style={{ background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >
-                        ← Back to User List
-                    </button>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button
-                            onClick={handleToggleBlacklist}
-                            style={{
-                                padding: '10px 20px',
-                                background: selectedUser.isBlacklisted ? '#4CAF50' : '#333',
-                                color: 'white',
-                                border: '1px solid #555',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold'
-                            }}>
-                            {selectedUser.isBlacklisted ? 'Remove from Blacklist' : '🚫 Blacklist User'}
-                        </button>
-                    </div>
-                </div>
-
-                <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    User Details: {selectedUser.username || selectedUser.name}
-                    {selectedUser.isBlacklisted && <span style={{ fontSize: '1rem', background: '#F44336', color: 'white', padding: '5px 10px', borderRadius: '15px' }}>Blacklisted</span>}
-                </h1>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-                    <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
-                        <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>Account Info</h3>
-                        <p><strong>ID:</strong> {selectedUser.id}</p>
-                        <p><strong>Username:</strong> {selectedUser.username || '-'}</p>
-                        <p><strong>Email:</strong> {selectedUser.email}</p>
-                        <p><strong>Password:</strong> {selectedUser.password ? String(selectedUser.password) : '<No Password>'}</p>
-                        <p><strong>Points:</strong> {selectedUser.points || 0}</p>
-                    </div>
-
-                    <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
-                        <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>Contact & Address</h3>
-                        <p><strong>Full Name:</strong> {selectedUser.name || '-'}</p>
-                        <p><strong>Phone:</strong> {selectedUser.phone || '-'}</p>
-                        <p><strong>Address:</strong> {selectedUser.house_number ? `${selectedUser.house_number}, ${selectedUser.sub_district || ''}, ${selectedUser.district || ''}, ${selectedUser.province || ''}` : 'No address set'}</p>
-                    </div>
-                </div>
-
-                <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>Order History</h3>
-                <div style={{ overflowX: 'auto', background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
-                    {userOrders.length > 0 ? (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '1px solid #444' }}>
-                                    <th style={{ padding: '10px' }}>Order ID</th>
-                                    <th style={{ padding: '10px' }}>Date</th>
-                                    <th style={{ padding: '10px' }}>Items</th>
-                                    <th style={{ padding: '10px' }}>Total</th>
-                                    <th style={{ padding: '10px' }}>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {userOrders.map((order: any) => (
-                                    <tr key={order.id} style={{ borderBottom: '1px solid #333' }}>
-                                        <td style={{ padding: '10px' }}>#{order.id}</td>
-                                        <td style={{ padding: '10px' }}>{new Date(order.date).toLocaleDateString()}</td>
-                                        <td style={{ padding: '10px' }}>{order.items?.length || 0}</td>
-                                        <td style={{ padding: '10px' }}>฿{order.total?.toLocaleString()}</td>
-                                        <td style={{ padding: '10px', color: '#4CAF50' }}>{order.status}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p style={{ color: '#888' }}>No orders found for this user.</p>
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     // --- User List View ---
     const activeUsers = users.filter(u => !u.isBlacklisted && !u.deletedAt);
@@ -135,20 +39,10 @@ const UserManager: React.FC = () => {
 
             // Update local state
             setUsers(Object.values(db));
-            if (selectedUser && selectedUser.id === userId) setSelectedUser(null);
         }
     };
 
-    const handlePermanentDelete = (userId: string) => {
-        if (!window.confirm('This will permanently delete the user data. Continue?')) return;
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        if (db[userId]) {
-            delete db[userId];
-            localStorage.setItem('mock_users_db', JSON.stringify(db));
-            setUsers(Object.values(db));
-            if (selectedUser && selectedUser.id === userId) setSelectedUser(null);
-        }
-    };
+
 
     const UserTable = ({ list, emptyMsg, type }: { list: any[], emptyMsg: string, type: 'active' | 'blacklist' | 'deleted' }) => (
         <div style={{
@@ -187,7 +81,7 @@ const UserManager: React.FC = () => {
                                         <button onClick={() => handleRestoreUser(user.id)} style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Restore</button>
                                     </>
                                 ) : (
-                                    <button onClick={() => setSelectedUser(user)} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
+                                    <button onClick={() => navigate('/admin/users/' + user.id)} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
                                 )}
                             </td>
                         </tr>

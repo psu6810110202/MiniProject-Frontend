@@ -17,6 +17,9 @@ interface User {
     facebook?: string;
     twitter?: string;
     line?: string;
+    facebookName?: string;
+    twitterName?: string;
+    lineName?: string;
 }
 
 interface AuthContextType {

@@ -17,7 +17,7 @@ const AdminDashboard: React.FC = () => {
     // Redirect if not admin
     React.useEffect(() => {
         if (role !== 'admin') {
-            navigate('/');
+            navigate('/profile');
         }
     }, [role, navigate]);
 
@@ -67,7 +67,7 @@ const AdminDashboard: React.FC = () => {
                         <p style={{ color: '#888' }}>View and manage registered users.</p>
                     </div>
                     <button
-                        onClick={() => navigate('/admin/users')}
+                        onClick={() => navigate('/profile/users')}
                         style={{
                             padding: '10px 25px',
                             background: '#FF5722',
@@ -192,7 +192,7 @@ const AdminDashboard: React.FC = () => {
                         <p style={{ color: '#888' }}>Organize products by category</p>
                     </div>
                     <button
-                        onClick={() => navigate('/admin/categories')}
+                        onClick={() => navigate('/profile/categories')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
@@ -221,7 +221,7 @@ const AdminDashboard: React.FC = () => {
                         <p style={{ color: '#888' }}>Edit All Fandom Section</p>
                     </div>
                     <button
-                        onClick={() => navigate('/admin/fandoms')}
+                        onClick={() => navigate('/profile/fandoms')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
@@ -250,7 +250,7 @@ const AdminDashboard: React.FC = () => {
                         <p style={{ color: '#888' }}>Total Products: {items.length}</p>
                     </div>
                     <button
-                        onClick={() => navigate('/admin/products')}
+                        onClick={() => navigate('/profile/products')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
@@ -279,7 +279,7 @@ const AdminDashboard: React.FC = () => {
                         <p style={{ color: '#888' }}>Total Items: {preOrders.length}</p>
                     </div>
                     <button
-                        onClick={() => navigate('/admin/preorders')}
+                        onClick={() => navigate('/profile/preorders')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',

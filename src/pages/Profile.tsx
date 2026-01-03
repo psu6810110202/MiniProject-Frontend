@@ -942,7 +942,7 @@ const Profile: React.FC = () => {
                                         cursor: 'pointer',
                                         transition: 'transform 0.2s'
                                     }}
-                                        onClick={() => navigate(`/catalog?fandom=${encodeURIComponent(fandomName)}`)}
+                                        onClick={() => navigate(`/fandoms/${encodeURIComponent(fandomName)}`)}
                                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                                     >

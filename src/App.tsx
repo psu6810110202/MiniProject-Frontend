@@ -9,7 +9,7 @@ import Catalog from './pages/Catalog';
 import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
-import AdminDashboard from './pages/AdminDashboard';
+// import AdminDashboard from './pages/AdminDashboard'; // AdminDashboard is used within Profile page now
 import Checkout from './pages/Checkout';
 import CallCenter from './pages/CallCenter';
 import CustomerChat from './pages/CustomerChat';
@@ -109,7 +109,7 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
           <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
-          <Link to="/creators" style={linkStyle}>All Fandom</Link>
+          <Link to="/fandoms" style={linkStyle}>All Fandom</Link>
           <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
         </div>
       </div>
@@ -514,7 +514,7 @@ const Home: React.FC = () => {
           }}>
             All Fandom
           </h2>
-          <Link to="/creators" style={{
+          <Link to="/fandoms" style={{
             color: '#FF5722',
             textDecoration: 'none',
             fontWeight: 'bold',
@@ -553,7 +553,7 @@ const Home: React.FC = () => {
              }
            `}</style>
           {fandoms.map((f, i) => (
-            <Link key={i} to="/catalog" style={{ textDecoration: 'none' }}>
+            <Link key={i} to={`/fandoms/${encodeURIComponent(f.name)}`} style={{ textDecoration: 'none' }}>
               <div style={{
                 flex: '0 0 220px', // Smaller cards
                 cursor: 'pointer',
@@ -730,7 +730,7 @@ const Footer: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('about')}</Link>
               <Link to="/updates" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('updates')}</Link>
-              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('for_creators')}</Link>
+              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('for_fandoms')}</Link>
             </div>
           </div>
 
@@ -752,6 +752,7 @@ import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 
 import AllFandom from './pages/AllFandom';
+import FandomDetail from './pages/FandomDetail';
 import RegularProducts from './pages/RegularProducts';
 
 import ProductDetail from './pages/ProductDetail';
@@ -820,7 +821,8 @@ function App() {
             <Route path="/preorder/:id" element={<PreOrderDetail />} />
             <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/regular-products/:id" element={<ProductDetail />} />
-            <Route path="/creators" element={<AllFandom />} />
+            <Route path="/fandoms" element={<AllFandom />} />
+            <Route path="/fandoms/:name" element={<FandomDetail />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
@@ -828,14 +830,14 @@ function App() {
             <Route path="/about" element={<AboutUs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<UserManager />} />
-            <Route path="/admin/users/:id" element={<UserDetail />} />
-            <Route path="/admin/preorders" element={<PreOrderManager />} />
-            <Route path="/admin/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
-            <Route path="/admin/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />
-            <Route path="/admin/fandoms" element={<FandomList />} />
-            <Route path="/admin/fandom/:name" element={<FandomManager />} />
+            {/* Admin Routes moved to /profile path */}
+            <Route path="/profile/users" element={<UserManager />} />
+            <Route path="/profile/users/:id" element={<UserDetail />} />
+            <Route path="/profile/preorders" element={<PreOrderManager />} />
+            <Route path="/profile/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
+            <Route path="/profile/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />
+            <Route path="/profile/fandoms" element={<FandomList />} />
+            <Route path="/profile/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/call-center" element={<CallCenter />} />

@@ -135,7 +135,7 @@ const translations: Record<Language, Translations> = {
         support: 'Support',
         all_products: 'All Products',
         vinyl_figures: 'Vinyl Figures',
-        for_creators: 'For Creators',
+        for_fandoms: 'For Fandoms',
         track_order: 'Track Your Order',
 
         // Login/Register
@@ -230,7 +230,7 @@ const translations: Record<Language, Translations> = {
         support: 'ช่วยเหลือ',
         all_products: 'สินค้าทั้งหมด',
         vinyl_figures: 'หุ่นไวนิล',
-        for_creators: 'สำหรับศิลปิน',
+        for_fandoms: 'สำหรับแฟนดอม',
         help_center: 'Help center',
         track_order: 'ติดตามคำสั่งซื้อ',
 

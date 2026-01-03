@@ -155,8 +155,8 @@ const Login: React.FC = () => {
                 }
             } else {
                 // If login failed here, it likely means password was wrong OR user truly not found
-                const errorJson = await loginResponse.json().catch(() => ({}));
-                // console.warn("Restore login check failed:", errorJson);
+                // We just swallow the error here as we fall through to local check
+                await loginResponse.json().catch(() => ({}));
             }
         } catch (apiErr: any) {
             console.error("API Restore flow failed", apiErr);

@@ -35,9 +35,31 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const [items, setItems] = useState<Item[]>(mockItems);
     const [preOrders, setPreOrders] = useState<PreOrderItem[]>(preorderItems);
-    const [fandoms, setFandoms] = useState<string[]>(() => Array.from(new Set(mockItems.map(i => i.fandom))));
+    const [fandoms, setFandoms] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('fandoms'));
+            const initial = Array.from(new Set(mockItems.map(i => i.fandom)));
+            return saved ? Array.from(new Set([...initial, ...JSON.parse(saved)])) : initial;
+        } catch {
+            return Array.from(new Set(mockItems.map(i => i.fandom)));
+        }
+    });
 
-    const [fandomImages, setFandomImages] = useState<Record<string, string>>({});
+    const [fandomImages, setFandomImages] = useState<Record<string, string>>(() => {
+        try {
+            const saved = localStorage.getItem(getStorageKey('fandomImages'));
+            return saved ? JSON.parse(saved) : {};
+        } catch { return {}; }
+    });
+
+    // Save Fandoms & Images
+    useEffect(() => {
+        localStorage.setItem(getStorageKey('fandoms'), JSON.stringify(fandoms));
+    }, [fandoms]);
+
+    useEffect(() => {
+        localStorage.setItem(getStorageKey('fandomImages'), JSON.stringify(fandomImages));
+    }, [fandomImages]);
 
     // --- Like System ---
     const [likedProductIds, setLikedProductIds] = useState<number[]>(() => {

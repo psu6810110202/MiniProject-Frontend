@@ -41,19 +41,14 @@ const FandomManager: React.FC = () => {
         if (name && fandomName) {
             if (fandomName !== name) {
                 updateFandomName(name, fandomName);
+                // Redirect to new URL if name changed to maintain correct state
+                navigate(`/admin/fandom/${encodeURIComponent(fandomName)}`, { replace: true });
             }
             // Save image if it changed/exists
             if (currentImage) {
-                // Determine if it's the new name or old name (if name didn't change, they are same)
-                // If name changed, updateFandomName handles name migration, but we might need to set it for the new name explicitly if we just uploaded it.
-                // However, updateFandomName migrates the *existing* key. 
-                // Best to set it for the *final* name.
                 setFandomImage(fandomName, currentImage);
             }
             alert('บันทึกสำเร็จ');
-            navigate('/admin');
-        } else {
-            navigate('/admin');
         }
     };
 

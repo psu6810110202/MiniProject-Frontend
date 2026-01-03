@@ -80,7 +80,9 @@ const AdminDashboard: React.FC = () => {
                         Manage Users
                     </button>
                 </div>
-            </div>
+            </div >
+
+
 
             {/* Management Cards Grid */}
             <div style={{
@@ -293,7 +295,7 @@ const AdminDashboard: React.FC = () => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

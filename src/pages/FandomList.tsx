@@ -26,10 +26,10 @@ const FandomList: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate('/profile')}
                 style={{ marginBottom: '20px', background: 'transparent', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1rem' }}
             >
-                ← Back to Dashboard
+                ← Back to Profile
             </button>
 
             <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>

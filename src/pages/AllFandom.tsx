@@ -6,7 +6,7 @@ const AllFandom: React.FC = () => {
     const [hoveredId, setHoveredId] = useState<string | null>(null);
 
     // Get fandoms from items and custom images
-    const { items, fandomImages } = useProducts();
+    const { items, fandomImages, likedFandoms, toggleLikeFandom } = useProducts();
     const fandoms = React.useMemo(() => {
         const unique = Array.from(new Set(items.map(item => item.fandom)));
         return unique.map(f => {
@@ -116,15 +116,45 @@ const AllFandom: React.FC = () => {
 
                             {/* Card Info */}
                             <div style={{ padding: '0 5px' }}>
-                                <h3 style={{
-                                    color: 'var(--text-main)',
-                                    fontSize: '1.4rem',
-                                    fontWeight: 'bold',
-                                    margin: '0 0 5px 0',
-                                    lineHeight: '1.2'
-                                }}>
-                                    {f.name}
-                                </h3>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3 style={{
+                                        color: 'var(--text-main)',
+                                        fontSize: '1.4rem',
+                                        fontWeight: 'bold',
+                                        margin: '0 0 5px 0',
+                                        lineHeight: '1.2'
+                                    }}>
+                                        {f.name}
+                                    </h3>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleLikeFandom(f.name);
+                                        }}
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '5px'
+                                        }}
+                                    >
+                                        <svg
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            fill={likedFandoms.includes(f.name) ? "#FF5722" : "none"}
+                                            stroke="#FF5722"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
                                     <span>Funded</span>
                                     <div style={{ height: '4px', width: '4px', borderRadius: '50%', background: '#666' }}></div>

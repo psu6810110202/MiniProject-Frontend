@@ -20,6 +20,20 @@ export const usePoints = () => {
         }
     };
 
-    return { points, addPoints, spendPoints };
+    const canUsePoints = (amount: number) => {
+        return (user?.points || 0) >= amount;
+    };
+
+    const calculatePointsFromAmount = (amount: number) => {
+        return Math.floor(amount / 100); // 1 point per 100 baht
+    };
+
+    return { 
+        points, 
+        addPoints, 
+        spendPoints, 
+        canUsePoints,
+        calculatePointsFromAmount 
+    };
 };
 

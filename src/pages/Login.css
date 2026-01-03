@@ -1,116 +1,364 @@
-/* src/pages/Login.css */
+/* Login.css */
+
+/* Main Containers */
 .login-container {
-  width: 100%;
-  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  /* ไล่สีพื้นหลังจางๆ ส้ม-ดำ */
-  background: radial-gradient(circle at center, #2a1005 0%, var(--bg-color) 70%);
+  align-items: center;
+  min-height: calc(100vh - 70px);
+  background: radial-gradient(circle at center, rgba(255, 87, 34, 0.25) 0%, #ffffff 70%);
+  /* Light Mode Default */
+  padding: 20px;
   font-family: 'Inter', sans-serif;
-  transition: background 0.3s;
+  transition: background 0.3s ease;
+}
+
+:root[data-theme='dark'] .login-container {
+  background: radial-gradient(circle at center, rgba(255, 87, 34, 0.4) 0%, #000000 70%);
 }
 
 .login-card {
-  background: var(--card-bg);
+  background: #ffffff;
   padding: 40px;
   border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* เงาเข้มขึ้นให้ดูลอย */
+  box-shadow: 0 10px 40px rgba(255, 87, 34, 0.15);
   width: 100%;
   max-width: 400px;
   text-align: center;
-  border: 1px solid var(--border-color);
-  transition: background 0.3s, border 0.3s;
+  color: #333333;
+  border: 1px solid #ffe0b2;
+  transition: all 0.3s ease;
 }
 
+:root[data-theme='dark'] .login-card {
+  background: #1a1a1a;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  border: 1px solid #333;
+}
+
+/* Typography & Elements */
 .login-title {
+  margin-bottom: 10px;
   font-size: 2rem;
+  color: #FF5722;
   font-weight: 800;
-  color: var(--primary-color); /* หัวข้อสีส้ม */
-  margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
-.login-subtitle {
-  color: var(--text-muted);
+.login-desc {
+  color: #888888;
   margin-bottom: 30px;
   font-size: 0.95rem;
 }
 
-.form-group {
+:root[data-theme='dark'] .login-desc {
+  color: #a0a0a0;
+}
+
+.login-error {
+  padding: 12px;
+  background: rgba(211, 47, 47, 0.1);
+  border: 1px solid #d32f2f;
+  color: #d32f2f;
+  border-radius: 8px;
   margin-bottom: 20px;
+  font-size: 0.9rem;
   text-align: left;
 }
 
-.form-label {
+.login-label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: var(--text-main);
+  color: #555555;
   font-size: 0.9rem;
+  text-align: left;
 }
 
-.form-input {
+:root[data-theme='dark'] .login-label {
+  color: #e0e0e0;
+}
+
+.login-input {
   width: 100%;
   padding: 12px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
   border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f0f4f8;
+  color: #333;
   font-size: 1rem;
-  box-sizing: border-box;
-  transition: all 0.2s;
-}
-
-/* ตอนคลิกช่องกรอกข้อมูล ให้ขอบเป็นสีส้ม */
-.form-input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.25); 
+  box-sizing: border-box;
+  transition: border 0.3s;
 }
 
-.login-button {
+:root[data-theme='dark'] .login-input {
+  border-color: #ccc;
+}
+
+.login-input:focus {
+  border-color: #FF5722;
+}
+
+.password-wrapper {
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  display: flex;
+  align-items: center;
+}
+
+:root[data-theme='dark'] .password-toggle-btn {
+  color: #a0a0a0;
+}
+
+.login-btn {
   width: 100%;
   padding: 12px;
-  background-color: var(--primary-color); /* ปุ่มสีส้ม */
-  color: #fff; /* ตัวหนังสือบนปุ่มสีขาวเสมอ */
+  background: #FF5722;
+  color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.login-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #e64a19;
+}
+
+.forgot-btn {
+  background: none;
+  border: none;
+  color: #FF5722;
+  font-size: 0.85rem;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 0.3s, transform 0.2s;
+  display: inline-block;
 }
 
-.login-button:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px);
-}
-
-.login-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background-color: rgba(255, 87, 34, 0.1); /* พื้นแดงอมส้มจางๆ */
-  color: #ff5722;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
   font-size: 0.9rem;
-  border: 1px solid #ff5722;
+  color: #666;
+  text-align: left;
 }
 
-.toggle-link {
-  margin-top: 20px;
+:root[data-theme='dark'] .checkbox-wrapper {
+  color: #a0a0a0;
+}
+
+.custom-checkbox {
+  margin-right: 10px;
+  accent-color: #FF5722;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.signup-text {
+  margin-top: 25px;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #666;
 }
 
-.toggle-link a {
-  color: var(--primary-color); /* ลิงค์สีส้ม */
+:root[data-theme='dark'] .signup-text {
+  color: #888;
+}
+
+.signup-link {
+  color: #FF5722;
   text-decoration: none;
   font-weight: bold;
+}
+
+/* --- Modals (Shared Styles) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  /* Slightly darker for better contrast */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 24px;
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 2px solid transparent;
+}
+
+:root[data-theme='dark'] .modal-content {
+  background: #1a1a1a;
+  border-color: #333;
+}
+
+.modal-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.modal-desc {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  font-weight: 500;
+  color: #333;
+}
+
+:root[data-theme='dark'] .modal-desc {
+  color: #e0e0e0;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Specific Modal Variants */
+.blacklist-modal .modal-content {
+  border-color: #FF5722;
+  box-shadow: 0 20px 50px rgba(255, 87, 34, 0.3);
+}
+
+.blacklist-modal .modal-icon-wrapper {
+  background: rgba(255, 87, 34, 0.1);
+  color: #FF5722;
+}
+
+.blacklist-modal .modal-title {
+  color: #FF5722;
+}
+
+.blacklist-modal .modal-btn {
+  background: #FF5722;
+}
+
+.blacklist-modal .modal-btn:hover {
+  background: #e64a19;
+}
+
+
+.warning-modal .modal-content {
+  border-color: #FFC107;
+  box-shadow: 0 20px 50px rgba(255, 193, 7, 0.3);
+}
+
+.warning-modal .modal-icon-wrapper {
+  background: rgba(255, 193, 7, 0.1);
+  color: #FFC107;
+}
+
+.warning-modal .modal-title {
+  color: #FFC107;
+}
+
+.warning-modal .cancel-btn {
+  background: #555;
+  color: white;
+}
+
+.warning-modal .restore-btn {
+  background: #FFC107;
+  color: black;
+}
+
+
+.restore-modal .modal-content {
+  border-color: #4CAF50;
+  max-width: 400px;
+  padding: 30px;
+  background: #ffffff;
+  /* Default light */
+}
+
+:root[data-theme='dark'] .restore-modal .modal-content {
+  background: #222;
+}
+
+.restore-modal .modal-title {
+  color: #4CAF50;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.restore-modal .restore-submit-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.restore-modal .cancel-btn {
+  background: #555;
+  margin-top: 10px;
+  color: white;
+}
+
+/* Keyframes */
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

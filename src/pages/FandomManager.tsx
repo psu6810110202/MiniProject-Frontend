@@ -50,11 +50,13 @@ const FandomManager: React.FC = () => {
                 // Best to set it for the *final* name.
                 setFandomImage(fandomName, currentImage);
             }
+            alert('บันทึกสำเร็จ');
             navigate('/admin');
         } else {
             navigate('/admin');
         }
     };
+
 
     const handleDelete = () => {
         if (confirm(`Are you sure you want to delete fandom "${name}" and all its items?`)) {

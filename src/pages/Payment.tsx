@@ -5,7 +5,7 @@ import { useCart, type CartItem } from '../contexts/CartContext';
 import { type Order } from '../data/mockOrders';
 import './Payment.css';
 
-type PaymentMethodId = 'cash' | 'promptpay' | 'card';
+type PaymentMethodId = 'promptpay' | 'card' | 'qr' | 'truemoney';
 
 const Payment: React.FC = () => {
   const location = useLocation();
@@ -21,7 +21,11 @@ const Payment: React.FC = () => {
     name: user?.name || '',
     phone: user?.phone || '',
     address: (user as any)?.address || '',
-    paymentMethod: 'cash' as PaymentMethodId
+    paymentMethod: 'promptpay' as PaymentMethodId,
+    cardNumber: '',
+    cardExpiry: '',
+    cardCVV: '',
+    cardName: ''
   });
 
   useEffect(() => {
@@ -44,15 +48,17 @@ const Payment: React.FC = () => {
 
   const totals = useMemo(() => {
     const shipping = totalAmount > 1000 ? 0 : 50;
-    return { subtotal: totalAmount, shipping, total: totalAmount + shipping };
-  }, [totalAmount]);
+    const truemoneyFee = form.paymentMethod === 'truemoney' ? 10 : 0;
+    return { subtotal: totalAmount, shipping, total: totalAmount + shipping + truemoneyFee, truemoneyFee };
+  }, [totalAmount, form.paymentMethod]);
 
   const paymentMethods = useMemo(
     () =>
       [
-        { id: 'cash' as const, name: 'เงินสดปลายทาง', icon: '💵', description: 'จ่ายเมื่อได้รับสินค้า' },
-        { id: 'promptpay' as const, name: 'พร้อมเพย์', icon: '📱', description: 'สแกนจ่ายได้ทันที' },
-        { id: 'card' as const, name: 'บัตรเครดิต/เดบิต', icon: '💳', description: 'Visa / Mastercard' }
+        { id: 'card' as const, name: 'บัตรเครดิต/เดบิต', icon: '💳', description: 'Visa / Mastercard' },
+        { id: 'qr' as const, name: 'QR Payment', icon: '📱', description: 'สแกน QR Code จ่ายเงิน' },
+        { id: 'truemoney' as const, name: 'True Money Wallet', icon: '💰', description: 'บริการเงินสดพร้อมเพย์ (+10 บาท)' },
+        { id: 'promptpay' as const, name: 'พร้อมเพย์', icon: '📱', description: 'สแกนจ่ายได้ทันที' }
       ],
     []
   );
@@ -65,6 +71,20 @@ const Payment: React.FC = () => {
     if (cartItems.length === 0) {
       setError('ตะกร้าสินค้าว่าง');
       return false;
+    }
+    if (form.paymentMethod === 'card') {
+      if (!form.cardName.trim() || !form.cardNumber.trim() || !form.cardExpiry.trim() || !form.cardCVV.trim()) {
+        setError('กรุณากรอกรายละเอียดบัตรให้ครบถ้วน');
+        return false;
+      }
+      if (form.cardNumber.length !== 16) {
+        setError('เลขบัตรต้องมี 16 หลัก');
+        return false;
+      }
+      if (form.cardCVV.length !== 3) {
+        setError('CVV ต้องมี 3 หลัก');
+        return false;
+      }
     }
     return true;
   };
@@ -190,6 +210,56 @@ const Payment: React.FC = () => {
                   </button>
                 ))}
               </div>
+
+              {form.paymentMethod === 'card' && (
+                <div className="payment-card-details">
+                  <div className="payment-card__title" style={{ marginTop: '16px', fontSize: '1rem' }}>รายละเอียดบัตร</div>
+                  <div className="payment-fields">
+                    <div className="payment-field payment-field--full">
+                      <label>ชื่อบนบัตร</label>
+                      <input
+                        value={form.cardName}
+                        onChange={(e) => setForm(prev => ({ ...prev, cardName: e.target.value }))}
+                        placeholder="ชื่อเจ้าของบัตร"
+                        autoComplete="cc-name"
+                      />
+                    </div>
+                    <div className="payment-field payment-field--full">
+                      <label>เลขบัตร</label>
+                      <input
+                        value={form.cardNumber.replace(/(.{4})/g, '$1 ').trim()}
+                        onChange={(e) => setForm(prev => ({ ...prev, cardNumber: e.target.value.replace(/\s/g, '').slice(0, 16) }))}
+                        placeholder="1234 5678 9012 3456"
+                        autoComplete="cc-number"
+                        maxLength={19}
+                      />
+                    </div>
+                    <div className="payment-field">
+                      <label>วันหมดอายุ</label>
+                      <input
+                        value={form.cardExpiry.length >= 3 ? `${form.cardExpiry.slice(0, 2)}/${form.cardExpiry.slice(2, 4)}` : form.cardExpiry}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setForm(prev => ({ ...prev, cardExpiry: value }));
+                        }}
+                        placeholder="MM/YY"
+                        autoComplete="cc-exp"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div className="payment-field">
+                      <label>CVV</label>
+                      <input
+                        value={form.cardCVV}
+                        onChange={(e) => setForm(prev => ({ ...prev, cardCVV: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                        placeholder="123"
+                        autoComplete="cc-csc"
+                        maxLength={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -216,6 +286,12 @@ const Payment: React.FC = () => {
                     <span>ค่าจัดส่ง</span>
                     <span>฿{totals.shipping.toLocaleString()}</span>
                   </div>
+                  {totals.truemoneyFee > 0 && (
+                    <div className="payment-summary__totalRow">
+                      <span>ค่าธรรมเนียม True Money</span>
+                      <span>฿{totals.truemoneyFee.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="payment-summary__totalRow payment-summary__totalRow--grand">
                     <span>ยอดชำระ</span>
                     <span>฿{totals.total.toLocaleString()}</span>
@@ -223,7 +299,7 @@ const Payment: React.FC = () => {
                 </div>
 
                 <button className="payment-pay" type="submit" disabled={isProcessing}>
-                  {isProcessing ? 'กำลังดำเนินการ…' : `ชำระเงิน ฿${totals.total.toLocaleString()}`}
+                  {isProcessing ? 'กำลังดำเนินการ…' : `ยืนยันการชำระเงิน ฿${totals.total.toLocaleString()}`}
                 </button>
                 <button className="payment-back" type="button" onClick={() => navigate('/cart')} disabled={isProcessing}>
                   กลับไปตะกร้า

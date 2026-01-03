@@ -158,7 +158,7 @@ const Catalog: React.FC = () => {
                         </div>
                         <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <div>
-                                {/* Category & Fandom Tags */}
+                                {/* Fandom Tags */}
                                 <div style={{
                                     display: 'flex',
                                     gap: '8px',
@@ -177,19 +177,6 @@ const Catalog: React.FC = () => {
                                         gap: '3px'
                                     }}>
                                         🎭 {item.fandom}
-                                    </div>
-                                    <div style={{
-                                        padding: '4px 8px',
-                                        background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-                                        color: 'white',
-                                        borderRadius: '12px',
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '3px'
-                                    }}>
-                                        📁 {item.category}
                                     </div>
                                     {item.category === 'Pre-Order' && (
                                         <div style={{

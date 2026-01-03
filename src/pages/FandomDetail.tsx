@@ -136,26 +136,6 @@ const FandomDetail: React.FC = () => {
                             </div>
                             <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div>
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '8px',
-                                        marginBottom: '10px',
-                                        flexWrap: 'wrap'
-                                    }}>
-                                        <div style={{
-                                            padding: '4px 8px',
-                                            background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-                                            color: 'white',
-                                            borderRadius: '12px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '3px'
-                                        }}>
-                                            📁 {item.category}
-                                        </div>
-                                    </div>
                                     <h3 style={{
                                         margin: '5px 0 10px 0',
                                         fontSize: '1.2rem',

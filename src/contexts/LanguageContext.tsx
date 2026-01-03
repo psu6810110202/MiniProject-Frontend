@@ -331,7 +331,16 @@ const translations: Record<Language, Translations> = {
         update_statistics: 'Update Statistics',
         total_updates: 'Total Updates',
         announcements: 'Announcements',
-        events: 'Events'
+        events: 'Events',
+        // Updates page missing keys
+        news_updates: 'News & Updates',
+        updates_description: 'Stay updated with the latest news, announcements, and events from DomPort.',
+        all: 'All',
+        announcement: 'Announcement',
+        new_release: 'New Release',
+        event: 'Event',
+        delay: 'Delay',
+        no_updates_category: 'No updates found in this category.'
     },
     th: {
         home: 'หน้าหลัก',
@@ -547,6 +556,15 @@ const translations: Record<Language, Translations> = {
         total_updates: 'Total Updates',
         announcements: 'Announcements',
         events: 'Events',
+        // Updates page missing keys
+        news_updates: 'ข่าวสารและอัปเดต',
+        updates_description: 'อัปเดตข่าวสารล่าสุด ประกาศ และกิจกรรมจาก DomPort',
+        all: 'ทั้งหมด',
+        announcement: 'ประกาศ',
+        new_release: 'วางจำหน่ายใหม่',
+        event: 'กิจกรรม',
+        delay: 'เลื่อน',
+        no_updates_category: 'ไม่พบอัปเดตในหมวดหมู่นี้',
         // Footer
         shop: 'เลือกซื้อสินค้า',
         who_we_are: 'DomPort คือใคร?',

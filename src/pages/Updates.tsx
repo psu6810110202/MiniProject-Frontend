@@ -3,22 +3,30 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { updatePosts } from '../data/updatesData';
 
 const Updates: React.FC = () => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [filter, setFilter] = useState<string>(t('all'));
 
     const categories = [t('all'), t('announcement'), t('new_release'), t('event'), t('delay')];
 
+    // Create a mapping from translated category names to English data values
+    const categoryMap: { [key: string]: string } = {
+        [t('announcement')]: 'Announcement',
+        [t('new_release')]: 'New Release',
+        [t('event')]: 'Event',
+        [t('delay')]: 'Delay'
+    };
+
     const filteredPosts = filter === t('all')
         ? updatePosts
-        : updatePosts.filter(post => post.category === filter);
+        : updatePosts.filter(post => post.category === categoryMap[filter]);
 
     // Color code for categories
     const getCategoryColor = (cat: string) => {
         switch (cat) {
-            case t('announcement'): return '#FFC107'; // Amber
-            case t('new_release'): return '#4CAF50'; // Green
-            case t('event'): return '#2196F3'; // Blue
-            case t('delay'): return '#F44336'; // Red
+            case 'Announcement': return '#FFC107'; // Amber
+            case 'New Release': return '#4CAF50'; // Green
+            case 'Event': return '#2196F3'; // Blue
+            case 'Delay': return '#F44336'; // Red
             default: return '#9E9E9E';
         }
     };
@@ -89,17 +97,19 @@ const Updates: React.FC = () => {
                                 fontWeight: 'bold',
                                 textTransform: 'uppercase'
                             }}>
-                                {post.category === t('announcement') ? t('announcement') : 
-                                 post.category === t('new_release') ? t('new_release') : 
-                                 post.category === t('event') ? t('event') : 
-                                 post.category === t('delay') ? t('delay') : post.category}
+                                {post.category === 'Announcement' ? t('announcement') : 
+                                 post.category === 'New Release' ? t('new_release') : 
+                                 post.category === 'Event' ? t('event') : 
+                                 post.category === 'Delay' ? t('delay') : post.category}
                             </span>
                             <span style={{ color: '#666', fontSize: '0.9rem' }}>
                                 {post.date} • {t('by')} {post.author}
                             </span>
                         </div>
 
-                        <h2 style={{ fontSize: '1.8rem', margin: '0' }}>{post.title}</h2>
+                        <h2 style={{ fontSize: '1.8rem', margin: '0' }}>
+                            {language === 'th' && post.title_th ? post.title_th : post.title}
+                        </h2>
 
                         {post.image && (
                             <img
@@ -116,7 +126,7 @@ const Updates: React.FC = () => {
                         )}
 
                         <p style={{ lineHeight: '1.6', fontSize: '1.05rem', color: 'var(--text-secondary)' }}>
-                            {post.content}
+                            {language === 'th' && post.content_th ? post.content_th : post.content}
                         </p>
                     </div>
                 ))}

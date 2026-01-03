@@ -23,10 +23,10 @@ const FandomDetail: React.FC = () => {
 
     const handleAddToCart = (item: any) => {
         addToCart(item);
-        alert(`${item.name} added to cart!`);
+        alert(`${t('added_to_cart')}: ${item.name}`);
     };
 
-    if (!decodedName) return <div>Fandom not found</div>;
+    if (!decodedName) return <div>{t('fandom_not_found')}</div>;
 
     return (
         <div style={{
@@ -65,7 +65,7 @@ const FandomDetail: React.FC = () => {
                         />
                     ) : (
                         <div style={{ width: '100%', height: '100%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '2rem', color: '#666' }}>No Cover Image</span>
+                            <span style={{ fontSize: '2rem', color: '#666' }}>{t('no_cover_image')}</span>
                         </div>
                     )}
                     <div style={{
@@ -89,7 +89,7 @@ const FandomDetail: React.FC = () => {
                 </div>
 
                 <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
-                    {fandomItems.length} Products Available
+                    {fandomItems.length} {t('products_available')}
                 </p>
             </div>
 
@@ -194,7 +194,7 @@ const FandomDetail: React.FC = () => {
                     ))
                 ) : (
                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', color: 'var(--text-muted)' }}>
-                        <h2>No products found for this fandom.</h2>
+                        <h2>{t('no_products_fandom')}</h2>
                     </div>
                 )}
             </div>

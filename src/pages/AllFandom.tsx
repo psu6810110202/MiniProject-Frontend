@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductContext';
+import { useLanguage } from '../contexts/LanguageContext';
 const AllFandom: React.FC = () => {
+    const { t } = useLanguage();
     // Independent state for interactions, similar to PreOrder
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -37,25 +39,20 @@ const AllFandom: React.FC = () => {
                     fontWeight: '900',
                     marginBottom: '10px'
                 }}>
-                    All Fandoms
+                    {t('all_fandoms')}
                 </h1>
-                <h2 style={{
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                    color: '#FF5722',
-                    marginTop: '0'
-                }}>
-                    The Latest Drops
+                <h2 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '20px', color: 'var(--text-main)' }}>
+                    {t('the_latest_drops')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto 30px' }}>
-                    Exclusive limited-time campaigns from your favorite fandoms. Get them before they're gone!
+                    {t('fandom_description')}
                 </p>
 
                 {/* Search Bar */}
                 <div style={{ position: 'relative', maxWidth: '500px', margin: '0 auto' }}>
                     <input
                         type="text"
-                        placeholder="Search for your favorite fandom..."
+                        placeholder={t('search_fandom')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
@@ -191,9 +188,9 @@ const AllFandom: React.FC = () => {
                                         </button>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                                        <span>Funded</span>
+                                        <span>{t('funded')}</span>
                                         <div style={{ height: '4px', width: '4px', borderRadius: '50%', background: '#666' }}></div>
-                                        <span style={{ color: '#4CAF50' }}>100% Success</span>
+                                        <span style={{ color: '#4CAF50' }}>{t('success')} 100%</span>
                                     </div>
                                 </div>
                             </div>
@@ -201,7 +198,7 @@ const AllFandom: React.FC = () => {
                     ))
                 ) : (
                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                        <h3>No fandoms found matching "{searchTerm}"</h3>
+                        <h3>{t('no_fandoms_found')} "{searchTerm}"</h3>
                     </div>
                 )}
             </div>

@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const FandomList: React.FC = () => {
     const navigate = useNavigate();
     const { role } = useAuth();
     const { fandoms, addFandom } = useProducts();
+    const { t } = useLanguage();
     const [newFandomName, setNewFandomName] = useState('');
 
     React.useEffect(() => {
@@ -29,20 +31,20 @@ const FandomList: React.FC = () => {
                 onClick={() => navigate('/profile')}
                 style={{ marginBottom: '20px', background: 'transparent', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1rem' }}
             >
-                ← Back to Profile
+                ← {t('back_to_profile')}
             </button>
 
             <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
-                Manage Fandoms 🎭
+                {t('manage_fandoms')} 🎭
             </h1>
 
             {/* Add New Fandom Section */}
             <div style={{ marginBottom: '40px', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '10px' }}>
-                <h3>Add New Fandom</h3>
+                <h3>{t('add_new_fandom')}</h3>
                 <form onSubmit={handleAddFandom} style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                     <input
                         type="text"
-                        placeholder="Enter fandom name..."
+                        placeholder={t('enter_fandom_name')}
                         value={newFandomName}
                         onChange={(e) => setNewFandomName(e.target.value)}
                         style={{
@@ -63,13 +65,13 @@ const FandomList: React.FC = () => {
                         fontWeight: 'bold',
                         cursor: 'pointer'
                     }}>
-                        Add
+                        {t('add')}
                     </button>
                 </form>
             </div>
 
             {/* List of Fandoms */}
-            <h3>Available Fandoms ({fandoms.length})</h3>
+            <h3>{t('available_fandoms')} ({fandoms.length})</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
                 {fandoms.map(fandom => (
                     <div key={fandom} style={{
@@ -99,7 +101,7 @@ const FandomList: React.FC = () => {
                                 justifyContent: 'center',
                                 gap: '5px'
                             }}>
-                            Edit <span>✎</span>
+                            {t('edit')} <span>✎</span>
                         </button>
                     </div>
                 ))}

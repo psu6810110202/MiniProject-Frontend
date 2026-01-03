@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { updatePosts } from '../data/updatesData';
 
 const Updates: React.FC = () => {
-    const [filter, setFilter] = useState<string>('All');
+    const { t } = useLanguage();
+    const [filter, setFilter] = useState<string>(t('all'));
 
-    const categories = ['All', 'Announcement', 'New Release', 'Event', 'Delay'];
+    const categories = [t('all'), t('announcement'), t('new_release'), t('event'), t('delay')];
 
-    const filteredPosts = filter === 'All'
+    const filteredPosts = filter === t('all')
         ? updatePosts
         : updatePosts.filter(post => post.category === filter);
 
     // Color code for categories
     const getCategoryColor = (cat: string) => {
         switch (cat) {
-            case 'Announcement': return '#FFC107'; // Amber
-            case 'New Release': return '#4CAF50'; // Green
-            case 'Event': return '#2196F3'; // Blue
-            case 'Delay': return '#F44336'; // Red
+            case t('announcement'): return '#FFC107'; // Amber
+            case t('new_release'): return '#4CAF50'; // Green
+            case t('event'): return '#2196F3'; // Blue
+            case t('delay'): return '#F44336'; // Red
             default: return '#9E9E9E';
         }
     };
@@ -31,10 +33,12 @@ const Updates: React.FC = () => {
             margin: '0 auto'
         }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '10px' }}>
-                    <span style={{ color: '#FF5722' }}>News</span> & Updates
+                <h1 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '10px' }}>
+                    {t('news_updates')}
                 </h1>
-                <p style={{ color: 'var(--text-muted)' }}>Stay tuned with the latest happenings at DomPort.</p>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '40px' }}>
+                    {t('updates_description')}
+                </p>
             </div>
 
             {/* Filters */}
@@ -54,7 +58,7 @@ const Updates: React.FC = () => {
                             fontWeight: 'bold'
                         }}
                     >
-                        {cat}
+                        {cat === t('all') ? t('all') : cat}
                     </button>
                 ))}
             </div>
@@ -85,10 +89,13 @@ const Updates: React.FC = () => {
                                 fontWeight: 'bold',
                                 textTransform: 'uppercase'
                             }}>
-                                {post.category}
+                                {post.category === t('announcement') ? t('announcement') : 
+                                 post.category === t('new_release') ? t('new_release') : 
+                                 post.category === t('event') ? t('event') : 
+                                 post.category === t('delay') ? t('delay') : post.category}
                             </span>
                             <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                                {post.date} • by {post.author}
+                                {post.date} • {t('by')} {post.author}
                             </span>
                         </div>
 
@@ -116,7 +123,7 @@ const Updates: React.FC = () => {
 
                 {filteredPosts.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                        No updates found for this category.
+                        {t('no_updates_category')}
                     </div>
                 )}
             </div>

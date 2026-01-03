@@ -234,10 +234,10 @@ const Profile: React.FC = () => {
 
                 updateUser(updatedUser);
                 setIsEditing(false);
-                alert('Profile updated successfully!');
+                alert(t('profile_updated_successfully'));
             } catch (e) {
                 console.error("Mock update failed", e);
-                alert("Failed to update profile");
+                alert(t('failed_to_update_profile'));
             }
             setIsLoading(false);
             return;
@@ -257,21 +257,21 @@ const Profile: React.FC = () => {
                 const updatedUserData = await response.json();
                 updateUser({ ...user, ...updatedUserData });
                 setIsEditing(false);
-                alert('Profile updated successfully!');
+                alert(t('profile_updated_successfully'));
                 window.scrollTo(0, 0);
             } else if (response.status === 401) {
-                alert('Session expired. Please log in again.');
+                alert(t('session_expired_login_again'));
                 logout();
                 navigate('/login');
             } else {
                 const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
                 console.error("Update failed:", errorData);
-                alert(`Failed to update profile: ${errorData.message || response.statusText}`);
+                alert(`${t('failed_to_update_profile')}: ${errorData.message || response.statusText}`);
             }
 
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('An error occurred while updating profile');
+            alert(t('error_updating_profile'));
         } finally {
             setIsLoading(false);
         }
@@ -283,7 +283,7 @@ const Profile: React.FC = () => {
         setIsLoading(true);
 
         if (newPassword !== confirmPassword) {
-            alert('Passwords do not match');
+            alert(t('passwords_do_not_match'));
             setIsLoading(false);
             return;
         }
@@ -466,7 +466,7 @@ const Profile: React.FC = () => {
                                                 cursor: 'pointer',
                                                 width: '100%'
                                             }}>
-                                            {isEditing ? 'Cancel' : 'Edit Profile'}
+                                            {isEditing ? t('cancel') : t('edit_profile')}
                                         </button>
                                         {!isEditing && (
                                             <button
@@ -481,7 +481,7 @@ const Profile: React.FC = () => {
                                                     fontSize: '0.9rem',
                                                     width: '100%'
                                                 }}>
-                                                {isChangingPassword ? 'Cancel' : 'Change Password'}
+                                                {isChangingPassword ? t('cancel') : t('change_password')}
                                             </button>
                                         )}
                                     </>
@@ -510,60 +510,60 @@ const Profile: React.FC = () => {
                 {/* Edit Form */}
                 {isEditing && (
                     <form onSubmit={handleSubmit} style={{ marginTop: '30px', paddingTop: '30px', borderTop: '1px solid var(--border-color)' }}>
-                        <h3 style={{ color: 'var(--text-main)', marginBottom: '20px' }}>Edit Profile</h3>
+                        <h3 style={{ color: 'var(--text-main)', marginBottom: '20px' }}>{t('edit_profile')}</h3>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
-                                <label style={labelStyle}>Username</label>
+                                <label style={labelStyle}>{t('username_label')}</label>
                                 <input name="username" value={formData.username} onChange={handleAddressChange} style={inputStyle} required />
                             </div>
                             <div>
-                                <label style={labelStyle}>Full Name</label>
+                                <label style={labelStyle}>{t('full_name_label')}</label>
                                 <input name="name" value={formData.name} onChange={handleAddressChange} style={inputStyle} required />
                             </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                             <div>
-                                <label style={labelStyle}>Phone</label>
+                                <label style={labelStyle}>{t('phone_label')}</label>
                                 <input name="phone" value={formData.phone} onChange={handleAddressChange} style={inputStyle} placeholder="+66..." />
                             </div>
                         </div>
 
 
 
-                        <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>Social Media</h4>
+                        <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>{t('social_media')}</h4>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                             <div>
-                                <label style={labelStyle}>Facebook URL</label>
+                                <label style={labelStyle}>{t('facebook_url')}</label>
                                 <input name="facebook" value={formData.facebook || ''} onChange={handleAddressChange} style={inputStyle} placeholder="https://facebook.com/..." />
-                                <input name="facebookName" value={formData.facebookName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder="Facebook Name" />
+                                <input name="facebookName" value={formData.facebookName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('facebook_name_placeholder')} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Twitter URL</label>
-                                <input name="twitter" value={formData.twitter || ''} onChange={handleAddressChange} style={inputStyle} placeholder="https://twitter.com/..." />
-                                <input name="twitterName" value={formData.twitterName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder="Twitter Name" />
+                                <label style={labelStyle}>{t('twitter_url')}</label>
+                                <input name="twitter" value={formData.twitter || ''} onChange={handleAddressChange} style={inputStyle} placeholder={t('twitter_url_placeholder')} />
+                                <input name="twitterName" value={formData.twitterName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('twitter_name_placeholder')} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Line ID/URL</label>
-                                <input name="line" value={formData.line || ''} onChange={handleAddressChange} style={inputStyle} placeholder="Line ID" />
-                                <input name="lineName" value={formData.lineName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder="Line Name" />
+                                <label style={labelStyle}>{t('line_id_url')}</label>
+                                <input name="line" value={formData.line || ''} onChange={handleAddressChange} style={inputStyle} placeholder={t('line_id_placeholder')} />
+                                <input name="lineName" value={formData.lineName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('line_name_placeholder')} />
                             </div>
                         </div>
 
-                        <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>Address</h4>
+                        <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>{t('address')}</h4>
 
                         {isLoadingAddress ? (
-                            <div style={{ color: '#FF5722' }}>Loading address data...</div>
+                            <div style={{ color: '#FF5722' }}>{t('loading_address_data')}</div>
                         ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div>
-                                    <label style={labelStyle}>House Number</label>
+                                    <label style={labelStyle}>{t('house_number')}</label>
                                     <input name="house_number" value={formData.house_number} onChange={handleAddressChange} style={inputStyle} placeholder="123/45 Village No.1" />
                                 </div>
 
                                 <div>
-                                    <label style={labelStyle}>Province</label>
+                                    <label style={labelStyle}>{t('province')}</label>
                                     <SearchableSelect
                                         options={thaiAddressData.map(p => ({ value: p.name_th, label: p.name_th }))}
                                         value={formData.province}
@@ -580,12 +580,12 @@ const Profile: React.FC = () => {
                                                 postal_code: ''
                                             }));
                                         }}
-                                        placeholder="Select Province"
+                                        placeholder={t('select_province')}
                                     />
                                 </div>
 
                                 <div>
-                                    <label style={labelStyle}>District</label>
+                                    <label style={labelStyle}>{t('district')}</label>
                                     <SearchableSelect
                                         options={getDistricts().map(d => ({ value: d.name_th, label: d.name_th }))}
                                         value={formData.district}
@@ -598,12 +598,12 @@ const Profile: React.FC = () => {
                                             }));
                                         }}
                                         disabled={!formData.province}
-                                        placeholder="Select District"
+                                        placeholder={t('select_district')}
                                     />
                                 </div>
 
                                 <div>
-                                    <label style={labelStyle}>Sub-district</label>
+                                    <label style={labelStyle}>{t('sub_district')}</label>
                                     <SearchableSelect
                                         options={getSubDistricts().map(s => ({ value: s.name_th, label: s.name_th }))}
                                         value={formData.sub_district}
@@ -616,12 +616,12 @@ const Profile: React.FC = () => {
                                             }));
                                         }}
                                         disabled={!formData.district}
-                                        placeholder="Select Sub-district"
+                                        placeholder={t('select_sub_district')}
                                     />
                                 </div>
 
                                 <div>
-                                    <label style={labelStyle}>Postal Code</label>
+                                    <label style={labelStyle}>{t('postal_code')}</label>
                                     <input name="postal_code" value={formData.postal_code} readOnly style={{ ...inputStyle, background: '#333', cursor: 'not-allowed' }} placeholder="Auto-filled" />
                                 </div>
                             </div>
@@ -641,7 +641,7 @@ const Profile: React.FC = () => {
                                     cursor: isLoading ? 'not-allowed' : 'pointer',
                                     opacity: isLoading ? 0.7 : 1
                                 }}>
-                                {isLoading ? 'Saving...' : 'Save Changes'}
+                                {isLoading ? t('saving') : t('save_changes')}
                             </button>
                         </div>
                     </form>
@@ -650,17 +650,17 @@ const Profile: React.FC = () => {
                 {/* Password Change Form */}
                 {isChangingPassword && (
                     <form onSubmit={handlePasswordSubmit} style={{ marginTop: '30px', paddingTop: '30px', borderTop: '1px solid var(--border-color)' }}>
-                        <h3 style={{ color: 'var(--text-main)', marginBottom: '20px' }}>Change Password</h3>
+                        <h3 style={{ color: 'var(--text-main)', marginBottom: '20px' }}>{t('change_password')}</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <div>
-                                <label style={labelStyle}>New Password</label>
+                                <label style={labelStyle}>{t('new_password')}</label>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type={showNewPassword ? 'text' : 'password'}
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         style={{ ...inputStyle, paddingRight: '40px' }}
-                                        placeholder="New password"
+                                        placeholder={t('new_password_placeholder')}
                                         required
                                     />
                                     <button
@@ -694,14 +694,14 @@ const Profile: React.FC = () => {
                                 </div>
                             </div>
                             <div>
-                                <label style={labelStyle}>Confirm Password</label>
+                                <label style={labelStyle}>{t('confirm_password_label')}</label>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         style={{ ...inputStyle, paddingRight: '40px' }}
-                                        placeholder="Confirm new password"
+                                        placeholder={t('confirm_new_password_placeholder')}
                                         required
                                     />
                                     <button
@@ -748,7 +748,7 @@ const Profile: React.FC = () => {
                                     fontWeight: 'bold',
                                     cursor: isLoading ? 'not-allowed' : 'pointer'
                                 }}>
-                                {isLoading ? 'Saving...' : 'Update Password'}
+                                {isLoading ? t('saving') : t('update_password')}
                             </button>
                         </div>
                     </form>
@@ -757,10 +757,10 @@ const Profile: React.FC = () => {
                 {/* Display Address if not editing */}
                 {!isEditing && (user?.house_number || user?.province) && (
                     <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                        <h4 style={{ color: 'var(--text-main)', marginTop: 0 }}>Shipping Address</h4>
+                        <h4 style={{ color: 'var(--text-main)', marginTop: 0 }}>{t('shipping_address')}</h4>
                         <p>{user.house_number} {user.sub_district} {user.district}</p>
                         <p>{user.province} {user.postal_code}</p>
-                        <p>Phone: {user.phone}</p>
+                        <p>{t('phone')}: {user.phone}</p>
                     </div>
                 )}
 
@@ -777,7 +777,7 @@ const Profile: React.FC = () => {
 
                     <div style={{ display: 'grid', gap: '15px' }}>
                         {userOrders.length === 0 ? (
-                            <p style={{ color: 'var(--text-muted)' }}>No orders found.</p>
+                            <p style={{ color: 'var(--text-muted)' }}>{t('no_orders_found')}</p>
                         ) : (
                             userOrders.map((order) => (
                                 <div
@@ -805,7 +805,7 @@ const Profile: React.FC = () => {
                                     }}
                                 >
                                     <div>
-                                        <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>Order #{order.id}</h3>
+                                        <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>{t('order')} #{order.id}</h3>
                                         <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
                                     </div>
 
@@ -843,7 +843,7 @@ const Profile: React.FC = () => {
             {user?.role !== 'admin' && (
                 <div style={{ marginTop: '40px' }}>
                     <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
-                        My Favorites
+                        {t('my_favorites')}
                     </h2>
 
                     <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
@@ -861,7 +861,7 @@ const Profile: React.FC = () => {
                                 transition: 'color 0.2s'
                             }}
                         >
-                            Liked Products
+                            {t('liked_products')}
                         </button>
                         <button
                             onClick={() => setActiveTab('fandoms')}
@@ -877,7 +877,7 @@ const Profile: React.FC = () => {
                                 transition: 'color 0.2s'
                             }}
                         >
-                            Liked Fandoms
+                            {t('liked_fandoms')}
                         </button>
                     </div>
 
@@ -921,7 +921,7 @@ const Profile: React.FC = () => {
                                 ))
                             ) : (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                                    No favorite products yet.
+                                    {t('no_favorite_products')}
                                 </div>
                             )}
                         </div>
@@ -969,13 +969,13 @@ const Profile: React.FC = () => {
                                                 fontSize: '0.9rem'
                                             }}
                                         >
-                                            Unlike
+                                            {t('unlike')}
                                         </button>
                                     </div>
                                 ))
                             ) : (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                                    No favorite fandoms yet.
+                                    {t('no_favorite_fandoms')}
                                 </div>
                             )}
                         </div>
@@ -1016,7 +1016,7 @@ const Profile: React.FC = () => {
                                 e.currentTarget.style.color = '#f44336';
                             }}
                         >
-                            ⚠️ Delete Account
+                            ⚠️ {t('delete_account')}
                         </button>
                     </div>
 
@@ -1024,9 +1024,9 @@ const Profile: React.FC = () => {
                         isOpen={showDeleteModal}
                         onClose={() => setShowDeleteModal(false)}
                         onConfirm={handleConfirmDelete}
-                        title="Delete Account"
-                        message="Are you sure you want to delete your account? This action cannot be undone and you will lose all your data."
-                        confirmText="Delete"
+                        title={t('delete_account')}
+                        message={t('delete_account_confirm_message')}
+                        confirmText={t('delete')}
                         isDangerous={true}
                     />
                 </>

@@ -10,18 +10,18 @@ const Catalog: React.FC = () => {
     const { addToCart } = useCart();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedFandom, setSelectedFandom] = useState('All');
+    const [selectedFandom, setSelectedFandom] = useState(t('all'));
 
     const handleAddToCart = (item: any) => {
         addToCart(item);
-        alert(`${item.name} added to cart!`);
+        alert(`${t('added_to_cart')}: ${item.name}`);
     };
 
 
     // Extract unique fandoms for filtering
     const fandoms = useMemo(() => {
         const fans = new Set(items.map(item => item.fandom));
-        return ['All', ...Array.from(fans)];
+        return [t('all'), ...Array.from(fans)];
     }, [items]);
 
 
@@ -32,11 +32,11 @@ const Catalog: React.FC = () => {
 
             const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
             // Check Fandom
-            const matchesFandom = selectedFandom === 'All' || item.fandom === selectedFandom;
+            const matchesFandom = selectedFandom === t('all') || item.fandom === selectedFandom;
 
             return matchesSearch && matchesFandom;
         });
-    }, [searchTerm, selectedFandom]);
+    }, [searchTerm, selectedFandom, items, t]);
 
     return (
         <div style={{
@@ -106,7 +106,7 @@ const Catalog: React.FC = () => {
                                 transition: 'all 0.2s'
                             }}
                         >
-                            {fan}
+                            {fan === t('all') ? t('all') : fan}
                         </button>
                     ))}
                 </div>
@@ -258,7 +258,7 @@ const Catalog: React.FC = () => {
                 <div style={{ marginTop: '50px', textAlign: 'center', color: '#666' }}>
                     <h2>{t('no_items_found')}</h2>
                     <button
-                        onClick={() => { setSearchTerm(''); setSelectedFandom('All'); }}
+                        onClick={() => { setSearchTerm(''); setSelectedFandom(t('all')); }}
                         style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer', background: 'transparent', border: '1px solid #555', color: '#fff' }}
                     >
                         {t('reset_filters')}

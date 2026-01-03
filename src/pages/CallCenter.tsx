@@ -11,20 +11,20 @@ const CallCenter: React.FC = () => {
   const [tickets] = useState([
     {
       id: 'TKT-001',
-      subject: 'Order not received',
-      category: 'Shipping',
-      priority: 'High',
-      status: 'Open',
+      subject: t('order_not_received'),
+      category: t('shipping'),
+      priority: t('high'),
+      status: t('open'),
       messages: 3,
       created: '2024-01-15',
       lastUpdated: '2024-01-16'
     },
     {
       id: 'TKT-002',
-      subject: 'Payment issue',
-      category: 'Payment',
-      priority: 'Medium',
-      status: 'In Progress',
+      subject: t('payment_issue'),
+      category: t('payment'),
+      priority: t('medium'),
+      status: t('in_progress'),
       messages: 5,
       created: '2024-01-14',
       lastUpdated: '2024-01-15'
@@ -33,58 +33,58 @@ const CallCenter: React.FC = () => {
 
   const [newTicket, setNewTicket] = useState({
     subject: '',
-    category: 'General',
-    priority: 'Medium',
+    category: t('general'),
+    priority: t('medium'),
     message: ''
   });
 
   const handleCreateTicket = () => {
     if (!newTicket.subject || !newTicket.message) {
-      alert('Please fill in all required fields');
+      alert(t('please_fill_required_fields'));
       return;
     }
     // Mock ticket creation
-    alert('Ticket created successfully!');
-    setNewTicket({ subject: '', category: 'General', priority: 'Medium', message: '' });
+    alert(t('ticket_created_successfully'));
+    setNewTicket({ subject: '', category: t('general'), priority: t('medium'), message: '' });
     setActiveTab('tickets');
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open': return '#4CAF50';
-      case 'In Progress': return '#FF9800';
-      case 'Resolved': return '#2196F3';
-      case 'Closed': return '#9E9E9E';
+      case t('open'): return '#4CAF50';
+      case t('in_progress'): return '#FF9800';
+      case t('resolved'): return '#2196F3';
+      case t('closed'): return '#9E9E9E';
       default: return '#9E9E9E';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Low': return '#4CAF50';
-      case 'Medium': return '#FF9800';
-      case 'High': return '#F44336';
-      case 'Urgent': return '#9C27B0';
+      case t('low'): return '#4CAF50';
+      case t('medium'): return '#FF9800';
+      case t('high'): return '#F44336';
+      case t('urgent'): return '#9C27B0';
       default: return '#9E9E9E';
     }
   };
 
   const faqData = [
     {
-      question: 'How do I track my order?',
-      answer: 'You can track your order by going to your profile and clicking on the order you want to track.'
+      question: t('faq_track_order_question'),
+      answer: t('faq_track_order_answer')
     },
     {
-      question: 'What is your return policy?',
-      answer: 'We offer 30-day return policy for unused items in original packaging.'
+      question: t('faq_return_policy_question'),
+      answer: t('faq_return_policy_answer')
     },
     {
-      question: 'How do pre-orders work?',
-      answer: 'Pre-orders allow you to reserve items before they are released. You will be charged a deposit and the remaining amount upon shipping.'
+      question: t('faq_preorder_question'),
+      answer: t('faq_preorder_answer')
     },
     {
-      question: 'How do I contact customer support?',
-      answer: 'You can reach our customer support through the live chat feature or by creating a support ticket.'
+      question: t('faq_contact_support_question'),
+      answer: t('faq_contact_support_answer')
     }
   ];
 
@@ -208,7 +208,7 @@ const CallCenter: React.FC = () => {
               <h2 style={{ marginBottom: '20px', color: '#fff' }}>{t('my_tickets')}</h2>
               {tickets.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
-                  <p>No tickets found</p>
+                  <p>{t('no_tickets_found')}</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -287,7 +287,7 @@ const CallCenter: React.FC = () => {
                       color: '#fff',
                       fontSize: '1rem'
                     }}
-                    placeholder="Enter ticket subject"
+                    placeholder={t('ticket_subject_placeholder')}
                   />
                 </div>
 
@@ -309,11 +309,11 @@ const CallCenter: React.FC = () => {
                         fontSize: '1rem'
                       }}
                     >
-                      <option value="General">General</option>
-                      <option value="Shipping">Shipping</option>
-                      <option value="Payment">Payment</option>
-                      <option value="Product">Product</option>
-                      <option value="Account">Account</option>
+                      <option value={t('general')}>{t('general')}</option>
+                      <option value={t('shipping')}>{t('shipping')}</option>
+                      <option value={t('payment')}>{t('payment')}</option>
+                      <option value={t('product')}>{t('product')}</option>
+                      <option value={t('account')}>{t('account')}</option>
                     </select>
                   </div>
 
@@ -334,10 +334,10 @@ const CallCenter: React.FC = () => {
                         fontSize: '1rem'
                       }}
                     >
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Urgent">Urgent</option>
+                      <option value={t('low')}>{t('low')}</option>
+                      <option value={t('medium')}>{t('medium')}</option>
+                      <option value={t('high')}>{t('high')}</option>
+                      <option value={t('urgent')}>{t('urgent')}</option>
                     </select>
                   </div>
                 </div>
@@ -360,7 +360,7 @@ const CallCenter: React.FC = () => {
                       minHeight: '150px',
                       resize: 'vertical'
                     }}
-                    placeholder="Describe your issue in detail..."
+                    placeholder={t('ticket_message_placeholder')}
                   />
                 </div>
 

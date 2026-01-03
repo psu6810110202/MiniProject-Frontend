@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { productAPI, type Product } from '../services/api';
 import { preorderItems } from '../data/preorderData';
 import { regularProducts } from '../data/regularProducts';
@@ -10,6 +11,7 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
   const { items, likedProductIds, toggleLikeProduct } = useProducts();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -113,8 +115,8 @@ const ProductDetail: React.FC = () => {
         // Use fallback data if nothing else works
         const fallbackProduct: Product = {
           product_id: productId,
-          name: 'Product Not Found',
-          description: 'The requested product could not be found in our catalog. Please check the product ID or return to catalog and select a valid product.',
+          name: t('product_not_found'),
+          description: t('product_not_found_description') || 'The requested product could not be found in our catalog. Please check the product ID or return to catalog and select a valid product.',
           price: 0,
           category: 'Unknown',
           fandom: 'Unknown',
@@ -127,15 +129,15 @@ const ProductDetail: React.FC = () => {
           updated_at: new Date().toISOString()
         };
         setProduct(fallbackProduct);
-        setError('Product not found in catalog. Please return to catalog and select a valid product.');
+        setError(t('product_not_found_error') || 'Product not found in catalog. Please return to catalog and select a valid product.');
       }
     } catch (err) {
       console.error('Failed to load product:', err);
-      setError('Failed to load product');
+      setError(t('error_loading_product') || 'Failed to load product');
       const fallbackProduct: Product = {
         product_id: productId,
-        name: 'Error Loading Product',
-        description: 'An error occurred while loading this product. Please try again later.',
+        name: t('error_loading_product_name') || 'Error Loading Product',
+        description: t('error_loading_product_description') || 'An error occurred while loading this product. Please try again later.',
         price: 0,
         category: 'Error',
         fandom: 'Error',
@@ -193,11 +195,11 @@ const ProductDetail: React.FC = () => {
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays > 0 && diffDays <= 30) return `In ${diffDays} days`;
-    if (diffDays > 30) return `In ${Math.ceil(diffDays / 30)} months`;
-    return 'Coming soon';
+    if (diffDays === 0) return t('today');
+    if (diffDays === 1) return t('tomorrow');
+    if (diffDays > 0 && diffDays <= 30) return `${t('in_days')} ${diffDays}`;
+    if (diffDays > 30) return `${t('in_months')} ${Math.ceil(diffDays / 30)}`;
+    return t('coming_soon');
   };
 
   if (loading) {
@@ -207,7 +209,7 @@ const ProductDetail: React.FC = () => {
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
-        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>Loading product details...</div>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>{t('loading_product_details')}</div>
         <div style={{
           width: '40px',
           height: '40px',
@@ -239,8 +241,8 @@ const ProductDetail: React.FC = () => {
         textAlign: 'center',
         color: 'var(--text-main)'
       }}>
-        <h2>Product not found</h2>
-        <Link to="/catalog" style={{ color: '#FF5722' }}>Back to Catalog</Link>
+        <h2>{t('product_not_found')}</h2>
+        <Link to="/catalog" style={{ color: '#FF5722' }}>{t('back_to_catalog')}</Link>
       </div>
     );
   }
@@ -258,9 +260,9 @@ const ProductDetail: React.FC = () => {
         fontSize: '0.9rem',
         color: 'var(--text-muted)'
       }}>
-        <Link to="/" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Home</Link>
+        <Link to="/" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>{t('home')}</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/catalog" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Catalog</Link>
+        <Link to="/catalog" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>{t('catalog')}</Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
       </div>
@@ -331,7 +333,7 @@ const ProductDetail: React.FC = () => {
               >
                 <img
                   src={product.image}
-                  alt={`View ${index + 1}`}
+                  alt={`${t('view')} ${index + 1}`}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -387,7 +389,7 @@ const ProductDetail: React.FC = () => {
                     boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
                     animation: 'pulse 2s infinite'
                   }}>
-                     PRE-ORDER EXCLUSIVE
+                     {t('preorder_exclusive')}
                   </span>
                   <span style={{
                     padding: '6px 12px',
@@ -398,7 +400,7 @@ const ProductDetail: React.FC = () => {
                     fontWeight: 'bold',
                     border: '1px solid #FF5722'
                   }}>
-                    LIMITED EDITION
+                    {t('limited_edition')}
                   </span>
                 </div>
               ) : (
@@ -414,7 +416,7 @@ const ProductDetail: React.FC = () => {
                     alignSelf: 'center',
                     boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
                   }}>
-                    ✅ IN STOCK - READY TO SHIP
+                    ✅ {t('in_stock_ready_ship')}
                   </span>
                   <span style={{
                     padding: '6px 12px',
@@ -425,7 +427,7 @@ const ProductDetail: React.FC = () => {
                     fontWeight: 'bold',
                     border: '1px solid #4CAF50'
                   }}>
-                    IMMEDIATE DELIVERY
+                    {t('immediate_delivery')}
                   </span>
                   {/* Category & Fandom Tags */}
                   <div style={{
@@ -480,10 +482,10 @@ const ProductDetail: React.FC = () => {
                 color: '#666',
                 fontWeight: 'normal'
               }}>
-                <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
-                <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
+                <div style={{ color: '#FF5722', fontWeight: 'bold' }}>{t('preorder_price')}</div>
+                <div>{t('deposit')}: ฿{product.deposit_amount?.toLocaleString()}</div>
                 <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
+                  ({t('now')} ฿{Math.round(product.price * 0.2).toLocaleString()} + {t('on_release')} ฿{Math.round(product.price * 0.8).toLocaleString()})
                 </div>
               </div>
             )}
@@ -493,9 +495,9 @@ const ProductDetail: React.FC = () => {
                 color: '#666',
                 fontWeight: 'normal'
               }}>
-                <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>REGULAR PRICE</div>
+                <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>{t('regular_price')}</div>
                 <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  Ships within 2-3 business days
+                  {t('ships_within_days')}
                 </div>
               </div>
             )}
@@ -520,7 +522,7 @@ const ProductDetail: React.FC = () => {
             gap: '20px',
             marginBottom: '30px'
           }}>
-            <span style={{ fontWeight: 'bold' }}>Quantity:</span>
+            <span style={{ fontWeight: 'bold' }}>{t('quantity')}:</span>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -564,7 +566,7 @@ const ProductDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock} units
+              {t('max_units')}: {product.stock} {t('units')}
             </span>
           </div>
 
@@ -608,9 +610,9 @@ const ProductDetail: React.FC = () => {
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : 
-               product.stock === 0 ? 'Out of Stock' : 
-               (product.is_preorder ? ' Pre-Order Now' : ' Add to Cart')
+              {addingToCart ? `✓ ${t('added_to_cart')}` : 
+               product.stock === 0 ? t('out_of_stock') : 
+               (product.is_preorder ? ` ${t('preorder_now')}` : ` ${t('add_to_cart')}`)
               }
             </button>
 
@@ -654,7 +656,7 @@ const ProductDetail: React.FC = () => {
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>Product Details</h4>
+            <h4 style={{ marginBottom: '15px' }}>{t('product_details')}</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -662,8 +664,8 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Stock:</strong> {product.stock} units</div>
-              <div><strong>Product ID:</strong> {product.product_id}</div>
+              <div><strong>{t('stock')}:</strong> {product.stock} {t('units')}</div>
+              <div><strong>{t('product_id_label')}:</strong> {product.product_id}</div>
             </div>
           </div>
 
@@ -673,7 +675,7 @@ const ProductDetail: React.FC = () => {
             paddingTop: '20px',
             marginTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
+            <h4 style={{ marginBottom: '15px' }}>{t('material_specifications')}</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -681,14 +683,14 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Material:</strong> Premium PVC Vinyl</div>
-              <div><strong>Height:</strong> 18 cm</div>
-              <div><strong>Weight:</strong> 450g</div>
-              <div><strong>Base:</strong> 7cm x 5cm</div>
-              <div><strong>Paint:</strong> Hand-painted details</div>
-              <div><strong>Packaging:</strong> Collector's box</div>
-              <div><strong>Authenticity:</strong> Certificate included</div>
-              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
+              <div><strong>{t('material')}:</strong> {t('premium_pvc_vinyl')}</div>
+              <div><strong>{t('height')}:</strong> 18 cm</div>
+              <div><strong>{t('weight')}:</strong> 450g</div>
+              <div><strong>{t('base')}:</strong> 7cm x 5cm</div>
+              <div><strong>{t('paint')}:</strong> {t('hand_painted_details')}</div>
+              <div><strong>{t('packaging')}:</strong> {t('collectors_box')}</div>
+              <div><strong>{t('authenticity')}:</strong> {t('certificate_included')}</div>
+              <div><strong>{t('limited_edition')}:</strong> {t('limited_edition_pieces')}</div>
             </div>
           </div>
         </div>

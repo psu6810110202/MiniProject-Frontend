@@ -54,14 +54,40 @@ const UserManager: React.FC = () => {
     const blacklistedUsers = users.filter(u => u.isBlacklisted && !u.deletedAt);
     const deletedUsers = users.filter(u => u.deletedAt);
 
-    const handleRestoreUser = (userId: string) => {
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        if (db[userId]) {
-            delete db[userId].deletedAt;
-            localStorage.setItem('mock_users_db', JSON.stringify(db));
+    const handleRestoreUser = async (userId: string) => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`http://localhost:3000/api/users/${userId}/restore`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-            // Update local state
-            setUsers(Object.values(db));
+            if (response.ok) {
+                // Update Local UI State
+                setUsers(prevUsers => prevUsers.map(u =>
+                    u.id === userId ? { ...u, deletedAt: null } : u
+                ));
+
+                // Update Local Mock DB if needed
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                if (db[userId]) {
+                    delete db[userId].deletedAt;
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                }
+                alert('User restored successfully');
+            } else {
+                alert('Failed to restore user from server');
+            }
+        } catch (e) {
+            console.error(e);
+            // Fallback to local
+            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+            if (db[userId]) {
+                delete db[userId].deletedAt;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+                setUsers(Object.values(db));
+                alert('Restored locally (Server might be down)');
+            }
         }
     };
 

@@ -155,7 +155,16 @@ const Profile: React.FC = () => {
             });
 
             if (response.ok) {
-                // alert('Account deleted successfully.'); // Optional: remove alert for smoother UX
+                // Determine if we should treat this as a Soft Delete locally too
+                // (Backend now does soft delete, so we should mark local DB as such for Mock Logic to work)
+                try {
+                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                    if (db[user.id]) {
+                        db[user.id].deletedAt = new Date().toISOString();
+                        localStorage.setItem('mock_users_db', JSON.stringify(db));
+                    }
+                } catch (e) { console.error(e); }
+
                 logout();
                 navigate('/login');
             } else {

@@ -23,6 +23,7 @@ const Login: React.FC = () => {
     const [showResetPass, setShowResetPass] = useState(false);
 
     const [restoreData, setRestoreData] = useState({ username: '', password: '' });
+    const [showDeletedWarningModal, setShowDeletedWarningModal] = useState(false);
 
     // ✅ 1. เพิ่มตัวแปรสำหรับตรวจจับ Theme (Dark/Light)
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -105,11 +106,65 @@ const Login: React.FC = () => {
         }
     };
 
-    const handleRestoreSubmit = (e: React.FormEvent) => {
+    const handleRestoreSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+        setLoading(true);
 
+        try {
+            // 1. Try to Login to get Token (Backend allows login for soft-deleted users, just returns deletedAt)
+            const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: restoreData.username, password: restoreData.password }),
+            });
+            const loginData = await loginResponse.json();
+
+            if (loginResponse.ok && loginData.access_token) {
+                // 2. We have a token. Now call Restore.
+                const userId = loginData.user.id || loginData.user.user_id; // Handle both id formats
+                const restoreResponse = await fetch(`http://localhost:3000/api/users/${userId}/restore`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${loginData.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (restoreResponse.ok) {
+                    alert('Account restored successfully! Logging you in...');
+
+                    // Update Local Mock DB to match (remove deletedAt)
+                    try {
+                        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                        if (db[userId]) {
+                            delete db[userId].deletedAt;
+                            localStorage.setItem('mock_users_db', JSON.stringify(db));
+                        }
+                    } catch (e) { console.error(e); }
+
+                    // Login to App
+                    login(loginData.access_token, { ...loginData.user, deletedAt: null }, true);
+                    navigate('/');
+                    return;
+                } else {
+                    const errorJson = await restoreResponse.json();
+                    alert(`Restore failed (Server): ${errorJson.message || restoreResponse.statusText}`);
+                    setLoading(false);
+                    return;
+                }
+            } else {
+                // If login failed here, it likely means password was wrong OR user truly not found
+                const errorJson = await loginResponse.json().catch(() => ({}));
+                // console.warn("Restore login check failed:", errorJson);
+            }
+        } catch (apiErr: any) {
+            console.error("API Restore flow failed", apiErr);
+            // alert("Connection error during restore.");
+        }
+
+        // 3. Fallback: Local Mock DB Check
+        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
         const user = Object.values(db).find((u: any) =>
             (u.username === restoreData.username || u.email === restoreData.username)
         );
@@ -129,6 +184,7 @@ const Login: React.FC = () => {
         } else {
             alert('Invalid credentials or account not found.');
         }
+        setLoading(false);
     };
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -143,15 +199,43 @@ const Login: React.FC = () => {
                 body: JSON.stringify({ email: formData.username, password: formData.password }),
             });
             const data = await response.json();
+            console.log("Login Response Data:", data); // Debugging
 
             if (!response.ok) throw new Error(data.message || 'Login failed');
 
             if (data.access_token) {
+                // Check Blacklist
+                if (data.user.isBlacklisted) {
+                    setShowBlacklistModal(true);
+                    setLoading(false);
+                    return;
+                }
+
+                // Check Deleted/Recovery
+                if (data.user.deletedAt) {
+                    // alert('This account is pending deletion/recovery within 30 days.\nPlease restore your account to continue.');
+                    setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
+                    setShowDeletedWarningModal(true); // Show new modal instead of alert
+                    setLoading(false);
+                    return;
+                }
+
                 let userToUse = data.user;
                 try {
                     const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
                     const localUser = db[userToUse.id] || Object.values(db).find((u: any) => u.email === userToUse.email);
-                    if (localUser) userToUse = { ...userToUse, points: localUser.points };
+
+                    if (localUser) {
+                        // Enforce local deletion check if API didn't catch it
+                        if (localUser.deletedAt && !userToUse.deletedAt) {
+                            // alert('This account is pending deletion/recovery within 30 days.\nPlease restore your account to continue.');
+                            setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
+                            setShowDeletedWarningModal(true);
+                            setLoading(false);
+                            return;
+                        }
+                        userToUse = { ...userToUse, points: localUser.points };
+                    }
                 } catch (e) {
                     console.error("Failed to merge local state", e);
                 }
@@ -186,6 +270,10 @@ const Login: React.FC = () => {
                 if (userToLogin.isBlacklisted) {
                     setShowBlacklistModal(true); setLoading(false); return;
                 }
+                if (userToLogin.deletedAt) {
+                    alert('Account is pending deletion.');
+                    setLoading(false); return;
+                }
 
                 if (formData.password === validPass) {
                     saveToMockDB(userToLogin);
@@ -214,6 +302,13 @@ const Login: React.FC = () => {
                     if (foundUser) {
                         if ((foundUser as any).isBlacklisted) {
                             setShowBlacklistModal(true); setLoading(false); return;
+                        }
+                        if ((foundUser as any).deletedAt) {
+                            // alert('This account is pending deletion/recovery within 30 days.\nPlease restore your account to continue.');
+                            setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
+                            setShowDeletedWarningModal(true);
+                            setLoading(false);
+                            return;
                         }
                         saveToMockDB(foundUser);
                         login('mock-override-token', foundUser as any, rememberMe);
@@ -321,11 +416,11 @@ const Login: React.FC = () => {
                     </button>
                 </form>
 
-                <div style={{ marginTop: '20px' }}>
+                {/* <div style={{ marginTop: '20px' }}>
                     <button type="button" onClick={() => setShowRestoreModal(true)} style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}>
                         Restore Deleted Account
                     </button>
-                </div>
+                </div> */}
 
                 <p style={{ marginTop: '25px', fontSize: '0.9rem', color: isDark ? '#888' : '#666' }}>
                     {t('dont_have_account')} <Link to="/register" style={{ color: '#FF5722', textDecoration: 'none', fontWeight: 'bold' }}>{t('sign_up')}</Link>
@@ -419,6 +514,23 @@ const Login: React.FC = () => {
                 </div>
             )}
 
+            {showDeletedWarningModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '20px' }}>
+                    <div style={{ background: isDark ? '#1a1a1a' : '#ffffff', padding: '40px', borderRadius: '24px', maxWidth: '450px', width: '100%', textAlign: 'center', border: '2px solid #FFC107', boxShadow: '0 20px 50px rgba(255, 193, 7, 0.3)', animation: 'popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)' }}>
+                        <div style={{ width: '80px', height: '80px', background: 'rgba(255, 193, 7, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#FFC107' }}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 style={{ color: '#FFC107', marginBottom: '15px', fontSize: '1.8rem' }}>Account Pending Deletion</h2>
+                        <p style={{ color: isDark ? '#e0e0e0' : '#333', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '30px', fontWeight: '500' }}>
+                            This account is scheduled for deletion within 30 days.<br />Do you want to restore it?
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={() => { setShowDeletedWarningModal(false); }} style={{ flex: 1, padding: '14px', background: '#555', color: 'white', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}>Cancel</button>
+                            <button onClick={() => { setShowDeletedWarningModal(false); setShowRestoreModal(true); }} style={{ flex: 1, padding: '14px', background: '#FFC107', color: 'black', border: 'none', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}>Restore Account</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <style>{`@keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }`}</style>
         </div>
     );

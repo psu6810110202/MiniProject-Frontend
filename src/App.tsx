@@ -766,8 +766,29 @@ function App() {
   // Auto-kick if blacklisted while logged in
   useEffect(() => {
     if (isLoggedIn && user) {
-      const checkBlacklistStatus = () => {
+      const checkBlacklistStatus = async () => {
         try {
+          // 1. API Check (Priority)
+          const token = localStorage.getItem('access_token');
+          if (token && user?.id) {
+            try {
+              const response = await fetch(`http://localhost:3000/api/users/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (response.ok) {
+                const remoteUser = await response.json();
+                if (remoteUser.isBlacklisted) {
+                  setShowBlacklistKickModal(true);
+                  logout();
+                  return;
+                }
+              }
+            } catch (apiErr) {
+              // API might be down, fall through to local
+            }
+          }
+
+          // 2. Local Fallback
           const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
           const currentUser = db[user.id];
           if (currentUser && currentUser.isBlacklisted) {

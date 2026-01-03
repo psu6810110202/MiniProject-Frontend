@@ -52,13 +52,51 @@ const UserDetail: React.FC = () => {
         fetchUser();
     }, [id, role, navigate]);
 
-    const handleToggleBlacklist = () => {
+    const handleToggleBlacklist = async () => {
         if (!user) return;
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        if (db[user.id]) {
-            db[user.id].isBlacklisted = !db[user.id].isBlacklisted;
-            localStorage.setItem('mock_users_db', JSON.stringify(db));
-            setUser({ ...db[user.id] }); // Update local state
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const newStatus = !user.isBlacklisted;
+
+            const response = await fetch(`http://localhost:3000/api/users/${user.id || user.user_id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ isBlacklisted: newStatus })
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setUser(updatedUser);
+
+                // Keep local mock DB in sync just in case
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                if (db[user.id]) {
+                    db[user.id].isBlacklisted = newStatus;
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                }
+            } else {
+                console.warn('API update failed, falling back to local mock DB');
+                // Fallback to local
+                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+                if (db[user.id]) {
+                    db[user.id].isBlacklisted = newStatus;
+                    localStorage.setItem('mock_users_db', JSON.stringify(db));
+                    setUser({ ...user, isBlacklisted: newStatus });
+                }
+            }
+        } catch (error) {
+            console.error('Error updating blacklist status:', error);
+            // Fallback to local storage if API fails completely
+            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+            if (db[user.id]) {
+                db[user.id].isBlacklisted = !user.isBlacklisted;
+                localStorage.setItem('mock_users_db', JSON.stringify(db));
+                setUser({ ...user, isBlacklisted: !user.isBlacklisted });
+            }
         }
     };
 
@@ -87,6 +125,7 @@ const UserDetail: React.FC = () => {
                         }}>
                         {user.isBlacklisted ? 'Remove from Blacklist' : '🚫 Blacklist User'}
                     </button>
+
                 </div>
             </div>
 

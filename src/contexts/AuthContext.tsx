@@ -20,6 +20,7 @@ interface User {
     facebookName?: string;
     twitterName?: string;
     lineName?: string;
+    isBlacklisted?: boolean;
 }
 
 interface AuthContextType {

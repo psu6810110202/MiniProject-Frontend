@@ -198,6 +198,22 @@ const Login: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.username, password: formData.password }),
             });
+            if (response.status === 401) {
+                // If 401, it means Unauthorized (Wrong password OR Blacklisted).
+                // Do NOT fallback to local check, as server explicitly rejected.
+                // However, our API returns 401 via JwtStrategy, but Login uses LocalStrategy which usually returns 401 too.
+                // We should check the message.
+                const errData = await response.json();
+                if (errData.message === 'User is blacklisted') {
+                    // Explicit blacklist
+                    setShowBlacklistModal(true);
+                    setLoading(false);
+                    return;
+                }
+                // Normal invalid credentials?
+                throw new Error(errData.message || 'Login failed');
+            }
+
             const data = await response.json();
             console.log("Login Response Data:", data); // Debugging
 
@@ -226,6 +242,13 @@ const Login: React.FC = () => {
                     const localUser = db[userToUse.id] || Object.values(db).find((u: any) => u.email === userToUse.email);
 
                     if (localUser) {
+                        // Enforce local blacklist check if API didn't catch it
+                        if (localUser.isBlacklisted) {
+                            setShowBlacklistModal(true);
+                            setLoading(false);
+                            return;
+                        }
+
                         // Enforce local deletion check if API didn't catch it
                         if (localUser.deletedAt && !userToUse.deletedAt) {
                             // alert('This account is pending deletion/recovery within 30 days.\nPlease restore your account to continue.');
@@ -246,6 +269,17 @@ const Login: React.FC = () => {
             }
         } catch (err: any) {
             console.error('Login Error:', err);
+
+            // SECURITY FIX: If the error message is explicitly from the server rejection (401),
+            // DO NOT fall back to local storage. Only fallback on connection errors.
+            if (err.message === 'Login failed' || err.message === 'User is blacklisted' || err.message === 'Unauthorized') {
+                // Even if we threw above, we might end up here. 
+                // If it was blacklisted, we already returned. If it was 'Login failed' (wrong pass), show error.
+                setError(err.message);
+                setLoading(false);
+                return;
+            }
+
             const getPersistedUser = (defaultUser: any) => {
                 try {
                     const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');

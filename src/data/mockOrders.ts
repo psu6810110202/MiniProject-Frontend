@@ -1,4 +1,5 @@
 export interface OrderItem {
+    id?: number | string;
     name: string;
     quantity: number;
     price: number;
@@ -20,8 +21,8 @@ export const mockOrders: Order[] = [
         date: '2025-12-25',
         status: 'delivered',
         items: [
-            { name: 'Skullpanda The Mare of Animals', quantity: 1, price: 550 },
-            { name: 'Labubu The Monsters', quantity: 2, price: 890 },
+            { id: 1, name: 'Skullpanda The Mare of Animals', quantity: 1, price: 550 },
+            { id: 3, name: 'Labubu The Monsters', quantity: 2, price: 890 },
         ],
         total: 2330,
         carrier: 'Thailand Post',
@@ -32,7 +33,7 @@ export const mockOrders: Order[] = [
         date: '2025-12-28',
         status: 'shipped',
         items: [
-            { name: 'Hirono Little Mischief', quantity: 1, price: 450 },
+            { id: 5, name: 'Hirono Little Mischief', quantity: 1, price: 450 },
         ],
         total: 450,
         carrier: 'Kerry Express',
@@ -43,9 +44,18 @@ export const mockOrders: Order[] = [
         date: '2025-12-30',
         status: 'pending',
         items: [
-            { name: 'Crybaby Powerpuff Girls', quantity: 1, price: 1290 },
-            { name: 'Molly Space 100%', quantity: 1, price: 690 },
+            { id: 13, name: 'Crybaby Powerpuff Girls', quantity: 1, price: 1290 },
+            { id: 14, name: 'Molly Space 100%', quantity: 1, price: 690 },
         ],
         total: 1980
+    },
+    {
+        id: 'ORD-841775',
+        date: '2026-01-01',
+        status: 'pending',
+        items: [
+            { id: 2, name: 'Genshin Impact: Raiden Shogun Statue', quantity: 1, price: 14500 }
+        ],
+        total: 14500
     }
 ];

@@ -8,7 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const PreOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { addToCart, cartItems, purchasedItems } = useCart();
+  const { addToCart, cartItems, purchasedItems, userOrders } = useCart();
   const { likedProductIds, toggleLikeProduct } = useProducts();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -46,70 +46,34 @@ const PreOrderDetail: React.FC = () => {
   }, [id]);
 
   const loadPreOrderProduct = async (productId: string) => {
-    console.log('Loading pre-order product with ID:', productId);
-    console.log('Available preorder items:', preorderItems);
-
     try {
       setLoading(true);
 
       // Find product in pre-order items only
       const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
-      console.log('Found preorder item:', preOrderItem);
 
       if (preOrderItem) {
         const convertedProduct = convertPreOrderToProduct(preOrderItem);
-        console.log('Converted pre-order product:', convertedProduct);
         setProduct(convertedProduct);
         setError(null);
       } else {
         // Try API as fallback
         try {
-          console.log('Trying API...');
           const data = await productAPI.getById(productId);
           setProduct(data);
           setError(null);
         } catch (apiError) {
-          console.log('API failed, using fallback');
-          const fallbackProduct: Product = {
-            product_id: productId,
-            name: 'Pre-Order Not Found',
-            description: 'The requested pre-order item could not be found. Please check the pre-order page and select a valid item.',
-            price: 0,
-            category: 'Pre-Order',
-            fandom: 'Unknown',
-            image: '/api/placeholder/400/400',
-            stock: 0,
-            is_preorder: true,
-            release_date: new Date().toISOString().split('T')[0],
-            deposit_amount: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          setProduct(fallbackProduct);
-          setError('Pre-order item not found. Please return to the pre-order page.');
+          setError('Pre-order item not found.');
         }
       }
     } catch (err) {
       console.error('Failed to load pre-order product:', err);
       setError('Failed to load pre-order product');
-      const fallbackProduct: Product = {
-        product_id: productId,
-        name: 'Error Loading Pre-Order',
-        description: 'An error occurred while loading this pre-order. Please try again later.',
-        price: 0,
-        category: 'Pre-Order',
-        fandom: 'Error',
-        image: '/api/placeholder/400/400',
-        stock: 0,
-        is_preorder: true,
-        release_date: new Date().toISOString().split('T')[0],
-        deposit_amount: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      setProduct(fallbackProduct);
     } finally {
-      setLoading(false);
+      // Small artificial delay to prevent flickering if it loads too fast
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   };
 
@@ -121,13 +85,22 @@ const PreOrderDetail: React.FC = () => {
 
     const safeId = isNaN(Number(product.product_id)) ? Date.now() : Number(product.product_id);
 
-    // Check limit: 1 per account (History + Current Cart)
-    if (purchasedItems.includes(safeId)) {
+    // 1. Check if already purchased (in history or past orders)
+    const alreadyPurchased = purchasedItems.includes(safeId) ||
+      userOrders.some(order => order.items.some(item => {
+        // Handle both string and number ID comparisons safely
+        const itemId = typeof item.id === 'string' ? parseInt(item.id) : item.id;
+        const targetId = typeof safeId === 'string' ? parseInt(safeId) : safeId;
+        return itemId === targetId;
+      }));
+
+    if (alreadyPurchased) {
       setLimitMessage('คุณได้สั่งจองสินค้าชิ้นนี้ไปแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
       setShowLimitModal(true);
       return;
     }
 
+    // 2. Check if currently in cart
     if (cartItems.some(item => item.id === safeId)) {
       setLimitMessage('สินค้านี้อยู่ในตะกร้าแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
       setShowLimitModal(true);

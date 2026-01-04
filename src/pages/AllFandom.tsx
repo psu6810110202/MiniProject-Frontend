@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductContext';
 import { useLanguage } from '../contexts/LanguageContext';
+
 const AllFandom: React.FC = () => {
     const { t } = useLanguage();
     // Independent state for interactions, similar to PreOrder

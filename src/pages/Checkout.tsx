@@ -157,6 +157,7 @@ const Checkout: React.FC = () => {
     }
 
     return (
+        <>
         <div style={{
             padding: '40px 20px',
             maxWidth: '1000px',
@@ -456,6 +457,7 @@ const Checkout: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

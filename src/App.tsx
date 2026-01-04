@@ -27,9 +27,6 @@ import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
 
 // --- Navbar Component ---
-interface NavbarProps {
-  points: number;
-}
 
 // Remove NavbarProps interface as it is no longer needed
 // interface NavbarProps {
@@ -104,13 +101,12 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
-            Dom<span style={{ color: '#ffffff' }}>Port</span>
+            DomPort
           </span>
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
-          <Link to="/preorder" style={linkStyle}>{t('preorder')}</Link>
-          <Link to="/fandoms" style={linkStyle}>All Fandom</Link>
-          <Link to="/updates" style={linkStyle}>{t('updates')}</Link>
+          <Link to="/preorder" style={linkStyle}>Pre order</Link>
+          <Link to="/fandoms" style={linkStyle}>All fandom</Link>
         </div>
       </div>
 
@@ -395,15 +391,12 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
 
       </div>
     </nav>
-  );
-};
 
 // --- Home Component ---
 // ส่วนเนื้อหา Home ยังคงเปลี่ยนสีตามโหมด (Dark/Light) เพื่อความสวยงาม
 const Home: React.FC = () => {
   const { t } = useLanguage();
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('theme') || 'dark');
-
 
   useEffect(() => {
     const checkTheme = () => {
@@ -681,13 +674,14 @@ const Home: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Footer Component */}
+      <Footer />
     </div>
   );
 };
 
-// --- Footer Component ---
-const Footer: React.FC = () => {
-  const { t } = useLanguage();
+// ... rest of the code remains the same ...
 
   return (
     <footer style={{

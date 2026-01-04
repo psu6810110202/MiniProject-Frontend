@@ -43,6 +43,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
     };
 
     return (
+        <>
         <div style={{
             padding: '40px 20px',
             background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
@@ -58,11 +59,60 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                     WebkitTextFillColor: 'transparent',
                     marginBottom: '10px'
                 }}>
-                    {t('exclusive_preorders')}
+                    Pre Order
                 </h1>
                 <p style={{ color: '#aaa', fontSize: '1.2rem' }}>
-                    {t('preorder_subtitle')}
+                    สินค้า Pre order และรับสั่งซื้อเพิ่มเติม
                 </p>
+                
+                {/* Search Bar and Button */}
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px', maxWidth: '600px', margin: '30px auto 0' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <input
+                            type="text"
+                            placeholder="ค้นหาสินค้า..."
+                            style={{
+                                width: '100%',
+                                padding: '12px 50px 12px 20px',
+                                borderRadius: '25px',
+                                border: '1px solid #333',
+                                background: '#1a1a1a',
+                                color: '#fff',
+                                fontSize: '1rem',
+                                outline: 'none'
+                            }}
+                        />
+                        <div style={{
+                            position: 'absolute',
+                            right: '20px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: '#aaa'
+                        }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <button
+                        style={{
+                            padding: '12px 25px',
+                            background: '#FF5722',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '25px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'background 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#F4511E'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#FF5722'}
+                    >
+                        สั่งเพิ่มเติม
+                    </button>
+                </div>
             </div>
 
             <div style={{
@@ -185,7 +235,141 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                     </div>
                 ))}
             </div>
+
+            {/* All Fandom Section */}
+            <div style={{
+                padding: '60px 40px',
+                background: 'var(--bg-color)',
+                borderTop: '1px solid var(--border-color)',
+                maxWidth: '1600px',
+                margin: '0 auto',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
+                {/* Section Header */}
+                <div style={{
+                    textAlign: 'center',
+                    marginBottom: '40px'
+                }}>
+                    <h2 style={{
+                        fontSize: '2.5rem',
+                        margin: '0 0 15px 0',
+                        color: 'var(--text-main)',
+                        fontWeight: 'bold'
+                    }}>
+                        All fandom
+                    </h2>
+                </div>
+
+                {/* Horizontal Scroll Container */}
+                <div style={{
+                    display: 'flex',
+                    overflowX: 'auto',
+                    gap: '30px',
+                    padding: '10px',
+                    scrollBehavior: 'smooth',
+                    paddingBottom: '20px'
+                }} className="custom-scrollbar">
+                    <style>{`
+                        .custom-scrollbar::-webkit-scrollbar {
+                            height: 8px;
+                        }
+                        .custom-scrollbar::-webkit-scrollbar-track {
+                            background: rgba(255, 255, 255, 0.05); 
+                            border-radius: 4px;
+                        }
+                        .custom-scrollbar::-webkit-scrollbar-thumb {
+                            background: #FF5722; 
+                            border-radius: 4px;
+                        }
+                        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                            background: #F4511E; 
+                        }
+                    `}</style>
+                    
+                    {['Hazbin Hotel', 'Undertale', 'Genshin Impact', 'Identity V', 'Alien Stage', 'Cookie Run Kingdom', 'Project Sekai', 'Milgram'].map((fandomName, i) => {
+                        const item = preorderItems.find(item => item.name.toLowerCase().includes(fandomName.toLowerCase()));
+                        return (
+                            <div key={i} style={{
+                                flex: '0 0 200px',
+                                cursor: 'pointer',
+                                transition: 'transform 0.3s'
+                            }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-8px)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                                
+                                {/* Image Container */}
+                                <div style={{
+                                    width: '200px',
+                                    height: '200px',
+                                    borderRadius: '20px',
+                                    overflow: 'hidden',
+                                    marginBottom: '15px',
+                                    border: '1px solid var(--border-color)',
+                                    position: 'relative',
+                                    background: 'var(--card-bg)'
+                                }}>
+                                    <img 
+                                        src={item?.image || '/placeholder.png'} 
+                                        alt={fandomName} 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    />
+                                </div>
+
+                                <h3 style={{
+                                    textAlign: 'center',
+                                    color: 'var(--text-main)',
+                                    fontSize: '1.1rem',
+                                    fontWeight: 'bold',
+                                    margin: '0',
+                                    lineHeight: '1.3'
+                                }}>
+                                    {fandomName}
+                                </h3>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Floating Chat Icon */}
+            <div style={{
+                position: 'fixed',
+                bottom: '30px',
+                right: '30px',
+                zIndex: 1000
+            }}>
+                <button
+                    onClick={() => window.open('https://m.me/yourpage', '_blank')}
+                    style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        background: '#FF5722',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 20px rgba(255, 87, 34, 0.4)',
+                        transition: 'all 0.3s'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                        e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 87, 34, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 87, 34, 0.4)';
+                    }}
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
+        </>
     );
 };
 

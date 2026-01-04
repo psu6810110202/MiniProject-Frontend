@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
+import CustomOrderForm from '../components/CustomOrderForm';
 
 const Catalog: React.FC = () => {
     const { t } = useLanguage();
@@ -11,6 +12,7 @@ const Catalog: React.FC = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFandom, setSelectedFandom] = useState(t('all'));
+    const [showCustomOrderForm, setShowCustomOrderForm] = useState(false);
 
     const handleAddToCart = (item: any) => {
         addToCart(item);
@@ -158,26 +160,13 @@ const Catalog: React.FC = () => {
                         </div>
                         <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <div>
-                                {/* Fandom Tags */}
+                                {/* Category Tag Only */}
                                 <div style={{
                                     display: 'flex',
                                     gap: '8px',
                                     marginBottom: '10px',
                                     flexWrap: 'wrap'
                                 }}>
-                                    <div style={{
-                                        padding: '4px 8px',
-                                        background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
-                                        color: 'white',
-                                        borderRadius: '12px',
-                                        fontSize: '0.7rem',
-                                        fontWeight: 'bold',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '3px'
-                                    }}>
-                                        🎭 {item.fandom}
-                                    </div>
                                     {item.category === 'Pre-Order' && (
                                         <div style={{
                                             padding: '4px 8px',
@@ -265,6 +254,47 @@ const Catalog: React.FC = () => {
                     </button>
                 </div>
             )}
+
+            {/* Custom Order Button */}
+            <div style={{ marginTop: '40px', textAlign: 'center', padding: '30px', background: 'rgba(255, 87, 34, 0.1)', borderRadius: '12px', border: '1px solid rgba(255, 87, 34, 0.3)' }}>
+                <h3 style={{ color: '#FF5722', marginBottom: '15px', fontSize: '1.3rem' }}>
+                    Can't find the product you're looking for?
+                </h3>
+                <p style={{ color: '#ccc', marginBottom: '20px', fontSize: '1rem' }}>
+                    You can order products that are not available on our website
+                </p>
+                <button
+                    onClick={() => setShowCustomOrderForm(true)}
+                    style={{
+                        padding: '12px 30px',
+                        background: '#FF5722',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        boxShadow: '0 4px 6px rgba(255, 87, 34, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#F4511E';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#FF5722';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                >
+                    Order Custom Product
+                </button>
+            </div>
+
+            {/* Custom Order Form Modal */}
+            <CustomOrderForm 
+                isOpen={showCustomOrderForm} 
+                onClose={() => setShowCustomOrderForm(false)} 
+            />
 
         </div>
     );

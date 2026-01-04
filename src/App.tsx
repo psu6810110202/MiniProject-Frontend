@@ -425,7 +425,7 @@ const Home: React.FC = () => {
 
 
   // ส่วนเนื้อหา Home ยังเปลี่ยนโลโก้ตามพื้นหลัง (เพราะพื้นหลัง Home เปลี่ยนสีได้)
-  const logoSrc = currentTheme === 'dark' ? '/DomPort_DarkTone.png' : '/DomPort.png';
+  const logoSrc = currentTheme === 'dark' ? 'http://localhost:3000/images/DomPort_DarkTone.png' : 'http://localhost:3000/images/DomPort.png';
 
   const homeBackground = currentTheme === 'dark'
     ? 'radial-gradient(circle at center, #2e1005 0%, #000000 80%)'

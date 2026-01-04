@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useCart } from '../contexts/CartContext';
-import CustomOrderForm from '../components/CustomOrderForm';
 
 const Catalog: React.FC = () => {
     const { t } = useLanguage();
@@ -12,7 +11,6 @@ const Catalog: React.FC = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFandom, setSelectedFandom] = useState(t('all'));
-    const [showCustomOrderForm, setShowCustomOrderForm] = useState(false);
 
     const handleAddToCart = (item: any) => {
         addToCart(item);
@@ -137,7 +135,7 @@ const Catalog: React.FC = () => {
                     }}
                         onClick={() => {
                             console.log('Navigating to product:', item.id, item.name, 'Category:', item.category);
-                            
+
                             // Route based on product type
                             if (item.category === 'Pre-Order') {
                                 navigate(`/preorder/${item.id}`);
@@ -255,46 +253,7 @@ const Catalog: React.FC = () => {
                 </div>
             )}
 
-            {/* Custom Order Button */}
-            <div style={{ marginTop: '40px', textAlign: 'center', padding: '30px', background: 'rgba(255, 87, 34, 0.1)', borderRadius: '12px', border: '1px solid rgba(255, 87, 34, 0.3)' }}>
-                <h3 style={{ color: '#FF5722', marginBottom: '15px', fontSize: '1.3rem' }}>
-                    Can't find the product you're looking for?
-                </h3>
-                <p style={{ color: '#ccc', marginBottom: '20px', fontSize: '1rem' }}>
-                    You can order products that are not available on our website
-                </p>
-                <button
-                    onClick={() => setShowCustomOrderForm(true)}
-                    style={{
-                        padding: '12px 30px',
-                        background: '#FF5722',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s',
-                        boxShadow: '0 4px 6px rgba(255, 87, 34, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#F4511E';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#FF5722';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                >
-                    Order Custom Product
-                </button>
-            </div>
 
-            {/* Custom Order Form Modal */}
-            <CustomOrderForm 
-                isOpen={showCustomOrderForm} 
-                onClose={() => setShowCustomOrderForm(false)} 
-            />
 
         </div>
     );

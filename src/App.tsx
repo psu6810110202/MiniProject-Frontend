@@ -35,6 +35,7 @@ import FandomDetail from './pages/FandomDetail';
 import RegularProducts from './pages/RegularProducts';
 
 import ProductDetail from './pages/ProductDetail';
+import RequestCustomProduct from './pages/RequestCustomProduct';
 import ScrollToTop from './components/ScrollToTop';
 
 // --- Navbar Component ---
@@ -848,6 +849,7 @@ function MainLayout() {
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/staff-dashboard" element={<StaffDashboard />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/request-custom-product" element={<RequestCustomProduct />} />
 
           </Routes>
         </div>

@@ -7,6 +7,7 @@ export interface PreOrderItem {
     image: string;
     description: string;
     fandom: string;
+    category: string;
 }
 
 export const preorderItems: PreOrderItem[] = [
@@ -18,7 +19,8 @@ export const preorderItems: PreOrderItem[] = [
         releaseDate: "2024-08-31",
         image: "http://localhost:3000/images/covers/Project_sekai.webp",
         description: "Scale figure celebrating Miku's 16th birthday with a vibrant design.",
-        fandom: "Project sekai"
+        fandom: "Project sekai",
+        category: "Figure"
     },
     {
         id: 2,
@@ -28,7 +30,8 @@ export const preorderItems: PreOrderItem[] = [
         releaseDate: "2024-12-15",
         image: "http://localhost:3000/images/covers/Genshin.webp",
         description: "Premium statue of the Electro Archon, featuring LED effects.",
-        fandom: "Genshin impact"
+        fandom: "Genshin impact",
+        category: "Figure"
     },
     {
         id: 3,
@@ -38,7 +41,8 @@ export const preorderItems: PreOrderItem[] = [
         releaseDate: "2024-09-20",
         image: "http://localhost:3000/images/covers/Hazbin Hotal.jpg",
         description: "Highly detailed figure of Alastor with his microphone staff.",
-        fandom: "Hazbin hotel"
+        fandom: "Hazbin hotel",
+        category: "Figure"
     },
     {
         id: 4,
@@ -48,6 +52,7 @@ export const preorderItems: PreOrderItem[] = [
         releaseDate: "2025-01-10",
         image: "http://localhost:3000/images/covers/Identity V.webp",
         description: "Massive collector's box containing exclusive skins and props.",
-        fandom: "Identity V"
+        fandom: "Identity V",
+        category: "Other"
     }
 ];

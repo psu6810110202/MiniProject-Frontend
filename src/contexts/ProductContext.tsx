@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 interface ProductContextType {
     items: Item[];
     fandoms: string[];
+    categories: string[];
     fandomImages: Record<string, string>;
     preOrders: PreOrderItem[];
     addItem: (item: Item) => void;
@@ -178,6 +179,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     return (
         <ProductContext.Provider value={{
             items, fandoms, fandomImages, preOrders,
+            // Derive categories dynamically from items + preOrders to ensure all are covered
+            categories: Array.from(new Set([...items.map(i => i.category || 'Other'), ...preOrders.map(() => 'Pre-Order')])).filter(Boolean),
             addItem, updateItem, deleteItem,
             addFandom, deleteFandom, updateFandomName, setFandomImage,
             addPreOrder, updatePreOrder, deletePreOrder,

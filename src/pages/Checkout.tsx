@@ -17,7 +17,10 @@ const Checkout: React.FC = () => {
         name: '',
         phone: '',
         address: '',
-        paymentMethod: 'bank' as PaymentMethodId
+        paymentMethod: 'bank' as PaymentMethodId,
+        transferDate: '',
+        transferTime: '',
+        slipImage: null as File | null
     });
 
     // Populate form with user data if available
@@ -54,6 +57,12 @@ const Checkout: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setForm({ ...form, slipImage: e.target.files[0] });
+        }
     };
 
     const isStep1Valid = () => {
@@ -247,41 +256,27 @@ const Checkout: React.FC = () => {
                                             <div>
                                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Number</label>
                                                 <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                    123-456-7890
+                                                    125-8-04638-9
                                                 </div>
                                             </div>
                                             <div>
                                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Name</label>
                                                 <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
-                                                    DomPort Company Limited
+                                                    ด.ญ.พันน์ชิตา ทองคำ
                                                 </div>
                                             </div>
                                             <div>
                                                 <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>QR Code</label>
                                                 <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    padding: '20px',
-                                                    background: 'white',
+                                                    marginTop: '10px',
                                                     borderRadius: '10px',
-                                                    border: '2px dashed #FF5722'
+                                                    overflow: 'hidden'
                                                 }}>
-                                                    <div style={{
-                                                        width: '200px',
-                                                        height: '200px',
-                                                        background: '#f0f0f0',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '1px solid #ddd',
-                                                        borderRadius: '5px'
-                                                    }}>
-                                                        <div style={{ textAlign: 'center', color: '#666' }}>
-                                                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📱</div>
-                                                            <div style={{ fontSize: '0.9rem' }}>QR Code</div>
-                                                            <div style={{ fontSize: '0.8rem', marginTop: '5px' }}>Placeholder</div>
-                                                        </div>
-                                                    </div>
+                                                    <img
+                                                        src="http://localhost:3000/images/payment/Qr.jpeg"
+                                                        alt="Payment QR Code"
+                                                        style={{ width: '100%', display: 'block' }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -293,9 +288,15 @@ const Checkout: React.FC = () => {
                                         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '1rem' }}>TrueMoney Wallet Details</h3>
                                         <div style={{ display: 'grid', gap: '15px' }}>
                                             <div>
+                                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Name</label>
+                                                <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
+                                                    นางสาวปาริชาติ หงส์สุวรรวัธนะ
+                                                </div>
+                                            </div>
+                                            <div>
                                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Phone Number</label>
                                                 <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                    089-123-4567
+                                                    080-569-2994
                                                 </div>
                                             </div>
                                             <div style={{
@@ -308,34 +309,6 @@ const Checkout: React.FC = () => {
                                                 fontWeight: 'bold'
                                             }}>
                                                 💰 Additional 10 THB fee will be applied
-                                            </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>QR Code</label>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    padding: '20px',
-                                                    background: 'white',
-                                                    borderRadius: '10px',
-                                                    border: '2px dashed #FF5722'
-                                                }}>
-                                                    <div style={{
-                                                        width: '200px',
-                                                        height: '200px',
-                                                        background: '#f0f0f0',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '1px solid #ddd',
-                                                        borderRadius: '5px'
-                                                    }}>
-                                                        <div style={{ textAlign: 'center', color: '#666' }}>
-                                                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>💰</div>
-                                                            <div style={{ fontSize: '0.9rem' }}>TrueMoney QR</div>
-                                                            <div style={{ fontSize: '0.8rem', marginTop: '5px' }}>Placeholder</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -360,9 +333,9 @@ const Checkout: React.FC = () => {
 
                         {step === 3 && (
                             <div style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '15px', border: '1px solid var(--border-color)' }}>
-                                <h2 style={{ marginTop: 0, marginBottom: '10px' }}>Confirm & Pay</h2>
+                                <h2 style={{ marginTop: 0, marginBottom: '10px' }}>Confirm Payment</h2>
                                 <p style={{ color: 'var(--text-muted)', marginTop: 0, marginBottom: '20px' }}>
-                                    ตรวจสอบข้อมูล แล้วกดยืนยันการชำระเงินเพื่อสร้างคำสั่งซื้อ
+                                    Upload purchase proof and confirm your order.
                                 </p>
 
                                 {error && (
@@ -371,30 +344,89 @@ const Checkout: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
-                                    <div style={{ padding: '12px 14px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
-                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>ผู้รับ</div>
-                                        <div style={{ color: 'var(--text-muted)' }}>{form.name} • {form.phone}</div>
-                                        <div style={{ color: 'var(--text-muted)', marginTop: '4px' }}>{form.address}</div>
+                                <div style={{ display: 'grid', gap: '15px', marginBottom: '20px' }}>
+
+                                    {/* Transfer Date/Time */}
+                                    {/* Transfer Date/Time */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>วันที่โอน (Transfer Date)</label>
+                                            <input
+                                                type="date"
+                                                name="transferDate"
+                                                value={form.transferDate}
+                                                onChange={handleChange}
+                                                required
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #555',
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    color: 'var(--text-main)',
+                                                    colorScheme: 'dark',
+                                                    cursor: 'pointer'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>เวลาที่โอน (Transfer Time)</label>
+                                            <input
+                                                type="time"
+                                                name="transferTime"
+                                                value={form.transferTime}
+                                                onChange={handleChange}
+                                                required
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #555',
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    color: 'var(--text-main)',
+                                                    colorScheme: 'dark',
+                                                    cursor: 'pointer'
+                                                }}
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div style={{ padding: '12px 14px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
-                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>Payment Method</div>
+                                    {/* Slip Upload */}
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>สลิปการโอนเงิน (Upload Slip)</label>
+                                        <div style={{ border: '2px dashed #555', borderRadius: '10px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: 'rgba(0,0,0,0.1)' }} onClick={() => document.getElementById('slip-upload')?.click()}>
+                                            <input
+                                                type="file"
+                                                id="slip-upload"
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                style={{ display: 'none' }}
+                                            />
+                                            {form.slipImage ? (
+                                                <div style={{ color: '#4CAF50' }}>✓ {form.slipImage.name} selected</div>
+                                            ) : (
+                                                <div style={{ color: '#aaa' }}>Click to upload slip image</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Shipping Information */}
+                                    <div style={{ padding: '15px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
+                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>Shipping Information</div>
+                                        <div style={{ color: 'var(--text-muted)' }}>
+                                            <div style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--text-main)' }}>Name:</strong> {form.name}</div>
+                                            <div style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--text-main)' }}>Phone:</strong> {form.phone}</div>
+                                            <div><strong style={{ color: 'var(--text-main)' }}>Address:</strong> {form.address}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ padding: '15px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
+                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>Order Details</div>
                                         <div style={{ color: 'var(--text-muted)' }}>
                                             {form.paymentMethod === 'bank' ? '🏦 Bank Transfer' : '💰 TrueMoney Wallet'}
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '6px' }}>
-                                            <span>Shipping</span>
-                                            <span>฿{totals.shipping.toLocaleString()}</span>
-                                        </div>
-                                        {totals.truemoneyFee > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '6px' }}>
-                                                <span>TrueMoney Fee</span>
-                                                <span>฿{totals.truemoneyFee.toLocaleString()}</span>
-                                            </div>
-                                        )}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontWeight: 'bold' }}>
-                                            <span>Total</span>
+                                            <span>Total Amount to Pay</span>
                                             <span style={{ color: '#FF5722' }}>฿{totals.total.toLocaleString()}</span>
                                         </div>
                                     </div>
@@ -413,7 +445,7 @@ const Checkout: React.FC = () => {
                                         disabled={isProcessing}
                                         style={{ flex: 2, padding: '15px', background: isProcessing ? '#4CAF50' : '#FF5722', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', opacity: isProcessing ? 0.8 : 1 }}
                                     >
-                                        {isProcessing ? 'กำลังดำเนินการ…' : `ยืนยันการชำระเงิน ฿${totals.total.toLocaleString()}`}
+                                        {isProcessing ? 'Processing…' : `Confirm Payment`}
                                     </button>
                                 </div>
                             </div>

@@ -13,6 +13,12 @@ export interface Order {
     total: number;
     carrier?: 'Thailand Post' | 'Kerry Express' | 'Flash Express' | 'J&T Express';
     trackingNumber?: string;
+    payment?: {
+        method: string;
+        transferDate?: string;
+        transferTime?: string;
+        slipImage?: string;
+    };
 }
 
 export const mockOrders: Order[] = [

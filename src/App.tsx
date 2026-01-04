@@ -6,7 +6,6 @@ import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
 import Catalog from './pages/Catalog';
-import Payment from './pages/Payment';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 // import AdminDashboard from './pages/AdminDashboard'; // AdminDashboard is used within Profile page now
@@ -761,8 +760,6 @@ const Footer: React.FC = () => {
 
 function MainLayout() {
   const { addPoints } = usePoints();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
 
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
@@ -828,7 +825,6 @@ function MainLayout() {
             <Route path="/fandoms" element={<AllFandom />} />
             <Route path="/fandoms/:name" element={<FandomDetail />} />
             <Route path="/updates" element={<Updates />} />
-            <Route path="/payment" element={<Payment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
             <Route path="/about" element={<AboutUs />} />

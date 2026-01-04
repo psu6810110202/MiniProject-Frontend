@@ -1,48 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { preorderItems, type PreOrderItem } from '../data/preorderData';
+import { preorderItems } from '../data/preorderData';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useCart } from '../contexts/CartContext';
 
 
 interface PreOrderProps {
     addPoints?: (amount: number) => void;
 }
 
-const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
+const PreOrder: React.FC<PreOrderProps> = () => {
     const { t } = useLanguage();
-    const { addToCart, cartItems, purchasedItems } = useCart();
     const navigate = useNavigate();
     // Independent state for this page's visual interactions
     const [hoveredId, setHoveredId] = useState<number | null>(null);
 
 
-    const handlePreOrder = (item: PreOrderItem) => {
-        // Rule: Pre-order limit 1 unit per ID (Account) as per requirements
-        // Checks both current cart and purchase history
-        if (cartItems.some(cartItem => cartItem.id === item.id) || purchasedItems.includes(item.id)) {
-            alert('You can only pre-order 1 unit of this item per account.');
-            return;
-        }
 
-        // Add to cart
-        addToCart({
-            id: item.id,
-            name: item.name,
-            price: `฿${item.price.toLocaleString()}`,
-            category: 'Pre-Order',
-            fandom: 'Exclusive',
-            image: item.image
-        });
-
-        // Award points for pre-ordering
-        if (addPoints) {
-            addPoints(50);
-            alert(`Pre-order added! You've earned 50 bonus points! 💎`);
-        } else {
-            alert(`${item.name} added to cart!`);
-        }
-    };
 
     return (
         <>
@@ -176,6 +149,19 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 }}>
                                     {t('release_date')}: {item.releaseDate}
                                 </div>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '10px', left: '10px',
+                                    background: '#FF5722',
+                                    padding: '5px 12px',
+                                    borderRadius: '15px',
+                                    fontSize: '0.8rem',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                                }}>
+                                    {item.fandom}
+                                </div>
                             </div>
 
                             <div style={{ padding: '20px' }}>
@@ -213,7 +199,10 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                 </div>
 
                                 <button
-                                    onClick={() => handlePreOrder(item)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/preorder/${item.id}`);
+                                    }}
                                     style={{
                                         width: '100%',
                                         padding: '12px',
@@ -231,7 +220,7 @@ const PreOrder: React.FC<PreOrderProps> = ({ addPoints }) => {
                                     onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
                                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                    {t('preorder_now')}
+                                    {t('view')}
                                 </button>
                             </div>
                         </div>

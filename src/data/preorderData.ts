@@ -6,6 +6,7 @@ export interface PreOrderItem {
     releaseDate: string;
     image: string;
     description: string;
+    fandom: string;
 }
 
 export const preorderItems: PreOrderItem[] = [
@@ -15,34 +16,38 @@ export const preorderItems: PreOrderItem[] = [
         price: 8500,
         deposit: 1000,
         releaseDate: "2024-08-31",
-        image: "https://via.placeholder.com/400x500/39c5bb/FFFFFF?text=Miku+16th",
-        description: "Scale figure celebrating Miku's 16th birthday with a vibrant design."
+        image: "http://localhost:3000/images/covers/Project_sekai.webp",
+        description: "Scale figure celebrating Miku's 16th birthday with a vibrant design.",
+        fandom: "Project sekai"
     },
     {
         id: 2,
-        name: "Gojo Satoru: Hollow Purple FX",
+        name: "Genshin Impact: Raiden Shogun Statue",
         price: 14500,
         deposit: 2500,
         releaseDate: "2024-12-15",
-        image: "https://via.placeholder.com/400x500/512da8/FFFFFF?text=Gojo+HP",
-        description: "Premium statue capturing the moment of Hollow Purple with LED effects."
+        image: "http://localhost:3000/images/covers/Genshin.webp",
+        description: "Premium statue of the Electro Archon, featuring LED effects.",
+        fandom: "Genshin impact"
     },
     {
         id: 3,
-        name: "Frieren: Beyond Journey's End",
+        name: "Hazbin Hotel: Alastor Radio Demon Figure",
         price: 5200,
         deposit: 500,
         releaseDate: "2024-09-20",
-        image: "https://via.placeholder.com/400x500/eeeeee/333333?text=Frieren",
-        description: "Highly detailed figure of Frieren holding her staff."
+        image: "http://localhost:3000/images/covers/Hazbin Hotal.jpg",
+        description: "Highly detailed figure of Alastor with his microphone staff.",
+        fandom: "Hazbin hotel"
     },
     {
         id: 4,
-        name: "EVA: Unit-01 Awakening",
+        name: "Identity V: Truce Limited Box",
         price: 28000,
         deposit: 5000,
         releaseDate: "2025-01-10",
-        image: "https://via.placeholder.com/400x500/673ab7/FFFFFF?text=EVA-01",
-        description: "Massive scale model with interchangeable parts and battle damage."
+        image: "http://localhost:3000/images/covers/Identity V.webp",
+        description: "Massive collector's box containing exclusive skins and props.",
+        fandom: "Identity V"
     }
 ];

@@ -31,7 +31,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const userId = user?.id || 'guest';
-    const getStorageKey = (key: string) => `${key}_v2_${userId}`;
+    const getStorageKey = (key: string) => `${key}_v4_${userId}`;
 
     const [items, setItems] = useState<Item[]>(mockItems);
     const [preOrders, setPreOrders] = useState<PreOrderItem[]>(preorderItems);

@@ -14,7 +14,7 @@ export const mockItems: Item[] = [
         price: "฿2,500",
         category: "Prop Replica",
         fandom: "Hazbin hotel",
-        image: "https://via.placeholder.com/300x300/FF0000/FFFFFF?text=Alastor+Staff"
+        image: "http://localhost:3000/images/covers/Hazbin Hotal.jpg"
     },
     {
         id: 2,
@@ -22,7 +22,7 @@ export const mockItems: Item[] = [
         price: "฿1,200",
         category: "Apparel",
         fandom: "Undertale",
-        image: "https://via.placeholder.com/300x300/0000FF/FFFFFF?text=Sans+Hoodie"
+        image: "http://localhost:3000/images/covers/Undertale.jpeg"
     },
     {
         id: 3,
@@ -30,7 +30,7 @@ export const mockItems: Item[] = [
         price: "฿5,500",
         category: "Figure",
         fandom: "Genshin impact",
-        image: "https://via.placeholder.com/300x300/9C27B0/FFFFFF?text=Raiden+Shogun"
+        image: "http://localhost:3000/images/covers/Genshin.webp"
     },
     {
         id: 4,
@@ -38,7 +38,7 @@ export const mockItems: Item[] = [
         price: "฿890",
         category: "Plush",
         fandom: "Identity V",
-        image: "https://via.placeholder.com/300x300/4CAF50/FFFFFF?text=Gardener+Plush"
+        image: "http://localhost:3000/images/covers/Identity V.webp"
     },
     {
         id: 5,
@@ -46,7 +46,7 @@ export const mockItems: Item[] = [
         price: "฿1,500",
         category: "Book",
         fandom: "Alien stage",
-        image: "https://via.placeholder.com/300x300/607D8B/FFFFFF?text=Alien+Stage+Artbook"
+        image: "http://localhost:3000/images/covers/Alien_stage.webp"
     },
     {
         id: 6,
@@ -54,7 +54,7 @@ export const mockItems: Item[] = [
         price: "฿650",
         category: "Cushion",
         fandom: "Cookie run kingdom",
-        image: "https://via.placeholder.com/300x300/795548/FFFFFF?text=GingerBrave"
+        image: "http://localhost:3000/images/covers/Cookie_run_kingdom.webp"
     },
     {
         id: 7,
@@ -62,7 +62,7 @@ export const mockItems: Item[] = [
         price: "฿1,800",
         category: "Figure",
         fandom: "Project sekai",
-        image: "https://via.placeholder.com/300x300/00BCD4/FFFFFF?text=Miku+Sekai"
+        image: "http://localhost:3000/images/covers/Project_sekai.webp"
     },
     {
         id: 8,
@@ -70,6 +70,6 @@ export const mockItems: Item[] = [
         price: "฿450",
         category: "Acrylic Stand",
         fandom: "Milgram",
-        image: "https://via.placeholder.com/300x300/9E9E9E/FFFFFF?text=Es+Stand"
+        image: "http://localhost:3000/images/covers/Milgram.jpg"
     }
 ];

@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const CallCenter: React.FC = () => {
+interface CallCenterProps {
+  initialTab?: 'tickets' | 'faq';
+}
+
+const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'tickets' | 'new' | 'faq'>('tickets');
+  const [activeTab, setActiveTab] = useState<'tickets' | 'faq'>(initialTab);
 
   // Mock data for tickets
   const [tickets] = useState([
@@ -31,23 +35,7 @@ const CallCenter: React.FC = () => {
     }
   ]);
 
-  const [newTicket, setNewTicket] = useState({
-    subject: '',
-    category: t('general'),
-    priority: t('medium'),
-    message: ''
-  });
 
-  const handleCreateTicket = () => {
-    if (!newTicket.subject || !newTicket.message) {
-      alert(t('please_fill_required_fields'));
-      return;
-    }
-    // Mock ticket creation
-    alert(t('ticket_created_successfully'));
-    setNewTicket({ subject: '', category: t('general'), priority: t('medium'), message: '' });
-    setActiveTab('tickets');
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -115,20 +103,20 @@ const CallCenter: React.FC = () => {
           flexWrap: 'wrap'
         }}>
           <button
-            onClick={() => navigate('/customer-chat')}
+            onClick={() => navigate('/call-center/new-ticket')}
             style={{
               padding: '15px 30px',
-              background: '#4CAF50',
+              background: '#FF5722',
               color: 'white',
               border: 'none',
               borderRadius: '10px',
               fontSize: '1.1rem',
               cursor: 'pointer',
               transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)'
+              boxShadow: '0 4px 15px rgba(255, 87, 34, 0.3)'
             }}
           >
-            💬 {t('live_chat')}
+            🎫 {t('create_ticket')}
           </button>
         </div>
 
@@ -142,7 +130,6 @@ const CallCenter: React.FC = () => {
         }}>
           {[
             { id: 'tickets', label: t('my_tickets') },
-            { id: 'new', label: t('new_ticket') },
             { id: 'faq', label: t('faq') }
           ].map(tab => (
             <button
@@ -235,123 +222,7 @@ const CallCenter: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'new' && (
-            <div>
-              <h2 style={{ marginBottom: '20px', color: '#fff' }}>{t('create_new_ticket')}</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>
-                    {t('ticket_subject')} *
-                  </label>
-                  <input
-                    type="text"
-                    value={newTicket.subject}
-                    onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '1px solid #444',
-                      background: '#333',
-                      color: '#fff',
-                      fontSize: '1rem'
-                    }}
-                    placeholder={t('ticket_subject_placeholder')}
-                  />
-                </div>
 
-                <div style={{ display: 'flex', gap: '20px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>
-                      {t('ticket_category_field')}
-                    </label>
-                    <select
-                      value={newTicket.category}
-                      onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #444',
-                        background: '#333',
-                        color: '#fff',
-                        fontSize: '1rem'
-                      }}
-                    >
-                      <option value={t('general')}>{t('general')}</option>
-                      <option value={t('shipping')}>{t('shipping')}</option>
-                      <option value={t('payment')}>{t('payment')}</option>
-                      <option value={t('product')}>{t('product')}</option>
-                      <option value={t('account')}>{t('account')}</option>
-                    </select>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>
-                      {t('ticket_priority_field')}
-                    </label>
-                    <select
-                      value={newTicket.priority}
-                      onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: '1px solid #444',
-                        background: '#333',
-                        color: '#fff',
-                        fontSize: '1rem'
-                      }}
-                    >
-                      <option value={t('low')}>{t('low')}</option>
-                      <option value={t('medium')}>{t('medium')}</option>
-                      <option value={t('high')}>{t('high')}</option>
-                      <option value={t('urgent')}>{t('urgent')}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>
-                    {t('ticket_message_field')} *
-                  </label>
-                  <textarea
-                    value={newTicket.message}
-                    onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '1px solid #444',
-                      background: '#333',
-                      color: '#fff',
-                      fontSize: '1rem',
-                      minHeight: '150px',
-                      resize: 'vertical'
-                    }}
-                    placeholder={t('ticket_message_placeholder')}
-                  />
-                </div>
-
-                <button
-                  onClick={handleCreateTicket}
-                  style={{
-                    padding: '15px 30px',
-                    background: '#FF5722',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    alignSelf: 'flex-start'
-                  }}
-                >
-                  {t('submit_ticket')}
-                </button>
-              </div>
-            </div>
-          )}
 
           {activeTab === 'faq' && (
             <div>
@@ -408,7 +279,7 @@ const CallCenter: React.FC = () => {
                     {t('live_chat')}
                   </button>
                   <button
-                    onClick={() => setActiveTab('new')}
+                    onClick={() => navigate('/call-center/new-ticket')}
                     style={{
                       padding: '12px 25px',
                       background: '#FF5722',

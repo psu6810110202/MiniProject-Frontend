@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 // import AdminDashboard from './pages/AdminDashboard'; // AdminDashboard is used within Profile page now
 import Checkout from './pages/Checkout';
+import CreateTicket from './pages/CreateTicket';
 import CallCenter from './pages/CallCenter';
 import CustomerChat from './pages/CustomerChat';
 import StaffDashboard from './pages/StaffDashboard';
@@ -757,12 +758,13 @@ const Footer: React.FC = () => {
 
 
 
-function App() {
+function MainLayout() {
   const { addPoints } = usePoints();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
-  const [showChat, setShowChat] = useState(false);
 
   // Auto-kick if blacklisted while logged in
   useEffect(() => {
@@ -808,7 +810,7 @@ function App() {
   }, [isLoggedIn, user, logout]);
 
   return (
-    <Router>
+    <>
       <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
 
@@ -841,6 +843,7 @@ function App() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/call-center" element={<CallCenter />} />
+            <Route path="/call-center/new-ticket" element={<CreateTicket />} />
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/staff-dashboard" element={<StaffDashboard />} />
             <Route path="/product/:id" element={<ProductDetail />} />
@@ -855,7 +858,7 @@ function App() {
           zIndex: 1000
         }}>
           <button
-            onClick={() => setShowChat(!showChat)}
+            onClick={() => navigate('/call-center/new-ticket')}
             style={{
               width: '60px',
               height: '60px',
@@ -878,34 +881,9 @@ function App() {
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 87, 34, 0.4)';
             }}
           >
-            {showChat ? (
-              <span style={{ fontSize: '1.5rem', color: 'white', fontWeight: 'bold' }}>✕</span>
-            ) : (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            )}
+            <span style={{ fontSize: '1.8rem' }}>🎫</span>
           </button>
         </div>
-
-        {/* Chat Popup */}
-        {showChat && (
-          <div style={{
-            position: 'fixed',
-            bottom: '100px',
-            right: '30px',
-            width: '350px',
-            height: '500px',
-            zIndex: 1001,
-            background: '#1a1a1a',
-            borderRadius: '12px',
-            boxShadow: '0 5px 30px rgba(0,0,0,0.5)',
-            border: '1px solid #333',
-            overflow: 'hidden'
-          }}>
-            <CustomerChat isPopup={true} onClose={() => setShowChat(false)} />
-          </div>
-        )}
       </div>
 
       {/* Global Blacklist Kick Popup */}
@@ -976,7 +954,14 @@ function App() {
             100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
+    </>
+  );
+}
 
+function App() {
+  return (
+    <Router>
+      <MainLayout />
     </Router>
   );
 }

@@ -20,7 +20,7 @@ const PreOrderDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // ... (keep convertPreOrderToProduct function same)
+  // Convert PreOrderItem to Product format
   const convertPreOrderToProduct = (item: PreOrderItem): Product => {
     return {
       product_id: item.id.toString(),
@@ -46,15 +46,75 @@ const PreOrderDetail: React.FC = () => {
   }, [id]);
 
   const loadPreOrderProduct = async (productId: string) => {
-    // ... (keep loadPreOrderProduct logic same, just re-declaring to keep context for tool if needed, 
-    // strictly speaking I can avoid replacing this huge block if I can target just variables and handleAddToCart)
-    // Actually simpler to just replace the top part and handleAddToCart separately? 
-    // The tool supports multiple chunks.
-    // Let's do multiple chunks.
+    console.log('Loading pre-order product with ID:', productId);
+    console.log('Available preorder items:', preorderItems);
+
+    try {
+      setLoading(true);
+
+      // Find product in pre-order items only
+      const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
+      console.log('Found preorder item:', preOrderItem);
+
+      if (preOrderItem) {
+        const convertedProduct = convertPreOrderToProduct(preOrderItem);
+        console.log('Converted pre-order product:', convertedProduct);
+        setProduct(convertedProduct);
+        setError(null);
+      } else {
+        // Try API as fallback
+        try {
+          console.log('Trying API...');
+          const data = await productAPI.getById(productId);
+          setProduct(data);
+          setError(null);
+        } catch (apiError) {
+          console.log('API failed, using fallback');
+          const fallbackProduct: Product = {
+            product_id: productId,
+            name: 'Pre-Order Not Found',
+            description: 'The requested pre-order item could not be found. Please check the pre-order page and select a valid item.',
+            price: 0,
+            category: 'Pre-Order',
+            fandom: 'Unknown',
+            image: '/api/placeholder/400/400',
+            stock: 0,
+            is_preorder: true,
+            release_date: new Date().toISOString().split('T')[0],
+            deposit_amount: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          setProduct(fallbackProduct);
+          setError('Pre-order item not found. Please return to the pre-order page.');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load pre-order product:', err);
+      setError('Failed to load pre-order product');
+      const fallbackProduct: Product = {
+        product_id: productId,
+        name: 'Error Loading Pre-Order',
+        description: 'An error occurred while loading this pre-order. Please try again later.',
+        price: 0,
+        category: 'Pre-Order',
+        fandom: 'Error',
+        image: '/api/placeholder/400/400',
+        stock: 0,
+        is_preorder: true,
+        release_date: new Date().toISOString().split('T')[0],
+        deposit_amount: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setProduct(fallbackProduct);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Wait, I cannot use multiple chunks if I'm mocking the function body in my thought process.
-  // I will use multiple chunks in the tool call.
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitMessage, setLimitMessage] = useState('');
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -63,12 +123,14 @@ const PreOrderDetail: React.FC = () => {
 
     // Check limit: 1 per account (History + Current Cart)
     if (purchasedItems.includes(safeId)) {
-      alert('You have already purchased this exclusive pre-order item. Limit 1 per account.');
+      setLimitMessage('คุณได้สั่งจองสินค้าชิ้นนี้ไปแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
+      setShowLimitModal(true);
       return;
     }
 
     if (cartItems.some(item => item.id === safeId)) {
-      alert('This item is already in your cart. Limit 1 per account.');
+      setLimitMessage('สินค้านี้อยู่ในตะกร้าแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
+      setShowLimitModal(true);
       return;
     }
 
@@ -164,7 +226,8 @@ const PreOrderDetail: React.FC = () => {
       padding: '40px 20px',
       maxWidth: '1200px',
       margin: '0 auto',
-      color: 'var(--text-main)'
+      color: 'var(--text-main)',
+      position: 'relative'
     }}>
       {/* Breadcrumb */}
       <div style={{
@@ -528,6 +591,99 @@ const PreOrderDetail: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* Limit Modal Popup */}
+      {showLimitModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.2s ease-out'
+        }} onClick={() => setShowLimitModal(false)}>
+          <div style={{
+            background: 'var(--card-bg)',
+            padding: '40px',
+            borderRadius: '20px',
+            maxWidth: '500px',
+            width: '90%',
+            textAlign: 'center',
+            border: '2px solid #FF5722',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            transform: 'scale(1)',
+            animation: 'popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+            position: 'relative'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{
+              width: '80px', height: '80px',
+              background: 'rgba(255,87,34,0.1)',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 25px',
+              color: '#FF5722'
+            }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+
+            <h2 style={{
+              color: '#FF5722',
+              marginBottom: '15px',
+              fontSize: '1.8rem',
+              fontWeight: 'bold'
+            }}>
+              Limit Reached
+            </h2>
+
+            <p style={{
+              color: 'var(--text-main)',
+              fontSize: '1.1rem',
+              marginBottom: '30px',
+              lineHeight: '1.6'
+            }}>
+              {limitMessage}
+            </p>
+
+            <button
+              onClick={() => setShowLimitModal(false)}
+              style={{
+                padding: '12px 30px',
+                background: '#FF5722',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'transform 0.1s'
+              }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              เข้าใจแล้ว
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

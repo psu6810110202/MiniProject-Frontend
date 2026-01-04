@@ -765,6 +765,7 @@ function MainLayout() {
 
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
+  const [showChatPopup, setShowChatPopup] = useState(false);
 
   // Auto-kick if blacklisted while logged in
   useEffect(() => {
@@ -855,10 +856,29 @@ function MainLayout() {
           position: 'fixed',
           bottom: '30px',
           right: '30px',
-          zIndex: 1000
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '20px'
         }}>
+          {showChatPopup && (
+            <div style={{
+              width: '350px',
+              height: '500px',
+              background: '#1a1a1a',
+              borderRadius: '12px',
+              boxShadow: '0 5px 25px rgba(0,0,0,0.3)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}>
+              <CustomerChat isPopup={true} onClose={() => setShowChatPopup(false)} />
+            </div>
+          )}
           <button
-            onClick={() => navigate('/call-center/new-ticket')}
+            onClick={() => setShowChatPopup(!showChatPopup)}
             style={{
               width: '60px',
               height: '60px',
@@ -870,18 +890,28 @@ function MainLayout() {
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 4px 20px rgba(255, 87, 34, 0.4)',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              transform: showChatPopup ? 'rotate(90deg)' : 'rotate(0deg)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.transform = showChatPopup ? 'rotate(90deg) scale(1.1)' : 'scale(1.1)';
               e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 87, 34, 0.6)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.transform = showChatPopup ? 'rotate(90deg) scale(1)' : 'scale(1)';
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 87, 34, 0.4)';
             }}
           >
-            <span style={{ fontSize: '1.8rem' }}>🎫</span>
+            {showChatPopup ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            )}
           </button>
         </div>
       </div>

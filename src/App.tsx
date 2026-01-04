@@ -26,6 +26,16 @@ import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
 
+import FandomManager from './pages/FandomManager'; // Import FandomManager
+import FandomList from './pages/FandomList';
+
+import AllFandom from './pages/AllFandom';
+import FandomDetail from './pages/FandomDetail';
+import RegularProducts from './pages/RegularProducts';
+
+import ProductDetail from './pages/ProductDetail';
+import ScrollToTop from './components/ScrollToTop';
+
 // --- Navbar Component ---
 
 // Remove NavbarProps interface as it is no longer needed
@@ -33,7 +43,8 @@ import { useCart } from './contexts/CartContext';
 //   points: number;
 // }
 
-const Navbar: React.FC<NavbarProps> = ({ points }) => {
+const Navbar: React.FC = () => {
+  const { points } = usePoints();
   const { t, language, setLanguage } = useLanguage();
   const { isLoggedIn, logout } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
@@ -100,8 +111,9 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
     <nav style={navStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <span style={{ fontSize: '1.8rem', fontWeight: '800', color: '#FF5722', letterSpacing: '-1px' }}>
-            DomPort
+          <span style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>
+            <span style={{ color: '#FFFFFF' }}>Dom</span>
+            <span style={{ color: '#FF5722' }}>Port</span>
           </span>
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
@@ -391,6 +403,8 @@ const Navbar: React.FC<NavbarProps> = ({ points }) => {
 
       </div>
     </nav>
+  );
+};
 
 // --- Home Component ---
 // ส่วนเนื้อหา Home ยังคงเปลี่ยนสีตามโหมด (Dark/Light) เพื่อความสวยงาม
@@ -458,7 +472,7 @@ const Home: React.FC = () => {
           }}
         />
         <h1 style={{ fontSize: '4rem', marginBottom: '20px', fontWeight: '900', color: 'var(--text-main)' }}>
-          {t('welcome')} <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>DomPort</span>
+          {t('welcome')} <span style={{ color: '#FF5722', textShadow: '0 0 15px rgba(255,87,34,0.6)' }}>Dom</span>Port
         </h1>
         <p style={{ fontSize: '1.3rem', color: 'var(--text-muted)', maxWidth: '600px', lineHeight: '1.6' }}>
           {t('description')}
@@ -675,14 +689,13 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Component */}
-      <Footer />
+
     </div>
   );
 };
 
-// ... rest of the code remains the same ...
-
+const Footer: React.FC = () => {
+  const { t } = useLanguage();
   return (
     <footer style={{
       backgroundColor: 'var(--bg-color)',
@@ -742,21 +755,14 @@ const Home: React.FC = () => {
   );
 };
 
-import FandomManager from './pages/FandomManager'; // Import FandomManager
-import FandomList from './pages/FandomList';
 
-import AllFandom from './pages/AllFandom';
-import FandomDetail from './pages/FandomDetail';
-import RegularProducts from './pages/RegularProducts';
-
-import ProductDetail from './pages/ProductDetail';
-import ScrollToTop from './components/ScrollToTop';
 
 function App() {
-  const { points, addPoints } = usePoints();
+  const { addPoints } = usePoints();
 
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   // Auto-kick if blacklisted while logged in
   useEffect(() => {
@@ -806,7 +812,7 @@ function App() {
       <ScrollToTop />
       <div style={{ width: '100%', minHeight: '100vh', backgroundColor: 'var(--bg-color)', display: 'flex', flexDirection: 'column' }}>
 
-        <Navbar points={points} />
+        <Navbar />
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -842,6 +848,64 @@ function App() {
           </Routes>
         </div>
         <Footer />
+        <div style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          zIndex: 1000
+        }}>
+          <button
+            onClick={() => setShowChat(!showChat)}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: '#FF5722',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 20px rgba(255, 87, 34, 0.4)',
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 87, 34, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 87, 34, 0.4)';
+            }}
+          >
+            {showChat ? (
+              <span style={{ fontSize: '1.5rem', color: 'white', fontWeight: 'bold' }}>✕</span>
+            ) : (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Chat Popup */}
+        {showChat && (
+          <div style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '30px',
+            width: '350px',
+            height: '500px',
+            zIndex: 1001,
+            background: '#1a1a1a',
+            borderRadius: '12px',
+            boxShadow: '0 5px 30px rgba(0,0,0,0.5)',
+            border: '1px solid #333',
+            overflow: 'hidden'
+          }}>
+            <CustomerChat isPopup={true} onClose={() => setShowChat(false)} />
+          </div>
+        )}
       </div>
 
       {/* Global Blacklist Kick Popup */}

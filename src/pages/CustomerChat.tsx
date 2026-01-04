@@ -23,7 +23,12 @@ interface ChatRoom {
   createdAt: string;
 }
 
-const CustomerChat: React.FC = () => {
+interface CustomerChatProps {
+  isPopup?: boolean;
+  onClose?: () => void;
+}
+
+const CustomerChat: React.FC<CustomerChatProps> = ({ isPopup = false, onClose }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -114,82 +119,65 @@ const CustomerChat: React.FC = () => {
         status: 'closed' as const
       };
       setChatRoom(closedChat);
-      setTimeout(() => {
-        navigate('/call-center');
-      }, 2000);
+      if (isPopup && onClose) {
+        setTimeout(onClose, 2000);
+      } else {
+        setTimeout(() => {
+          navigate('/call-center');
+        }, 2000);
+      }
     }
   };
 
-  if (!user) {
-    return (
-      <div style={{
-        padding: '40px 20px',
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
-        color: '#fff',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <h2>{t('please_login')}</h2>
-        <button
-          onClick={() => navigate('/login')}
-          style={{
-            padding: '12px 30px',
-            background: '#FF5722',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            marginTop: '20px'
-          }}
-        >
-          {t('go_to_login')}
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div style={{
-      padding: '20px',
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
-      color: '#fff'
+      padding: isPopup ? '0' : '20px',
+      minHeight: isPopup ? 'auto' : '100vh',
+      height: isPopup ? '100%' : 'auto',
+      background: isPopup ? '#1a1a1a' : 'linear-gradient(to bottom, #121212, #1f1f1f)',
+      color: '#fff',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', height: 'calc(100vh - 40px)' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', height: isPopup ? '100%' : 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div style={{
           background: '#252525',
-          borderRadius: '12px 12px 0 0',
-          padding: '20px',
+          borderRadius: isPopup ? '0 0 0 0' : '12px 12px 0 0',
+          padding: '15px 20px',
           border: '1px solid #333',
           borderBottom: 'none',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexShrink: 0
         }}>
           <div>
-            <h2 style={{ margin: 0, color: '#fff' }}>
+            <h2 style={{ margin: 0, color: '#fff', fontSize: isPopup ? '1.2rem' : '1.5rem' }}>
               {t('live_chat_support')}
             </h2>
-            <p style={{ margin: '5px 0 0 0', color: '#aaa', fontSize: '0.9rem' }}>
+            <p style={{ margin: '5px 0 0 0', color: '#aaa', fontSize: '0.8rem' }}>
               {chatRoom ? `${t('chatting_with')} ${chatRoom.staffName}` : t('connecting_to_staff')}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              background: isConnected ? '#4CAF50' : '#FF9800',
-              animation: isConnected ? 'pulse 2s infinite' : 'none'
-            }} />
-            <span style={{ color: isConnected ? '#4CAF50' : '#FF9800', fontSize: '0.9rem' }}>
-              {isConnected ? t('online') : t('connecting')}
-            </span>
+            {isPopup && onClose && (
+              <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+            )}
+            {!isPopup && (
+              <>
+                <div style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  background: isConnected ? '#4CAF50' : '#FF9800',
+                  animation: isConnected ? 'pulse 2s infinite' : 'none'
+                }} />
+                <span style={{ color: isConnected ? '#4CAF50' : '#FF9800', fontSize: '0.9rem' }}>
+                  {isConnected ? t('online') : t('connecting')}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -200,7 +188,7 @@ const CustomerChat: React.FC = () => {
           border: '1px solid #333',
           borderTop: 'none',
           borderBottom: 'none',
-          height: 'calc(100vh - 280px)',
+          flex: 1,
           overflowY: 'auto'
         }}>
           {!isConnected && (
@@ -230,25 +218,25 @@ const CustomerChat: React.FC = () => {
                   }}
                 >
                   <div style={{
-                    maxWidth: '70%',
-                    padding: '12px 16px',
+                    maxWidth: '85%',
+                    padding: '10px 14px',
                     borderRadius: '18px',
                     background: msg.isStaff ? '#333' : '#FF5722',
                     color: '#fff',
                     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                   }}>
                     {!msg.isStaff && (
-                      <div style={{ fontSize: '0.8rem', color: '#FFB74D', marginBottom: '5px' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#FFB74D', marginBottom: '3px' }}>
                         {t('you')}
                       </div>
                     )}
                     {msg.isStaff && (
-                      <div style={{ fontSize: '0.8rem', color: '#4CAF50', marginBottom: '5px' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#4CAF50', marginBottom: '3px' }}>
                         {msg.senderName}
                       </div>
                     )}
-                    <div style={{ marginBottom: '5px' }}>{msg.message}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#ccc', textAlign: 'right' }}>
+                    <div style={{ marginBottom: '3px', fontSize: '0.95rem' }}>{msg.message}</div>
+                    <div style={{ fontSize: '0.65rem', color: '#ccc', textAlign: 'right' }}>
                       {new Date(msg.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -262,32 +250,36 @@ const CustomerChat: React.FC = () => {
         {/* Input Area */}
         <div style={{
           background: '#252525',
-          borderRadius: '0 0 12px 12px',
-          padding: '20px',
+          borderRadius: isPopup ? '0 0 0 0' : '0 0 12px 12px',
+          padding: '15px',
           border: '1px solid #333',
-          borderTop: 'none'
+          borderTop: 'none',
+          flexShrink: 0
         }}>
           {chatRoom?.status === 'closed' ? (
             <div style={{ textAlign: 'center', color: '#aaa' }}>
               <p>{t('chat_ended')}</p>
               <button
-                onClick={() => navigate('/call-center')}
+                onClick={() => {
+                  if (isPopup && onClose) onClose();
+                  else navigate('/call-center');
+                }}
                 style={{
                   padding: '10px 20px',
                   background: '#FF5722',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
                   marginTop: '10px'
                 }}
               >
-                {t('back_to_help_center')}
+                {t('close')}
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
                 value={message}
@@ -297,12 +289,12 @@ const CustomerChat: React.FC = () => {
                 disabled={!isConnected}
                 style={{
                   flex: 1,
-                  padding: '12px',
-                  borderRadius: '25px',
+                  padding: '10px',
+                  borderRadius: '20px',
                   border: '1px solid #444',
                   background: '#1a1a1a',
                   color: '#fff',
-                  fontSize: '1rem',
+                  fontSize: '0.95rem',
                   outline: 'none'
                 }}
               />
@@ -310,31 +302,17 @@ const CustomerChat: React.FC = () => {
                 onClick={handleSendMessage}
                 disabled={!isConnected || !message.trim()}
                 style={{
-                  padding: '12px 20px',
+                  padding: '10px 15px',
                   background: isConnected && message.trim() ? '#FF5722' : '#666',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '25px',
-                  fontSize: '1rem',
+                  borderRadius: '20px',
+                  fontSize: '0.9rem',
                   cursor: isConnected && message.trim() ? 'pointer' : 'not-allowed',
                   transition: 'all 0.3s'
                 }}
               >
                 {t('send')}
-              </button>
-              <button
-                onClick={handleEndChat}
-                style={{
-                  padding: '12px 20px',
-                  background: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '25px',
-                  fontSize: '1rem',
-                  cursor: 'pointer'
-                }}
-              >
-                {t('end_chat')}
               </button>
             </div>
           )}

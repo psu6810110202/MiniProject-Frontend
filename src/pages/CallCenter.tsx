@@ -130,37 +130,6 @@ const CallCenter: React.FC = () => {
           >
             💬 {t('live_chat')}
           </button>
-          <button
-            onClick={() => setActiveTab('new')}
-            style={{
-              padding: '15px 30px',
-              background: '#FF5722',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(255, 87, 34, 0.3)'
-            }}
-          >
-            📝 {t('create_ticket')}
-          </button>
-          <button
-            style={{
-              padding: '15px 30px',
-              background: '#2196F3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
-            }}
-          >
-            📞 {t('call_us')}
-          </button>
         </div>
 
         {/* Tabs */}

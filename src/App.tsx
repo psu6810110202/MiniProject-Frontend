@@ -829,6 +829,7 @@ function MainLayout() {
             <Route path="/regular-products/:id" element={<ProductDetail />} />
             <Route path="/fandoms" element={<AllFandom />} />
             <Route path="/fandoms/:name" element={<FandomDetail />} />
+            <Route path="/fandoms/:name/:id" element={<ProductDetail />} />
             <Route path="/updates" element={<Updates />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
@@ -854,7 +855,6 @@ function MainLayout() {
             <Route path="/call-center/new-ticket" element={<CreateTicket />} />
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/staff-dashboard" element={<StaffDashboard />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/request-custom-product" element={<RequestCustomProduct />} />
 
           </Routes>

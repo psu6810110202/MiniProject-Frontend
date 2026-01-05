@@ -114,14 +114,8 @@ const FandomDetail: React.FC = () => {
                             cursor: 'pointer'
                         }}
                             onClick={() => {
-                                // Route based on product type
-                                if (item.category === 'Pre-Order') {
-                                    navigate(`/preorder/${item.id}`);
-                                } else if (item.category === 'Regular Product') {
-                                    navigate(`/regular-products/${item.id}`);
-                                } else {
-                                    navigate(`/product/${item.id}`);
-                                }
+                                // Navigate to product detail page
+                                navigate(`/fandoms/${encodeURIComponent(decodedName)}/${item.id}`);
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -140,7 +134,13 @@ const FandomDetail: React.FC = () => {
                                         margin: '5px 0 10px 0',
                                         fontSize: '1.2rem',
                                         transition: 'color 0.2s',
-                                        display: 'inline-block'
+                                        display: 'inline-block',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline'
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/fandoms/${encodeURIComponent(item.fandom)}`);
                                     }}>{item.name}</h3>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>

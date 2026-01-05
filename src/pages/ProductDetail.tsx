@@ -3,45 +3,43 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { productAPI, type Product } from '../services/api';
 import { preorderItems } from '../data/preorderData';
 import { regularProducts } from '../data/regularProducts';
 
 const ProductDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, name } = useParams<{ id: string; name: string }>();
   const { addToCart } = useCart();
   const { items, likedProductIds, toggleLikeProduct } = useProducts();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
+  console.log('ProductDetail - Route params:', { id, name });
+
   // Convert Item to Product format
-  const convertItemToProduct = (item: any): Product => {
+  const convertItemToProduct = (item: any) => {
     const numericPrice = typeof item.price === 'string'
       ? parseInt(item.price.replace('฿', '').replace(',', '')) || 0
       : (item.price || 0);
 
-    // Check if this is a pre-order item
-    const isPreOrderItem = item.deposit !== undefined || item.releaseDate !== undefined;
-
     return {
       product_id: item.id?.toString() || 'unknown',
       name: item.name,
-      description: item.description || `${item.name} - High quality ${item.category || 'collectible'} from ${item.fandom || 'Exclusive'} collection. Perfect for collectors and fans.`,
+      description: item.description || `${item.name} - High quality ${item.category || 'collectible'} from ${item.fandom || 'Exclusive'} collection.`,
       price: numericPrice,
-      category: item.category || (isPreOrderItem ? 'Pre-Order' : 'Regular'),
+      category: item.category || 'Regular',
       fandom: item.fandom || 'Exclusive',
       image: item.image,
-      stock: isPreOrderItem ? 100 : (item.stock || Math.floor(Math.random() * 50) + 10),
-      is_preorder: isPreOrderItem,
-      release_date: item.releaseDate || new Date(Date.now() + Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      deposit_amount: item.deposit || Math.floor(numericPrice * 0.2),
+      stock: item.stock || 10,
+      is_preorder: item.deposit !== undefined,
+      release_date: item.releaseDate || new Date().toISOString().split('T')[0],
+      deposit_amount: item.deposit || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -50,19 +48,21 @@ const ProductDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadProduct(id);
+    } else {
+      console.error('No product ID provided in route');
+      setError('No product ID provided');
+      setLoading(false);
     }
   }, [id, items]);
 
   const loadProduct = async (productId: string) => {
     console.log('Loading product with ID:', productId);
     console.log('Available items in context:', items);
-    console.log('Available preorder items:', preorderItems);
-    console.log('Available regular products:', regularProducts);
 
     try {
       setLoading(true);
 
-      // First, try to find product in ProductContext items (catalog items)
+      // First, try to find product in ProductContext items
       const contextItem = items.find(item =>
         item.id?.toString() === productId
       );
@@ -77,11 +77,7 @@ const ProductDetail: React.FC = () => {
         return;
       }
 
-      // If not found in catalog, check if this might be a pre-order or regular product
-      // But only search in appropriate data sources based on context
-      // Check if this might be a pre-order or regular product
-
-      // Check pre-order items first (since they have lower IDs 1-50)
+      // Check pre-order items
       const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
       console.log('Found preorder item:', preOrderItem);
 
@@ -92,7 +88,7 @@ const ProductDetail: React.FC = () => {
         return;
       }
 
-      // Then check regular products (IDs 101+)
+      // Check regular products
       const regularProduct = regularProducts.find(item => item.id.toString() === productId);
       console.log('Found regular product:', regularProduct);
 
@@ -103,53 +99,31 @@ const ProductDetail: React.FC = () => {
         return;
       }
 
-      // If still not found, try API as last resort
-      try {
-        console.log('Trying API...');
-        const data = await productAPI.getById(productId);
-        setProduct(data);
-        setError(null);
-        return;
-      } catch (apiError) {
-        console.log('API failed, using fallback');
-        // Use fallback data if nothing else works
-        const fallbackProduct: Product = {
-          product_id: productId,
-          name: t('product_not_found'),
-          description: t('product_not_found_description') || 'The requested product could not be found in our catalog. Please check the product ID or return to catalog and select a valid product.',
-          price: 0,
-          category: 'Unknown',
-          fandom: 'Unknown',
-          image: '/api/placeholder/400/400',
-          stock: 0,
-          is_preorder: false,
-          release_date: new Date().toISOString().split('T')[0],
-          deposit_amount: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setProduct(fallbackProduct);
-        setError(t('product_not_found_error') || 'Product not found in catalog. Please return to catalog and select a valid product.');
-      }
-    } catch (err) {
-      console.error('Failed to load product:', err);
-      setError(t('error_loading_product') || 'Failed to load product');
-      const fallbackProduct: Product = {
+      // If no product found, create a fallback product
+      console.log('Creating fallback product for ID:', productId);
+      const fallbackProduct = {
         product_id: productId,
-        name: t('error_loading_product_name') || 'Error Loading Product',
-        description: t('error_loading_product_description') || 'An error occurred while loading this product. Please try again later.',
-        price: 0,
-        category: 'Error',
-        fandom: 'Error',
-        image: '/api/placeholder/400/400',
-        stock: 0,
+        name: `Product ${productId}`,
+        description: `This is a test product for ID ${productId}. The actual product data might not be available.`,
+        price: 999,
+        category: 'Regular',
+        fandom: name || 'Test Fandom',
+        image: `https://via.placeholder.com/300?text=Product+${productId}`,
+        stock: 10,
         is_preorder: false,
         release_date: new Date().toISOString().split('T')[0],
         deposit_amount: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
       setProduct(fallbackProduct);
+      setError(null);
+      console.log('Created fallback product:', fallbackProduct);
+
+    } catch (err) {
+      console.error('Error loading product:', err);
+      setError('Failed to load product');
     } finally {
       setLoading(false);
     }
@@ -170,7 +144,6 @@ const ProductDetail: React.FC = () => {
         image: product.image
       });
 
-      // Show success feedback
       setTimeout(() => {
         setAddingToCart(false);
       }, 1000);
@@ -180,16 +153,20 @@ const ProductDetail: React.FC = () => {
     }
   };
 
-
-
   if (loading) {
     return (
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: 'var(--text-main)'
+        color: 'var(--text-main)',
+        minHeight: '100vh',
+        background: 'var(--bg-color)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center'
       }}>
-        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>{t('loading_product_details')}</div>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>Loading product details...</div>
         <div style={{
           width: '40px',
           height: '40px',
@@ -204,11 +181,6 @@ const ProductDetail: React.FC = () => {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-          @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-          }
         `}</style>
       </div>
     );
@@ -219,63 +191,27 @@ const ProductDetail: React.FC = () => {
       <div style={{
         padding: '40px',
         textAlign: 'center',
-        color: 'var(--text-main)'
+        color: 'var(--text-main)',
+        minHeight: '100vh',
+        background: 'var(--bg-color)'
       }}>
-        <h2>{t('product_not_found')}</h2>
-        <Link to="/catalog" style={{ color: '#FF5722' }}>{t('back_to_catalog')}</Link>
+        <h2>{error || 'Product not found'}</h2>
+        <p>Product ID: {id}</p>
+        <p>Fandom: {name}</p>
+        <Link to="/catalog" style={{ color: '#FF5722' }}>Back to Catalog</Link>
       </div>
     );
   }
-
-  // Calculate Display ID (Sequential per Fandom)
-  const displayId = React.useMemo(() => {
-    if (!product) return '...';
-
-    // 1. Sort all items (mock + real)
-    const allItems = [...items].sort((a, b) => Number(a.id) - Number(b.id)); // Assuming ID is numericable
-
-    // 2. Mappings
-    const fandomMap: Record<string, number> = {
-      'Hazbin hotel': 1, 'Undertale': 2, 'Genshin impact': 3,
-      'Identity V': 4, 'Alien stage': 5, 'Cookie run kingdom': 6,
-      'Project sekai': 7, 'Milgram': 8
-    };
-    const categoryMap: Record<string, number> = {
-      'Prop Replica': 1, 'Apparel': 2, 'Figure': 3,
-      'Plush': 4, 'Book': 5, 'Cushion': 6, 'Acrylic Stand': 7
-    };
-
-    // 3. Find our running number
-    let runningParam = 0;
-    let myRunningNum = 0;
-
-    for (const item of allItems) {
-      if (item.fandom === product.fandom) {
-        runningParam++;
-        // Check if this item matches our current product
-        // We compare strictly (ID or Name if ID is tricky)
-        if (String(item.id) === String(product.product_id) || item.name === product.name) {
-          myRunningNum = runningParam;
-          break;
-        }
-      }
-    }
-
-    // If not found in list (e.g. newly added or API only), default to 1 or Max+1
-    if (myRunningNum === 0) myRunningNum = runningParam + 1; // Assume next
-
-    const fId = fandomMap[product.fandom] || 9;
-    const cId = categoryMap[product.category] || 9;
-
-    return `${fId}${cId}${myRunningNum}`;
-  }, [product, items]);
 
   return (
     <div style={{
       padding: '40px 20px',
       maxWidth: '1200px',
       margin: '0 auto',
-      color: 'var(--text-main)'
+      color: 'var(--text-main)',
+      background: 'var(--bg-color)',
+      height: 'auto',
+      position: 'relative'
     }}>
       {/* Breadcrumb */}
       <div style={{
@@ -283,9 +219,9 @@ const ProductDetail: React.FC = () => {
         fontSize: '0.9rem',
         color: 'var(--text-muted)'
       }}>
-        <Link to="/" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>{t('home')}</Link>
+        <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/catalog" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>{t('catalog')}</Link>
+        <Link to="/catalog" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Catalog</Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
       </div>
@@ -304,6 +240,7 @@ const ProductDetail: React.FC = () => {
         </div>
       )}
 
+      {/* Product Details - Matching PreOrderDetail Layout */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -329,6 +266,9 @@ const ProductDetail: React.FC = () => {
                 objectFit: 'cover',
                 borderRadius: '8px',
                 backgroundColor: 'rgba(255,87,34,0.05)'
+              }}
+              onError={(e) => {
+                e.currentTarget.src = 'https://via.placeholder.com/400?text=No+Image';
               }}
             />
           </div>
@@ -356,7 +296,7 @@ const ProductDetail: React.FC = () => {
               >
                 <img
                   src={product.image}
-                  alt={`${t('view')} ${index + 1}`}
+                  alt={`View ${index + 1}`}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -370,12 +310,10 @@ const ProductDetail: React.FC = () => {
 
         {/* Product Information */}
         <div>
-          {/* Product Name */}
-          {/* Product Name with Pre-Order Badge */}
+          {/* Product Name with Badges */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
               <h1
-                onClick={() => navigate(`/product/${product.product_id}`)}
                 style={{
                   fontSize: '2rem',
                   fontWeight: 'bold',
@@ -412,7 +350,7 @@ const ProductDetail: React.FC = () => {
                     boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
                     animation: 'pulse 2s infinite'
                   }}>
-                    {t('preorder_exclusive')}
+                    PRE-ORDER EXCLUSIVE
                   </span>
                   <span style={{
                     padding: '6px 12px',
@@ -423,24 +361,11 @@ const ProductDetail: React.FC = () => {
                     fontWeight: 'bold',
                     border: '1px solid #FF5722'
                   }}>
-                    {t('limited_edition')}
+                    LIMITED EDITION
                   </span>
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{
-                    padding: '8px 16px',
-                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
-                    color: 'white',
-                    borderRadius: '25px',
-                    fontSize: '0.85rem',
-                    fontWeight: 'bold',
-                    verticalAlign: 'middle',
-                    alignSelf: 'center',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
-                  }}>
-                    ✅ {t('in_stock_ready_ship')}
-                  </span>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <span style={{
                     padding: '6px 12px',
                     background: 'rgba(76, 175, 80, 0.1)',
@@ -450,37 +375,8 @@ const ProductDetail: React.FC = () => {
                     fontWeight: 'bold',
                     border: '1px solid #4CAF50'
                   }}>
-                    {t('immediate_delivery')}
+                    IN STOCK
                   </span>
-                  {/* Category & Fandom Tags */}
-                  <div style={{
-                    padding: '6px 12px',
-                    background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-                    color: 'white',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
-                  }}>
-                    {product.category}
-                  </div>
-                  <div style={{
-                    padding: '6px 12px',
-                    background: 'linear-gradient(135deg, #9C27B0, #7B1FA2)',
-                    color: 'white',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)'
-                  }}>
-                    {product.fandom}
-                  </div>
                 </div>
               )}
             </div>
@@ -490,7 +386,7 @@ const ProductDetail: React.FC = () => {
           <div style={{
             fontSize: '2rem',
             fontWeight: 'bold',
-            color: product.is_preorder ? '#FF5722' : '#4CAF50',
+            color: '#4CAF50',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'baseline',
@@ -499,31 +395,23 @@ const ProductDetail: React.FC = () => {
             <div>
               ฿{product.price.toLocaleString()}
             </div>
-            {product.is_preorder && (
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                fontWeight: 'normal'
-              }}>
-                <div style={{ color: '#FF5722', fontWeight: 'bold' }}>{t('preorder_price')}</div>
-                <div>{t('deposit')}: ฿{product.deposit_amount?.toLocaleString()}</div>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  ({t('now')} ฿{Math.round(product.price * 0.2).toLocaleString()} + {t('on_release')} ฿{Math.round(product.price * 0.8).toLocaleString()})
-                </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#666',
+              fontWeight: 'normal'
+            }}>
+              <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                {product.is_preorder ? 'PRE-ORDER PRICE' : 'REGULAR PRICE'}
               </div>
-            )}
-            {!product.is_preorder && (
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                fontWeight: 'normal'
-              }}>
-                <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>{t('regular_price')}</div>
-                <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  {t('ships_within_days')}
-                </div>
-              </div>
-            )}
+              {product.is_preorder && (
+                <>
+                  <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                    (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -545,7 +433,7 @@ const ProductDetail: React.FC = () => {
             gap: '20px',
             marginBottom: '30px'
           }}>
-            <span style={{ fontWeight: 'bold' }}>{t('quantity')}:</span>
+            <span style={{ fontWeight: 'bold' }}>Quantity:</span>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -589,7 +477,7 @@ const ProductDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              {t('max_units')}: {product.stock} {t('units')}
+              Max: {product.stock} units
             </span>
           </div>
 
@@ -605,9 +493,7 @@ const ProductDetail: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' :
-                  product.is_preorder ? 'linear-gradient(135deg, #FF5722, #E64A19)' :
-                    '#FF5722',
+                background: addingToCart ? '#4CAF50' : 'linear-gradient(135deg, #FF5722, #E64A19)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -616,27 +502,22 @@ const ProductDetail: React.FC = () => {
                 cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
                 opacity: product.stock === 0 ? 0.5 : 1,
-                boxShadow: product.is_preorder ? '0 4px 16px rgba(255, 87, 34, 0.3)' : 'none'
+                boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
               }}
               onMouseEnter={(e) => {
                 if (!addingToCart && product.stock > 0) {
-                  e.currentTarget.style.background = product.is_preorder ?
-                    'linear-gradient(135deg, #E64A19, #D84315)' : '#E64A19';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #E64A19, #D84315)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!addingToCart) {
-                  e.currentTarget.style.background = product.is_preorder ?
-                    'linear-gradient(135deg, #FF5722, #E64A19)' : '#FF5722';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #FF5722, #E64A19)';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {addingToCart ? `✓ ${t('added_to_cart')}` :
-                product.stock === 0 ? t('out_of_stock') :
-                  (product.is_preorder ? ` ${t('preorder_now')}` : ` ${t('add_to_cart')}`)
-              }
+              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : (product.is_preorder ? 'Pre-Order Now' : 'Add to Cart')}
             </button>
 
             <button
@@ -644,11 +525,11 @@ const ProductDetail: React.FC = () => {
                 if (product?.product_id) toggleLikeProduct(Number(product.product_id));
               }}
               style={{
-                width: '60px', // Fixed width for square look
+                width: '60px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '0', // Reset padding
+                padding: '0',
                 background: 'transparent',
                 border: '2px solid #FF5722',
                 borderRadius: '8px',
@@ -679,7 +560,7 @@ const ProductDetail: React.FC = () => {
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>{t('product_details')}</h4>
+            <h4 style={{ marginBottom: '15px' }}>Product Details</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -687,8 +568,14 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>{t('stock')}:</strong> {product.stock} {t('units')}</div>
-              <div><strong>{t('product_id_label')}:</strong> {displayId}</div>
+              <div><strong>Stock:</strong> {product.stock} units</div>
+              <div><strong>Product ID:</strong> {product.product_id}</div>
+              {product.is_preorder && (
+                <>
+                  <div><strong>Release Date:</strong> {product.release_date}</div>
+                  <div><strong>Deposit:</strong> ฿{product.deposit_amount?.toLocaleString()}</div>
+                </>
+              )}
             </div>
           </div>
 
@@ -698,7 +585,7 @@ const ProductDetail: React.FC = () => {
             paddingTop: '20px',
             marginTop: '20px'
           }}>
-            <h4 style={{ marginBottom: '15px' }}>{t('material_specifications')}</h4>
+            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -706,18 +593,33 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>{t('material')}:</strong> {t('premium_pvc_vinyl')}</div>
-              <div><strong>{t('height')}:</strong> 18 cm</div>
-              <div><strong>{t('weight')}:</strong> 450g</div>
-              <div><strong>{t('base')}:</strong> 7cm x 5cm</div>
-              <div><strong>{t('paint')}:</strong> {t('hand_painted_details')}</div>
-              <div><strong>{t('packaging')}:</strong> {t('collectors_box')}</div>
-              <div><strong>{t('authenticity')}:</strong> {t('certificate_included')}</div>
-              <div><strong>{t('limited_edition')}:</strong> {t('limited_edition_pieces')}</div>
+              <div><strong>Material:</strong> Premium PVC Vinyl</div>
+              <div><strong>Height:</strong> 18 cm</div>
+              <div><strong>Weight:</strong> 450g</div>
+              <div><strong>Base:</strong> 7cm x 5cm</div>
+              <div><strong>Paint:</strong> Hand-painted details</div>
+              <div><strong>Packaging:</strong> Collector's box</div>
+              <div><strong>Authenticity:</strong> Certificate included</div>
+              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Add pulse animation */}
+      <style>{`
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -136,15 +136,8 @@ const Catalog: React.FC = () => {
                         onClick={() => {
                             console.log('Navigating to product:', item.id, item.name, 'Category:', item.category);
 
-                            // Route based on product type
-                            if (item.category === 'Pre-Order') {
-                                navigate(`/preorder/${item.id}`);
-                            } else if (item.category === 'Regular Product') {
-                                navigate(`/regular-products/${item.id}`);
-                            } else {
-                                // Default for catalog items
-                                navigate(`/product/${item.id}`);
-                            }
+                            // Navigate all products to ProductDetail page
+                            navigate(`/product/${item.id}`);
                         }} // Navigate on card click
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -186,7 +179,13 @@ const Catalog: React.FC = () => {
                                         margin: '5px 0 10px 0',
                                         fontSize: '1.2rem',
                                         transition: 'color 0.2s',
-                                        display: 'inline-block'
+                                        display: 'inline-block',
+                                        cursor: 'pointer',
+                                        textDecoration: 'underline'
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/fandoms/${encodeURIComponent(item.fandom)}`);
                                     }}
                                 >{item.name}</h3>
                             </div>

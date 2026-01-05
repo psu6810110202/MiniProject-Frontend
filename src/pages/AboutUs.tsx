@@ -1,26 +1,11 @@
 import React from 'react';
 import './AboutUs.css';
-import type { TeamMember, Feature } from '../types';
+import type { Feature } from '../types';
 
 import { useLanguage } from '../contexts/LanguageContext';
 
 const AboutUs: React.FC = () => {
   const { t } = useLanguage();
-  // ข้อมูลสมาชิก (แก้ไขเป็นข้อมูลจริง)
-  const members: TeamMember[] = [
-    {
-      studentId: '64xxxxxxxx',
-      name: 'Member Name 1',
-      role: 'Backend Developer',
-      imageUrl: 'A',
-    },
-    {
-      studentId: '64xxxxxxxx',
-      name: 'Member Name 2',
-      role: 'Frontend Developer',
-      imageUrl: 'B',
-    },
-  ];
 
   // ข้อมูลฟีเจอร์
   const features: Feature[] = [

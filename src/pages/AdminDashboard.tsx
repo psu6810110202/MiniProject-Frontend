@@ -2,10 +2,12 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { orderAPI, type Shipment } from '../services/api';
 
 const AdminDashboard: React.FC = () => {
     const { role } = useAuth();
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { items, preOrders } = useProducts();
 
@@ -60,30 +62,30 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div style={{ color: 'var(--text-main)', marginTop: '40px' }}>
-            <h2 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px', fontSize: '1.8rem' }}>
+            <h2 style={{ marginBottom: '30px', borderBottom: '2px solid var(--primary-color)', paddingBottom: '10px', fontSize: '1.8rem' }}>
                 Admin Dashboard 🛠️
             </h2>
 
             {/* Top Row: User Management */}
             <div style={{ marginBottom: '20px' }}>
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '30px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                 }}>
                     <div>
-                        <h3>User Management</h3>
-                        <p style={{ color: '#888' }}>View and manage registered users.</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>User Management</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>View and manage registered users.</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/users')}
                         style={{
                             padding: '10px 25px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
@@ -106,18 +108,18 @@ const AdminDashboard: React.FC = () => {
             }}>
                 {/* Shipping Tools */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     gap: '12px'
                 }}>
                     <div>
-                        <h3>Create Shipping Label</h3>
-                        <p style={{ color: '#888', marginTop: '6px' }}>
+                        <h3 style={{ color: 'var(--text-main)' }}>Create Shipping Label</h3>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '6px' }}>
                             Create shipping labels and tracking numbers (must be PAID orders)
                         </p>
                     </div>
@@ -131,8 +133,8 @@ const AdminDashboard: React.FC = () => {
                                 width: '100%',
                                 padding: '10px 12px',
                                 borderRadius: '6px',
-                                border: '1px solid #444',
-                                background: 'rgba(0,0,0,0.15)',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--input-bg)',
                                 color: 'var(--text-main)'
                             }}
                         />
@@ -142,7 +144,7 @@ const AdminDashboard: React.FC = () => {
                             disabled={shippingLoading}
                             style={{
                                 padding: '10px 20px',
-                                background: shippingLoading ? '#4CAF50' : '#FF5722',
+                                background: shippingLoading ? '#4CAF50' : 'var(--primary-color)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '5px',
@@ -160,7 +162,7 @@ const AdminDashboard: React.FC = () => {
                                 borderRadius: '8px',
                                 background: 'rgba(244,67,54,0.12)',
                                 border: '1px solid rgba(244,67,54,0.35)',
-                                color: '#ffb3ad',
+                                color: 'var(--text-muted)',
                                 fontSize: '0.95rem'
                             }}>
                                 {shippingError}
@@ -176,14 +178,14 @@ const AdminDashboard: React.FC = () => {
                                 color: 'var(--text-main)'
                             }}>
                                 <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Success</div>
-                                <div style={{ color: '#cfcfcf', fontSize: '0.95rem', marginBottom: '6px' }}>
-                                    Tracking: <span style={{ color: 'white', fontWeight: 'bold' }}>{shippingResult.tracking_number}</span>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '6px' }}>
+                                    Tracking: <span style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>{shippingResult.tracking_number}</span>
                                 </div>
                                 <a
                                     href={shippingResult.label_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    style={{ color: '#FF5722', fontWeight: 'bold', textDecoration: 'none' }}
+                                    style={{ color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none' }}
                                 >
                                     Open Label
                                 </a>
@@ -194,22 +196,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Manage Fandoms */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h3>Manage Fandoms</h3>
-                        <p style={{ color: '#888' }}>Edit All Fandom Section</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>Manage Fandoms</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Edit All Fandom Section</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/fandoms')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
@@ -223,22 +225,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Manage Products */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h3>Manage Products</h3>
-                        <p style={{ color: '#888' }}>Total Products: {items.length}</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>Manage Products</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Total Products: {items.length}</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/products')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
@@ -252,22 +254,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Manage Pre-Orders */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h3>Manage Pre-Orders</h3>
-                        <p style={{ color: '#888' }}>Total Items: {preOrders.length}</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>Manage Pre-Orders</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Total Items: {preOrders.length}</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/preorders')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
@@ -281,22 +283,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Manage Tickets */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h3>Manage Tickets</h3>
-                        <p style={{ color: '#888' }}>Receive and respond to tickets from users</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>Manage Tickets</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Receive and respond to tickets from users</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/tickets')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
@@ -310,22 +312,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Manage Custom Requests */}
                 <div style={{
-                    background: 'rgba(255,255,255,0.05)',
+                    background: 'var(--card-bg)',
                     padding: '20px',
                     borderRadius: '10px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
                 }}>
                     <div>
-                        <h3>Custom Requests</h3>
-                        <p style={{ color: '#888' }}>Receive custom product requests from users</p>
+                        <h3 style={{ color: 'var(--text-main)' }}>Custom Requests</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Receive custom product requests from users</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/custom-requests')}
                         style={{
                             marginTop: '15px',
                             padding: '10px 20px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',

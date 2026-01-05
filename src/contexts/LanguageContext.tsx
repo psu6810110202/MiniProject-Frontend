@@ -537,7 +537,7 @@ const translations: Record<Language, Translations> = {
         grand_opening_title: 'เปิดตัวอย่างร้านค้าอออนไลน์ของ DomPort!',
         grand_opening_content: 'เรามีความปรีณีที่จะประกาศการเปิดตัวอย่างร้านค้าอออนไลน์ของ DomPort อย่างเป็นศูนย์ใจสำหรับอุปกรณ์อนิเมะและของสะสม! เพื่อเฉลิฉลองการเปิดตัว เรามอบแต้มพอยให้แก่องคะแนนสองลอนแรกครั้งแรกครั้งในสัปดาหนนี้',
         wonder_festival_title: 'สรุปปี Wonder Festival 2024',
-        wonder_festival_content: 'Wonder Festival ฤดูหนาวเป็นไปได้อย่างมาก! เราได้เห็นตัวอย่างต่อไปของ Chainsaw Man และ Spy x Family ที่จะอออกมาในอนาคติว ตรวจสอรูปภาพจากจากพื้นพื้นของงาน',
+        wonder_festival_content: 'Wonder Festival ฤดูหนาวเป็นไปได้อย่างมาก! เราได้เห็นตัวอย่างต่อไปของ Chainsaw Man และ Spy x Family ที่จะอออนมาในอนาคติว ตรวจสอรูปภาพจากจากพื้นพื้นของงาน',
         production_delay_title: 'ผลิตช้างเลื่อน: EVA Unit-01',
         production_delay_content: 'เราต้องขอออภัยว่าการวางจำหน่ายของ EVA Unit-01 Awakening statue ได้ถูกเลื่อนออกไป 2 เดือนเนื่องจากการปรับเปลี่ยนแปลงการผลิตเพื่อให้คุณภาพระดีสูงสุด เราขออภัยในความไม่สะดวสะดี',
         new_preorders_title: 'สั่งจองล่วงหน้าใหม่: Hololive Generation 3',
@@ -630,12 +630,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [language, setLanguageState] = useState<Language>('en');
+    const [language, setLanguageState] = useState<Language>('th');
 
     useEffect(() => {
         const savedLang = localStorage.getItem('language') as Language;
         if (savedLang && (savedLang === 'en' || savedLang === 'th')) {
             setLanguageState(savedLang);
+        } else {
+            // Set default to Thai if no saved language
+            setLanguageState('th');
+            localStorage.setItem('language', 'th');
         }
     }, []);
 

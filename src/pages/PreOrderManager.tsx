@@ -54,8 +54,14 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
             zIndex: 2000, padding: '20px'
         }}>
             <div style={{
-                background: '#1a1a1a', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '500px',
-                maxHeight: '90vh', overflowY: 'auto', border: '1px solid #FF5722'
+                background: '#1a1a1a', 
+                padding: '40px', 
+                borderRadius: '20px', 
+                width: '100%', 
+                maxWidth: '500px',
+                maxHeight: '90vh', 
+                overflowY: 'auto', 
+                border: '1px solid #FF5722'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h2 style={{ margin: 0, color: '#FF5722' }}>Add New Pre-Order</h2>
@@ -63,8 +69,8 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Product Name *</label>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Product Name *</label>
                         <input
                             type="text"
                             required
@@ -72,18 +78,19 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                             onChange={(e) => handleInputChange('name', e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '10px',
+                                padding: '12px',
                                 background: '#2a2a2a',
                                 border: '1px solid #333',
                                 borderRadius: '8px',
-                                color: '#fff'
+                                color: '#fff',
+                                fontSize: '1rem'
                             }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+                    <div style={{ display: 'flex', gap: '30px', marginBottom: '20px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Price *</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Price *</label>
                             <input
                                 type="number"
                                 required
@@ -91,16 +98,17 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                                 onChange={(e) => handleInputChange('price', e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '10px',
+                                    padding: '12px',
                                     background: '#2a2a2a',
                                     border: '1px solid #333',
                                     borderRadius: '8px',
-                                    color: '#fff'
+                                    color: '#fff',
+                                    fontSize: '1rem'
                                 }}
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Deposit *</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Deposit *</label>
                             <input
                                 type="number"
                                 required
@@ -108,18 +116,19 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                                 onChange={(e) => handleInputChange('deposit', e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '10px',
+                                    padding: '12px',
                                     background: '#2a2a2a',
                                     border: '1px solid #333',
                                     borderRadius: '8px',
-                                    color: '#fff'
+                                    color: '#fff',
+                                    fontSize: '1rem'
                                 }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Release Date *</label>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Release Date *</label>
                         <input
                             type="date"
                             required
@@ -127,18 +136,19 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                             onChange={(e) => handleInputChange('releaseDate', e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '10px',
+                                padding: '12px',
                                 background: '#2a2a2a',
                                 border: '1px solid #333',
                                 borderRadius: '8px',
-                                color: '#fff'
+                                color: '#fff',
+                                fontSize: '1rem'
                             }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
+                    <div style={{ display: 'flex', gap: '30px', marginBottom: '20px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Fandom *</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Fandom *</label>
                             <input
                                 type="text"
                                 required
@@ -146,27 +156,29 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                                 onChange={(e) => handleInputChange('fandom', e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '10px',
+                                    padding: '12px',
                                     background: '#2a2a2a',
                                     border: '1px solid #333',
                                     borderRadius: '8px',
-                                    color: '#fff'
+                                    color: '#fff',
+                                    fontSize: '1rem'
                                 }}
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Category *</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Category *</label>
                             <select
                                 required
                                 value={formData.category}
                                 onChange={(e) => handleInputChange('category', e.target.value)}
                                 style={{
                                     width: '100%',
-                                    padding: '10px',
+                                    padding: '12px',
                                     background: '#2a2a2a',
                                     border: '1px solid #333',
                                     borderRadius: '8px',
-                                    color: '#fff'
+                                    color: '#fff',
+                                    fontSize: '1rem'
                                 }}
                             >
                                 <option value="Figure">Figure</option>
@@ -175,8 +187,8 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Image URL</label>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Image URL</label>
                         <input
                             type="url"
                             value={formData.image}
@@ -184,29 +196,31 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
                             placeholder="http://localhost:3000/images/covers/product.webp"
                             style={{
                                 width: '100%',
-                                padding: '10px',
+                                padding: '12px',
                                 background: '#2a2a2a',
                                 border: '1px solid #333',
                                 borderRadius: '8px',
-                                color: '#fff'
+                                color: '#fff',
+                                fontSize: '1rem'
                             }}
                         />
                     </div>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '5px', color: '#aaa' }}>Description</label>
+                    <div style={{ marginBottom: '25px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Description</label>
                         <textarea
                             value={formData.description}
                             onChange={(e) => handleInputChange('description', e.target.value)}
                             rows={3}
                             style={{
                                 width: '100%',
-                                padding: '10px',
+                                padding: '12px',
                                 background: '#2a2a2a',
                                 border: '1px solid #333',
                                 borderRadius: '8px',
                                 color: '#fff',
-                                resize: 'vertical'
+                                resize: 'vertical',
+                                fontSize: '1rem'
                             }}
                         />
                     </div>
@@ -323,219 +337,84 @@ const PreOrderManager: React.FC = () => {
     if (role !== 'admin') return null;
 
     return (
-        <div style={{ 
-            padding: '40px 20px',
-            maxWidth: '1400px', 
-            margin: '0 auto', 
-            background: 'linear-gradient(135deg, #121212 0%, #1f1f1f 100%)',
-            minHeight: '100vh',
-            color: '#fff'
-        }}>
+        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
                 onClick={() => navigate('/profile')}
-                style={{ 
-                    marginBottom: '30px', 
-                    background: 'linear-gradient(45deg, rgba(255, 87, 34, 0.1), rgba(255, 193, 7, 0.05))',
-                    border: '1px solid rgba(255, 87, 34, 0.3)',
-                    color: '#FF5722', 
-                    cursor: 'pointer', 
-                    fontSize: '1rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    padding: '12px 20px',
-                    borderRadius: '12px',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 2px 8px rgba(255, 87, 34, 0.2)'
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 87, 34, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 87, 34, 0.2)';
-                }}
+                style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '5px' }}
             >
                 ← Back to Profile
             </button>
 
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '50px',
-                padding: '20px',
-                background: 'linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 193, 7, 0.05))',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 87, 34, 0.2)',
-                backdropFilter: 'blur(10px)'
-            }}>
-                <div>
-                    <h1 style={{ 
-                        margin: 0, 
-                        fontSize: '2.5rem',
-                        fontWeight: '900',
-                        background: 'linear-gradient(90deg, #FF5722, #FFC107)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        marginBottom: '8px'
-                    }}>
-                        Pre-Order Management 📦
-                    </h1>
-                    <p style={{ margin: 0, color: '#aaa', fontSize: '1.1rem' }}>
-                        Manage your pre-order products and view reservations
-                    </p>
-                </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+                <h1 style={{ margin: 0, borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
+                    Pre-Order Management 📦
+                </h1>
                 <button 
                     onClick={() => setShowAddModal(true)}
                     style={{
-                        padding: '14px 28px',
-                        background: 'linear-gradient(45deg, #FF5722, #F4511E)',
+                        padding: '12px 25px',
+                        background: '#FF5722',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '12px',
+                        borderRadius: '8px',
                         cursor: 'pointer',
                         fontWeight: 'bold',
-                        fontSize: '1rem',
-                        boxShadow: '0 6px 20px rgba(255, 87, 34, 0.4)',
-                        transition: 'all 0.3s ease',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-3px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 87, 34, 0.5)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 87, 34, 0.4)';
+                        boxShadow: '0 4px 15px rgba(255, 87, 34, 0.3)'
                     }}
                 >
                     + Add New Pre-Order
                 </button>
             </div>
 
-            {/* Grid display */}
+            {/* Grid display ("ช่องเรียบร้อย") */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: '30px'
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '25px'
             }}>
                 {preOrders.map(item => (
                     <div key={item.id} style={{
-                        background: 'linear-gradient(145deg, #252525, #2a2a2a)',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 87, 34, 0.2)',
+                        background: 'var(--card-bg)',
+                        borderRadius: '15px',
+                        border: '1px solid var(--border-color)',
                         overflow: 'hidden',
                         display: 'flex',
                         flexDirection: 'column',
-                        transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                        boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
-                        position: 'relative'
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-8px)';
-                        e.currentTarget.style.boxShadow = '0 15px 35px rgba(255, 87, 34, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+                        transition: 'transform 0.2s',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}>
-                        <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                        <div style={{ position: 'relative', height: '200px' }}>
                             <img
                                 src={item.image}
                                 alt={item.name}
-                                style={{ 
-                                    width: '100%', 
-                                    height: '100%', 
-                                    objectFit: 'cover',
-                                    transition: 'transform 0.5s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                             <div style={{
                                 position: 'absolute',
-                                top: '15px',
-                                right: '15px',
-                                background: 'linear-gradient(45deg, rgba(0,0,0,0.8), rgba(0,0,0,0.6))',
-                                padding: '8px 15px',
-                                borderRadius: '20px',
-                                fontSize: '0.85rem',
+                                top: '10px',
+                                right: '10px',
+                                background: 'rgba(0,0,0,0.7)',
+                                padding: '4px 10px',
+                                borderRadius: '10px',
+                                fontSize: '0.8rem',
                                 color: '#FFC107',
-                                fontWeight: 'bold',
-                                border: '1px solid rgba(255, 193, 7, 0.3)',
-                                backdropFilter: 'blur(10px)'
+                                fontWeight: 'bold'
                             }}>
                                 ID: {item.id}
                             </div>
-                            <div style={{
-                                position: 'absolute',
-                                bottom: '15px',
-                                left: '15px',
-                                background: 'linear-gradient(45deg, #FF5722, #F4511E)',
-                                padding: '6px 12px',
-                                borderRadius: '15px',
-                                fontSize: '0.75rem',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                boxShadow: '0 4px 10px rgba(255, 87, 34, 0.4)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                            }}>
-                                {item.category}
-                            </div>
                         </div>
 
-                        <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ 
-                                margin: '0 0 15px 0', 
-                                fontSize: '1.3rem', 
-                                height: '2.8em', 
-                                overflow: 'hidden',
-                                fontWeight: '700',
-                                color: '#fff',
-                                lineHeight: '1.4'
-                            }}>{item.name}</h3>
+                        <div style={{ padding: '15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', height: '2.4em', overflow: 'hidden' }}>{item.name}</h3>
 
-                            <div style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                marginBottom: '20px',
-                                padding: '15px',
-                                background: 'rgba(255, 87, 34, 0.05)',
-                                borderRadius: '12px',
-                                border: '1px solid rgba(255, 87, 34, 0.1)'
-                            }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Price</div>
-                                    <div style={{ fontWeight: 'bold', color: '#FF5722', fontSize: '1.2rem' }}>฿{item.price.toLocaleString()}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888' }}>Price</div>
+                                    <div style={{ fontWeight: 'bold', color: '#FF5722' }}>฿{item.price.toLocaleString()}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Release</div>
-                                    <div style={{ fontWeight: 'bold', color: '#FFC107', fontSize: '1rem' }}>{item.releaseDate}</div>
-                                </div>
-                            </div>
-
-                            <div style={{ marginBottom: '15px' }}>
-                                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fandom</div>
-                                <div style={{ 
-                                    padding: '6px 12px',
-                                    background: 'rgba(255, 193, 7, 0.1)',
-                                    border: '1px solid rgba(255, 193, 7, 0.2)',
-                                    borderRadius: '8px',
-                                    color: '#FFC107',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '500',
-                                    display: 'inline-block'
-                                }}>
-                                    {item.fandom}
+                                    <div style={{ fontSize: '0.8rem', color: '#888' }}>Release</div>
+                                    <div style={{ fontWeight: 'bold' }}>{item.releaseDate}</div>
                                 </div>
                             </div>
 
@@ -543,94 +422,46 @@ const PreOrderManager: React.FC = () => {
                                 onClick={() => handleViewReservations(item)}
                                 style={{
                                     width: '100%',
-                                    padding: '12px',
-                                    marginBottom: '12px',
-                                    background: 'linear-gradient(45deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))',
+                                    padding: '10px',
+                                    marginBottom: '10px',
+                                    background: '#333',
                                     color: '#FFC107',
-                                    border: '1px solid rgba(255, 193, 7, 0.3)',
-                                    borderRadius: '10px',
+                                    border: '1px solid #FFC107',
+                                    borderRadius: '6px',
                                     cursor: 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '0.9rem',
-                                    transition: 'all 0.3s ease',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    boxShadow: '0 4px 10px rgba(255, 193, 7, 0.2)'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 6px 15px rgba(255, 193, 7, 0.3)';
-                                    e.currentTarget.style.background = 'linear-gradient(45deg, rgba(255, 193, 7, 0.2), rgba(255, 193, 7, 0.1))';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 4px 10px rgba(255, 193, 7, 0.2)';
-                                    e.currentTarget.style.background = 'linear-gradient(45deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05))';
-                                }}
-                            >
+                                    fontWeight: 'bold'
+                                }}>
                                 👁️ View Reservations
                             </button>
 
-                            <div style={{ marginTop: 'auto', display: 'flex', gap: '12px' }}>
+                            <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
                                 <button
                                     onClick={() => setEditItem(item)}
                                     style={{
                                         flex: 1,
-                                        padding: '10px',
-                                        background: 'linear-gradient(45deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))',
+                                        padding: '8px',
+                                        background: 'rgba(33, 150, 243, 0.1)',
                                         color: '#2196F3',
-                                        border: '1px solid rgba(33, 150, 243, 0.3)',
-                                        borderRadius: '10px',
+                                        border: '1px solid #2196F3',
+                                        borderRadius: '6px',
                                         cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        transition: 'all 0.3s ease',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px',
-                                        boxShadow: '0 4px 10px rgba(33, 150, 243, 0.2)'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 15px rgba(33, 150, 243, 0.3)';
-                                        e.currentTarget.style.background = 'linear-gradient(45deg, rgba(33, 150, 243, 0.2), rgba(33, 150, 243, 0.1))';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 4px 10px rgba(33, 150, 243, 0.2)';
-                                        e.currentTarget.style.background = 'linear-gradient(45deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05))';
-                                    }}
-                                >
-                                    ✏️ Edit
+                                        fontWeight: 'bold'
+                                    }}>
+                                    Edit
                                 </button>
                                 <button
                                     onClick={() => handleDelete(item.id)}
                                     style={{
                                         flex: 1,
-                                        padding: '10px',
-                                        background: 'linear-gradient(45deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05))',
+                                        padding: '8px',
+                                        background: 'rgba(244, 67, 54, 0.1)',
                                         color: '#F44336',
-                                        border: '1px solid rgba(244, 67, 54, 0.3)',
-                                        borderRadius: '10px',
+                                        border: '1px solid #F44336',
+                                        borderRadius: '6px',
                                         cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        transition: 'all 0.3s ease',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px',
-                                        boxShadow: '0 4px 10px rgba(244, 67, 54, 0.2)'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 15px rgba(244, 67, 54, 0.3)';
-                                        e.currentTarget.style.background = 'linear-gradient(45deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1))';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 4px 10px rgba(244, 67, 54, 0.2)';
-                                        e.currentTarget.style.background = 'linear-gradient(45deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05))';
-                                    }}
-                                >
-                                    🗑️ Delete
+                                        fontWeight: 'bold'
+                                    }}>
+                                    Delete
                                 </button>
                             </div>
                         </div>

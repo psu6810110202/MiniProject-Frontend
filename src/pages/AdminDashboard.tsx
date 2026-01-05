@@ -35,8 +35,21 @@ const AdminDashboard: React.FC = () => {
 
         setShippingLoading(true);
         try {
-            const shipment = await orderAPI.createShippingLabel(orderId);
-            setShippingResult(shipment);
+            // Mock API call for demonstration
+            const mockShipment = {
+                shipment_id: `SHIP${Date.now()}`,
+                order_id: orderId,
+                provider: 'Thailand Post',
+                tracking_number: `TH${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+                label_url: 'https://track.thailandpost.co.th/',
+                created_at: new Date().toISOString()
+            };
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            setShippingResult(mockShipment);
+            setShippingOrderId('');
         } catch (err: any) {
             const message = typeof err?.message === 'string' ? err.message : 'Failed to create shipping label';
             setShippingError(message);

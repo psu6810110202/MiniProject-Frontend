@@ -265,6 +265,35 @@ const AdminDashboard: React.FC = () => {
                         Manage Pre-Orders
                     </button>
                 </div>
+
+                {/* Manage Tickets */}
+                <div style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    border: '1px solid #333',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                }}>
+                    <div>
+                        <h3>Manage Tickets</h3>
+                        <p style={{ color: '#888' }}>รับปัญหาและตอบกลับ Ticket จากผู้ใช้</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/profile/tickets')}
+                        style={{
+                            marginTop: '15px',
+                            padding: '10px 20px',
+                            background: '#FF5722',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            width: '100%'
+                        }}>
+                        Manage Tickets
+                    </button>
+                </div>
             </div>
         </div >
     );

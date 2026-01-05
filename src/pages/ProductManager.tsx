@@ -25,16 +25,68 @@ const ProductManager: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Mappings for ID Generation
+    const fandomMap: Record<string, number> = {
+        'Hazbin hotel': 1,
+        'Undertale': 2,
+        'Genshin impact': 3,
+        'Identity V': 4,
+        'Alien stage': 5,
+        'Cookie run kingdom': 6,
+        'Project sekai': 7,
+        'Milgram': 8
+    };
+
+    const categoryMap: Record<string, number> = {
+        'Prop Replica': 1,
+        'Apparel': 2,
+        'Figure': 3,
+        'Plush': 4,
+        'Book': 5,
+        'Cushion': 6,
+        'Acrylic Stand': 7
+    };
+
+    const generateCustomIdMap = (allItems: any[]) => {
+        const map = new Map<string, string>();
+        const fandomCounters: Record<string, number> = {};
+
+        // Sort by ID to ensure consistent running numbers
+        const sorted = [...allItems].sort((a, b) => Number(a.id) - Number(b.id));
+
+        sorted.forEach(item => {
+            const fName = item.fandom;
+            // Initialize count for this fandom if new
+            if (!fandomCounters[fName]) fandomCounters[fName] = 0;
+            fandomCounters[fName]++; // Increment count (1, 2, 3...)
+
+            const fId = fandomMap[fName] || 9;
+            const cId = categoryMap[item.category] || 9;
+            const runNum = fandomCounters[fName]; // Use the running number
+
+            // ID = Fandom + Category + RunningNumber
+            // Example: Fandom 1, Cat 1, 1st item -> 111
+            // Example: Fandom 1, Cat 2, 2nd item -> 122
+            map.set(String(item.id), `${fId}${cId}${runNum}`);
+        });
+
+        return map;
+    };
+
     useEffect(() => {
         if (role !== 'admin') {
             navigate('/');
             return;
         }
+
+        // Generate ID Map based on ALL items
+        const idMap = generateCustomIdMap(items);
+
         // Map Context Items to our State
-        // Context items might mock API response structure differently, let's normalize
         setProducts(items.map(item => ({
             ...item,
-            product_id: String(item.id),
+            // Use the mapped ID or fallback
+            product_id: idMap.get(String(item.id)) || String(item.id),
             // Mock items don't have stock, default to 0
             stock_qty: 0,
             category_id: item.category
@@ -87,7 +139,7 @@ const ProductManager: React.FC = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                         <tr style={{ background: '#333', color: '#FF5722' }}>
-                            <th style={{ padding: '15px' }}>ID (Custom)</th>
+                            <th style={{ padding: '15px' }}>ID</th>
                             <th style={{ padding: '15px' }}>Image</th>
                             <th style={{ padding: '15px' }}>Name</th>
                             <th style={{ padding: '15px' }}>Fandom</th>
@@ -100,10 +152,8 @@ const ProductManager: React.FC = () => {
                     <tbody>
                         {products.map((product) => (
                             <tr key={product.product_id} style={{ borderBottom: '1px solid #333' }}>
-                                <td style={{ padding: '15px', fontFamily: 'monospace', color: '#bbb' }}>
-                                    {/* Mock Custom ID logic: Fandom(1) + Cat(1) + ID */}
-                                    {/* Just a visual mock for now */}
-                                    {`1${product.category_id === 'Figure' ? '1' : '2'}${product.id}`}
+                                <td style={{ padding: '15px', fontFamily: 'monospace', color: '#bbb', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                    {product.product_id}
                                 </td>
                                 <td style={{ padding: '15px' }}>
                                     <div style={{ width: '50px', height: '50px', background: '#444', borderRadius: '5px', overflow: 'hidden' }}>

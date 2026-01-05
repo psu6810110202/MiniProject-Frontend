@@ -21,6 +21,8 @@ import UserDetail from './pages/UserDetail';
 import PreOrderManager from './pages/PreOrderManager';
 import PreOrderDetail from './pages/PreOrderDetail';
 import ProductManager from './pages/ProductManager';
+import AddProduct from './pages/AddProduct';
+import EditProduct from './pages/EditProduct';
 
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
@@ -837,7 +839,10 @@ function MainLayout() {
             <Route path="/profile/preorders" element={<PreOrderManager />} />
             <Route path="/profile/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
             <Route path="/profile/products" element={<ProductManager />} />
+            <Route path="/profile/products/new" element={<AddProduct />} />
+            <Route path="/profile/products/edit/:id" element={<EditProduct />} />
             <Route path="/profile/fandoms" element={<FandomList />} />
+            <Route path="/profile/fandoms/:id" element={<FandomManager />} />
             <Route path="/profile/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/regular-products" element={<RegularProducts />} />

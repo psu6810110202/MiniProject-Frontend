@@ -58,7 +58,7 @@ const ProductDetail: React.FC = () => {
     console.log('Available items in context:', items);
     console.log('Available preorder items:', preorderItems);
     console.log('Available regular products:', regularProducts);
-    
+
     try {
       setLoading(true);
 
@@ -79,12 +79,12 @@ const ProductDetail: React.FC = () => {
 
       // If not found in catalog, check if this might be a pre-order or regular product
       // But only search in appropriate data sources based on context
-      let foundItem = null;
+      // Check if this might be a pre-order or regular product
 
       // Check pre-order items first (since they have lower IDs 1-50)
       const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
       console.log('Found preorder item:', preOrderItem);
-      
+
       if (preOrderItem) {
         const convertedProduct = convertItemToProduct(preOrderItem);
         setProduct(convertedProduct);
@@ -95,7 +95,7 @@ const ProductDetail: React.FC = () => {
       // Then check regular products (IDs 101+)
       const regularProduct = regularProducts.find(item => item.id.toString() === productId);
       console.log('Found regular product:', regularProduct);
-      
+
       if (regularProduct) {
         const convertedProduct = convertItemToProduct(regularProduct);
         setProduct(convertedProduct);
@@ -180,27 +180,7 @@ const ProductDetail: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
-  const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return t('today');
-    if (diffDays === 1) return t('tomorrow');
-    if (diffDays > 0 && diffDays <= 30) return `${t('in_days')} ${diffDays}`;
-    if (diffDays > 30) return `${t('in_months')} ${Math.ceil(diffDays / 30)}`;
-    return t('coming_soon');
-  };
 
   if (loading) {
     return (
@@ -246,6 +226,49 @@ const ProductDetail: React.FC = () => {
       </div>
     );
   }
+
+  // Calculate Display ID (Sequential per Fandom)
+  const displayId = React.useMemo(() => {
+    if (!product) return '...';
+
+    // 1. Sort all items (mock + real)
+    const allItems = [...items].sort((a, b) => Number(a.id) - Number(b.id)); // Assuming ID is numericable
+
+    // 2. Mappings
+    const fandomMap: Record<string, number> = {
+      'Hazbin hotel': 1, 'Undertale': 2, 'Genshin impact': 3,
+      'Identity V': 4, 'Alien stage': 5, 'Cookie run kingdom': 6,
+      'Project sekai': 7, 'Milgram': 8
+    };
+    const categoryMap: Record<string, number> = {
+      'Prop Replica': 1, 'Apparel': 2, 'Figure': 3,
+      'Plush': 4, 'Book': 5, 'Cushion': 6, 'Acrylic Stand': 7
+    };
+
+    // 3. Find our running number
+    let runningParam = 0;
+    let myRunningNum = 0;
+
+    for (const item of allItems) {
+      if (item.fandom === product.fandom) {
+        runningParam++;
+        // Check if this item matches our current product
+        // We compare strictly (ID or Name if ID is tricky)
+        if (String(item.id) === String(product.product_id) || item.name === product.name) {
+          myRunningNum = runningParam;
+          break;
+        }
+      }
+    }
+
+    // If not found in list (e.g. newly added or API only), default to 1 or Max+1
+    if (myRunningNum === 0) myRunningNum = runningParam + 1; // Assume next
+
+    const fId = fandomMap[product.fandom] || 9;
+    const cId = categoryMap[product.category] || 9;
+
+    return `${fId}${cId}${myRunningNum}`;
+  }, [product, items]);
 
   return (
     <div style={{
@@ -389,7 +412,7 @@ const ProductDetail: React.FC = () => {
                     boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
                     animation: 'pulse 2s infinite'
                   }}>
-                     {t('preorder_exclusive')}
+                    {t('preorder_exclusive')}
                   </span>
                   <span style={{
                     padding: '6px 12px',
@@ -442,7 +465,7 @@ const ProductDetail: React.FC = () => {
                     gap: '5px',
                     boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
                   }}>
-                     {product.category}
+                    {product.category}
                   </div>
                   <div style={{
                     padding: '6px 12px',
@@ -456,7 +479,7 @@ const ProductDetail: React.FC = () => {
                     gap: '5px',
                     boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)'
                   }}>
-                     {product.fandom}
+                    {product.fandom}
                   </div>
                 </div>
               )}
@@ -582,9 +605,9 @@ const ProductDetail: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' : 
-                         product.is_preorder ? 'linear-gradient(135deg, #FF5722, #E64A19)' : 
-                         '#FF5722',
+                background: addingToCart ? '#4CAF50' :
+                  product.is_preorder ? 'linear-gradient(135deg, #FF5722, #E64A19)' :
+                    '#FF5722',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -597,22 +620,22 @@ const ProductDetail: React.FC = () => {
               }}
               onMouseEnter={(e) => {
                 if (!addingToCart && product.stock > 0) {
-                  e.currentTarget.style.background = product.is_preorder ? 
+                  e.currentTarget.style.background = product.is_preorder ?
                     'linear-gradient(135deg, #E64A19, #D84315)' : '#E64A19';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!addingToCart) {
-                  e.currentTarget.style.background = product.is_preorder ? 
+                  e.currentTarget.style.background = product.is_preorder ?
                     'linear-gradient(135deg, #FF5722, #E64A19)' : '#FF5722';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {addingToCart ? `✓ ${t('added_to_cart')}` : 
-               product.stock === 0 ? t('out_of_stock') : 
-               (product.is_preorder ? ` ${t('preorder_now')}` : ` ${t('add_to_cart')}`)
+              {addingToCart ? `✓ ${t('added_to_cart')}` :
+                product.stock === 0 ? t('out_of_stock') :
+                  (product.is_preorder ? ` ${t('preorder_now')}` : ` ${t('add_to_cart')}`)
               }
             </button>
 
@@ -665,7 +688,7 @@ const ProductDetail: React.FC = () => {
               color: 'var(--text-muted)'
             }}>
               <div><strong>{t('stock')}:</strong> {product.stock} {t('units')}</div>
-              <div><strong>{t('product_id_label')}:</strong> {product.product_id}</div>
+              <div><strong>{t('product_id_label')}:</strong> {displayId}</div>
             </div>
           </div>
 

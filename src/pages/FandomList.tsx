@@ -73,38 +73,53 @@ const FandomList: React.FC = () => {
             {/* List of Fandoms */}
             <h3>{t('available_fandoms')} ({fandoms.length})</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
-                {fandoms.map(fandom => (
-                    <div key={fandom} style={{
-                        background: '#333',
-                        padding: '20px',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '15px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center' }}>{fandom}</span>
-                        <button
-                            onClick={() => navigate(`/admin/fandom/${fandom}`)}
-                            style={{
-                                padding: '8px 20px',
-                                background: '#2196F3',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '5px'
-                            }}>
-                            {t('edit')} <span>✎</span>
-                        </button>
-                    </div>
-                ))}
+                {fandoms.map(fandom => {
+                    // Reverse Mapping to get ID
+                    const fandomToIdMap: Record<string, string> = {
+                        'Hazbin hotel': '1',
+                        'Undertale': '2',
+                        'Genshin impact': '3',
+                        'Identity V': '4',
+                        'Alien stage': '5',
+                        'Cookie run kingdom': '6',
+                        'Project sekai': '7',
+                        'Milgram': '8'
+                    };
+                    const fId = fandomToIdMap[fandom] || encodeURIComponent(fandom);
+
+                    return (
+                        <div key={fandom} style={{
+                            background: '#333',
+                            padding: '20px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: '15px',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }}>
+                            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center' }}>{fandom}</span>
+                            <button
+                                onClick={() => navigate(`/profile/fandoms/${fId}`)}
+                                style={{
+                                    padding: '8px 20px',
+                                    background: '#2196F3',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '5px'
+                                }}>
+                                {t('edit')} <span>✎</span>
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

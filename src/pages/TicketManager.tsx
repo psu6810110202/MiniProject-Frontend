@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 interface Ticket {
@@ -19,6 +20,7 @@ interface Ticket {
 
 const TicketManager: React.FC = () => {
     const { role } = useAuth();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -148,31 +150,31 @@ const TicketManager: React.FC = () => {
 
     const getCategoryLabel = (category: string) => {
         const labels: Record<string, string> = {
-            'general': 'General',
-            'shipping': 'Shipping',
-            'payment': 'Payment',
-            'product': 'Product',
-            'account': 'Account'
+            'general': t('general'),
+            'shipping': t('shipping'),
+            'payment': t('payment'),
+            'product': t('product'),
+            'account': t('account')
         };
         return labels[category] || category;
     };
 
     const getStatusLabel = (status: Ticket['status']) => {
         const labels: Record<string, string> = {
-            'open': 'Open',
-            'in_progress': 'In Progress',
-            'resolved': 'Resolved',
-            'closed': 'Closed'
+            'open': t('open'),
+            'in_progress': t('in_progress'),
+            'resolved': t('resolved'),
+            'closed': t('closed')
         };
         return labels[status] || status;
     };
 
     const getPriorityLabel = (priority: Ticket['priority']) => {
         const labels: Record<string, string> = {
-            'urgent': 'Urgent',
-            'high': 'High',
-            'medium': 'Medium',
-            'low': 'Low'
+            'urgent': t('urgent'),
+            'high': t('high'),
+            'medium': t('medium'),
+            'low': t('low')
         };
         return labels[priority] || priority;
     };

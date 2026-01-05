@@ -20,6 +20,7 @@ import UserManager from './pages/UserManager';
 import UserDetail from './pages/UserDetail';
 import PreOrderManager from './pages/PreOrderManager';
 import PreOrderDetail from './pages/PreOrderDetail';
+import ProductManager from './pages/ProductManager';
 
 import { useLanguage } from './contexts/LanguageContext';
 import { useAuth } from './contexts/AuthContext';
@@ -835,7 +836,7 @@ function MainLayout() {
             <Route path="/profile/users/:id" element={<UserDetail />} />
             <Route path="/profile/preorders" element={<PreOrderManager />} />
             <Route path="/profile/categories" element={<div style={{ padding: '100px', color: 'white' }}>Category Management Page (Coming Soon)</div>} />
-            <Route path="/profile/products" element={<div style={{ padding: '100px', color: 'white' }}>Product Management Page (Coming Soon)</div>} />
+            <Route path="/profile/products" element={<ProductManager />} />
             <Route path="/profile/fandoms" element={<FandomList />} />
             <Route path="/profile/fandom/:name" element={<FandomManager />} />
             <Route path="/checkout" element={<Checkout />} />

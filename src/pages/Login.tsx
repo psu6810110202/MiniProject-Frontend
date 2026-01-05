@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { BlacklistModal, DeletedWarningModal, RestoreModal } from '../components/LoginModals';
+import ThemeNotification from '../components/ThemeNotification';
 import './Login.css'; // Import the CSS file
 
 const Login: React.FC = () => {
@@ -27,14 +29,18 @@ const Login: React.FC = () => {
     const [restoreData, setRestoreData] = useState({ username: '', password: '' });
     const [showDeletedWarningModal, setShowDeletedWarningModal] = useState(false);
 
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+    const { theme } = useTheme();
+    const [notification, setNotification] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({
+        show: false,
+        message: '',
+        type: 'success'
+    });
+
+    const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+        setNotification({ show: true, message, type });
+    };
 
     useEffect(() => {
-        const handleStorageChange = () => {
-            setTheme(localStorage.getItem('theme') || 'dark');
-        };
-        window.addEventListener('storage', handleStorageChange);
-
         const currentDB = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
         const adminExists = Object.values(currentDB).some((u: any) => u.email === 'admin@example.com' || u.username === 'admin');
 
@@ -50,22 +56,9 @@ const Login: React.FC = () => {
                 isBlacklisted: false
             };
             localStorage.setItem('mock_users_db', JSON.stringify(currentDB));
-            console.log("Restored Admin User to Mock DB");
         }
 
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
-    useEffect(() => {
-        const checkTheme = () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            if (currentTheme && currentTheme !== theme) {
-                setTheme(currentTheme);
-            }
-        };
-        const interval = setInterval(checkTheme, 100);
-        return () => clearInterval(interval);
-    }, [theme]);
+        }, []);
 
     const isDark = theme === 'dark';
 
@@ -84,17 +77,17 @@ const Login: React.FC = () => {
                 setForgotUserId((user as any).id);
                 setForgotStep('newpass');
             } else {
-                alert('Account not found');
+                showNotification('Account not found', 'error');
             }
         } else {
             if (newResetPass !== confirmResetPass) {
-                alert('Passwords do not match!');
+                showNotification('Passwords do not match!', 'error');
                 return;
             }
             if (forgotUserId && db[forgotUserId]) {
                 db[forgotUserId].password = newResetPass;
                 localStorage.setItem('mock_users_db', JSON.stringify(db));
-                alert('Password reset successfully. Please login.');
+                showNotification('Password reset successfully. Please login.', 'success');
                 setShowForgotModal(false);
                 setForgotStep('email');
                 setForgotEmail('');
@@ -468,6 +461,13 @@ const Login: React.FC = () => {
                 onClose={() => setShowDeletedWarningModal(false)}
                 onRestore={() => { setShowDeletedWarningModal(false); setShowRestoreModal(true); }}
                 isDark={isDark}
+            />
+
+            <ThemeNotification
+                show={notification.show}
+                message={notification.message}
+                type={notification.type}
+                onClose={() => setNotification({ ...notification, show: false })}
             />
         </div>
     );

@@ -22,8 +22,7 @@ const ProductDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
-  console.log('ProductDetail - Route params:', { id, name });
-
+  
   // Convert Item to Product format
   const convertItemToProduct = (item: any) => {
     const numericPrice = typeof item.price === 'string'

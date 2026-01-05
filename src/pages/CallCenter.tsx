@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface CallCenterProps {
   initialTab?: 'tickets' | 'faq';
@@ -8,6 +9,7 @@ interface CallCenterProps {
 
 const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'tickets' | 'faq'>(initialTab);
 
@@ -80,16 +82,16 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
     <div style={{
       padding: '40px 20px',
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
-      color: '#fff'
+      background: 'var(--bg-color)',
+      color: 'var(--text-main)'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: '#fff' }}>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-main)' }}>
             {t('help_center')}
           </h1>
-          <p style={{ fontSize: '1.2rem', color: '#aaa', maxWidth: '600px', margin: '0 auto' }}>
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
             {t('help_center_desc')}
           </p>
         </div>
@@ -125,7 +127,7 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
           display: 'flex',
           gap: '10px',
           marginBottom: '30px',
-          borderBottom: '2px solid #333',
+          borderBottom: '2px solid var(--border-color)',
           paddingBottom: '0'
         }}>
           {[
@@ -137,14 +139,14 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
               onClick={() => setActiveTab(tab.id as any)}
               style={{
                 padding: '15px 25px',
-                background: activeTab === tab.id ? '#FF5722' : 'transparent',
-                color: activeTab === tab.id ? '#fff' : '#aaa',
+                background: activeTab === tab.id ? 'var(--primary-color)' : 'transparent',
+                color: activeTab === tab.id ? '#fff' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '10px 10px 0 0',
                 fontSize: '1rem',
                 cursor: 'pointer',
                 transition: 'all 0.3s',
-                borderBottom: activeTab === tab.id ? '2px solid #FF5722' : '2px solid transparent'
+                borderBottom: activeTab === tab.id ? '2px solid var(--primary-color)' : '2px solid transparent'
               }}
             >
               {tab.label}
@@ -154,16 +156,16 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
 
         {/* Tab Content */}
         <div style={{
-          background: '#1a1a1a',
+          background: 'var(--card-bg)',
           borderRadius: '12px',
           padding: '30px',
-          border: '1px solid #333'
+          border: '1px solid var(--border-color)'
         }}>
           {activeTab === 'tickets' && (
             <div>
-              <h2 style={{ marginBottom: '20px', color: '#fff' }}>{t('my_tickets')}</h2>
+              <h2 style={{ marginBottom: '20px', color: 'var(--text-main)' }}>{t('my_tickets')}</h2>
               {tickets.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                   <p>{t('no_tickets_found')}</p>
                 </div>
               ) : (
@@ -172,20 +174,20 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
                     <div
                       key={ticket.id}
                       style={{
-                        background: '#252525',
+                        background: 'var(--card-bg)',
                         padding: '20px',
                         borderRadius: '10px',
-                        border: '1px solid #333',
+                        border: '1px solid var(--border-color)',
                         cursor: 'pointer',
                         transition: 'all 0.3s'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                         <div>
-                          <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>
+                          <h3 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>
                             {ticket.subject}
                           </h3>
-                          <p style={{ margin: '5px 0', color: '#aaa', fontSize: '0.9rem' }}>
+                          <p style={{ margin: '5px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                             {ticket.id} • {ticket.category}
                           </p>
                         </div>
@@ -210,7 +212,7 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
                           </span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#aaa', fontSize: '0.9rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         <span>{t('created')}: {ticket.created}</span>
                         <span>{t('last_updated')}: {ticket.lastUpdated}</span>
                         <span>{ticket.messages} {t('ticket_messages')}</span>
@@ -226,22 +228,22 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
 
           {activeTab === 'faq' && (
             <div>
-              <h2 style={{ marginBottom: '20px', color: '#fff' }}>{t('frequently_asked_questions')}</h2>
+              <h2 style={{ marginBottom: '20px', color: 'var(--text-main)' }}>{t('frequently_asked_questions')}</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {faqData.map((faq, index) => (
                   <div
                     key={index}
                     style={{
-                      background: '#252525',
+                      background: 'var(--card-bg)',
                       padding: '20px',
                       borderRadius: '10px',
-                      border: '1px solid #333'
+                      border: '1px solid var(--border-color)'
                     }}
                   >
-                    <h3 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '1.1rem' }}>
+                    <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>
                       {faq.question}
                     </h3>
-                    <p style={{ margin: 0, color: '#aaa', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0, color: 'var(--text-muted)', lineHeight: '1.6' }}>
                       {faq.answer}
                     </p>
                   </div>
@@ -256,10 +258,10 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
                 border: '1px solid #FF5722',
                 textAlign: 'center'
               }}>
-                <h3 style={{ margin: '0 0 10px 0', color: '#fff' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: 'var(--text-main)' }}>
                   {t('still_need_help')}
                 </h3>
-                <p style={{ margin: '0 0 20px 0', color: '#aaa' }}>
+                <p style={{ margin: '0 0 20px 0', color: 'var(--text-muted)' }}>
                   {t('contact_support_desc')}
                 </p>
                 <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -282,7 +284,7 @@ const CallCenter: React.FC<CallCenterProps> = ({ initialTab = 'tickets' }) => {
                     onClick={() => navigate('/call-center/new-ticket')}
                     style={{
                       padding: '12px 25px',
-                      background: '#FF5722',
+                      background: 'var(--primary-color)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',

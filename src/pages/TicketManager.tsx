@@ -115,7 +115,7 @@ const TicketManager: React.FC = () => {
         localStorage.setItem('admin_tickets', JSON.stringify(updatedTickets));
         setSelectedTicket({ ...selectedTicket, adminResponse: responseText, status: 'in_progress' });
         setResponseText('');
-        alert('ตอบกลับ Ticket เรียบร้อยแล้ว');
+        alert('Ticket replied successfully!');
     };
 
     const getFilteredTickets = () => {
@@ -148,31 +148,31 @@ const TicketManager: React.FC = () => {
 
     const getCategoryLabel = (category: string) => {
         const labels: Record<string, string> = {
-            'general': 'ทั่วไป',
-            'shipping': 'การจัดส่ง',
-            'payment': 'การชำระเงิน',
-            'product': 'สินค้า',
-            'account': 'บัญชีผู้ใช้'
+            'general': 'General',
+            'shipping': 'Shipping',
+            'payment': 'Payment',
+            'product': 'Product',
+            'account': 'Account'
         };
         return labels[category] || category;
     };
 
     const getStatusLabel = (status: Ticket['status']) => {
         const labels: Record<string, string> = {
-            'open': 'เปิด',
-            'in_progress': 'ดำเนินการ',
-            'resolved': 'แก้ไขแล้ว',
-            'closed': 'ปิด'
+            'open': 'Open',
+            'in_progress': 'In Progress',
+            'resolved': 'Resolved',
+            'closed': 'Closed'
         };
         return labels[status] || status;
     };
 
     const getPriorityLabel = (priority: Ticket['priority']) => {
         const labels: Record<string, string> = {
-            'urgent': 'เร่งด่วน',
-            'high': 'สูง',
-            'medium': 'ปานกลาง',
-            'low': 'ต่ำ'
+            'urgent': 'Urgent',
+            'high': 'High',
+            'medium': 'Medium',
+            'low': 'Low'
         };
         return labels[priority] || priority;
     };
@@ -200,7 +200,7 @@ const TicketManager: React.FC = () => {
             {/* Filters */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>สถานะ</label>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Status</label>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
@@ -213,15 +213,15 @@ const TicketManager: React.FC = () => {
                             fontSize: '1rem'
                         }}
                     >
-                        <option value="all">ทั้งหมด</option>
-                        <option value="open">เปิด</option>
-                        <option value="in_progress">ดำเนินการ</option>
-                        <option value="resolved">แก้ไขแล้ว</option>
-                        <option value="closed">ปิด</option>
+                        <option value="all">All</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
                     </select>
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>ความสำคัญ</label>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Priority</label>
                     <select
                         value={filterPriority}
                         onChange={(e) => setFilterPriority(e.target.value)}
@@ -234,11 +234,11 @@ const TicketManager: React.FC = () => {
                             fontSize: '1rem'
                         }}
                     >
-                        <option value="all">ทั้งหมด</option>
-                        <option value="urgent">เร่งด่วน</option>
-                        <option value="high">สูง</option>
-                        <option value="medium">ปานกลาง</option>
-                        <option value="low">ต่ำ</option>
+                        <option value="all">All</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
                     </select>
                 </div>
             </div>
@@ -254,13 +254,13 @@ const TicketManager: React.FC = () => {
                     <thead>
                         <tr style={{ borderBottom: '2px solid #333', background: 'rgba(255,255,255,0.05)' }}>
                             <th style={{ padding: '15px', textAlign: 'left' }}>Ticket ID</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>หัวข้อ</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>ผู้ใช้</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>หมวดหมู่</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>ความสำคัญ</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>สถานะ</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>วันที่</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>การจัดการ</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Subject</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>User</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Category</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Priority</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Date</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -334,7 +334,7 @@ const TicketManager: React.FC = () => {
                                             marginRight: '5px'
                                         }}
                                     >
-                                        ดูรายละเอียด
+                                        View Details
                                     </button>
                                     {ticket.status !== 'closed' && (
                                         <button
@@ -349,7 +349,7 @@ const TicketManager: React.FC = () => {
                                                 fontSize: '0.8rem'
                                             }}
                                         >
-                                            ปิด
+                                            Close
                                         </button>
                                     )}
                                 </td>
@@ -360,7 +360,7 @@ const TicketManager: React.FC = () => {
 
                 {getFilteredTickets().length === 0 && (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                        ไม่พบ Ticket ที่ตรงกับเงื่อนไข
+                        No tickets found matching the criteria
                     </div>
                 )}
             </div>

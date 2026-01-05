@@ -29,7 +29,7 @@ const AdminDashboard: React.FC = () => {
 
         const orderId = shippingOrderId.trim();
         if (!orderId) {
-            setShippingError('กรุณากรอก Order ID');
+            setShippingError('Please enter Order ID');
             return;
         }
 
@@ -38,7 +38,7 @@ const AdminDashboard: React.FC = () => {
             const shipment = await orderAPI.createShippingLabel(orderId);
             setShippingResult(shipment);
         } catch (err: any) {
-            const message = typeof err?.message === 'string' ? err.message : 'สร้างใบปะหน้าจัดส่งไม่สำเร็จ';
+            const message = typeof err?.message === 'string' ? err.message : 'Failed to create shipping label';
             setShippingError(message);
         } finally {
             setShippingLoading(false);
@@ -105,7 +105,7 @@ const AdminDashboard: React.FC = () => {
                     <div>
                         <h3>Create Shipping Label</h3>
                         <p style={{ color: '#888', marginTop: '6px' }}>
-                            สร้างเลขพัสดุและใบปะหน้า (ต้องเป็นออเดอร์สถานะ PAID)
+                            Create shipping labels and tracking numbers (must be PAID orders)
                         </p>
                     </div>
 
@@ -113,7 +113,7 @@ const AdminDashboard: React.FC = () => {
                         <input
                             value={shippingOrderId}
                             onChange={(e) => setShippingOrderId(e.target.value)}
-                            placeholder="Order ID (เช่น 7b8c...uuid)"
+                            placeholder="Order ID (e.g. 7b8c...uuid)"
                             style={{
                                 width: '100%',
                                 padding: '10px 12px',
@@ -138,7 +138,7 @@ const AdminDashboard: React.FC = () => {
                                 width: '100%',
                                 opacity: shippingLoading ? 0.8 : 1
                             }}>
-                            {shippingLoading ? 'กำลังสร้าง…' : 'Create Label'}
+                            {shippingLoading ? 'Creating...' : 'Create Label'}
                         </button>
 
                         {shippingError && (
@@ -162,7 +162,7 @@ const AdminDashboard: React.FC = () => {
                                 border: '1px solid rgba(76,175,80,0.35)',
                                 color: 'var(--text-main)'
                             }}>
-                                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>สร้างสำเร็จ</div>
+                                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Success</div>
                                 <div style={{ color: '#cfcfcf', fontSize: '0.95rem', marginBottom: '6px' }}>
                                     Tracking: <span style={{ color: 'white', fontWeight: 'bold' }}>{shippingResult.tracking_number}</span>
                                 </div>
@@ -172,7 +172,7 @@ const AdminDashboard: React.FC = () => {
                                     rel="noreferrer"
                                     style={{ color: '#FF5722', fontWeight: 'bold', textDecoration: 'none' }}
                                 >
-                                    เปิดใบปะหน้า (Label)
+                                    Open Label
                                 </a>
                             </div>
                         )}
@@ -276,7 +276,7 @@ const AdminDashboard: React.FC = () => {
                 }}>
                     <div>
                         <h3>Manage Tickets</h3>
-                        <p style={{ color: '#888' }}>รับปัญหาและตอบกลับ Ticket จากผู้ใช้</p>
+                        <p style={{ color: '#888' }}>Receive and respond to tickets from users</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/tickets')}
@@ -305,7 +305,7 @@ const AdminDashboard: React.FC = () => {
                 }}>
                     <div>
                         <h3>Custom Requests</h3>
-                        <p style={{ color: '#888' }}>รับคำขอสินค้าแบบกำหนดเองจากผู้ใช้</p>
+                        <p style={{ color: '#888' }}>Receive custom product requests from users</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile/custom-requests')}

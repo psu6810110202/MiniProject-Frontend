@@ -233,7 +233,7 @@ const CustomRequestManager: React.FC = () => {
             {/* Filters */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>สถานะ</label>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Status</label>
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
@@ -246,16 +246,16 @@ const CustomRequestManager: React.FC = () => {
                             fontSize: '1rem'
                         }}
                     >
-                        <option value="all">ทั้งหมด</option>
-                        <option value="pending">รอดำเนินการ</option>
-                        <option value="approved">อนุมัติ</option>
-                        <option value="rejected">ปฏิเสธ</option>
-                        <option value="ordered">สั่งซื้อแล้ว</option>
-                        <option value="completed">เสร็จสิ้น</option>
+                        <option value="all">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="ordered">Ordered</option>
+                        <option value="completed">Completed</option>
                     </select>
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>ภูมิภาค</label>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#aaa', fontSize: '0.9rem' }}>Region</label>
                     <select
                         value={filterRegion}
                         onChange={(e) => setFilterRegion(e.target.value)}
@@ -268,7 +268,7 @@ const CustomRequestManager: React.FC = () => {
                             fontSize: '1rem'
                         }}
                     >
-                        <option value="all">ทั้งหมด</option>
+                        <option value="all">All</option>
                         <option value="US">USA</option>
                         <option value="JP">Japan</option>
                         <option value="CN">China</option>
@@ -288,13 +288,13 @@ const CustomRequestManager: React.FC = () => {
                     <thead>
                         <tr style={{ borderBottom: '2px solid #333', background: 'rgba(255,255,255,0.05)' }}>
                             <th style={{ padding: '15px', textAlign: 'left' }}>Request ID</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>สินค้า</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>ผู้ใช้</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>ภูมิภาค</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>ราคาประเมิน</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>สถานะ</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>วันที่</th>
-                            <th style={{ padding: '15px', textAlign: 'left' }}>การจัดการ</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Product</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>User</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Region</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Estimated Price</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Date</th>
+                            <th style={{ padding: '15px', textAlign: 'left' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -362,7 +362,7 @@ const CustomRequestManager: React.FC = () => {
                                             marginRight: '5px'
                                         }}
                                     >
-                                        ดูรายละเอียด
+                                        View Details
                                     </button>
                                     {request.status === 'approved' && (
                                         <button
@@ -377,7 +377,7 @@ const CustomRequestManager: React.FC = () => {
                                                 fontSize: '0.8rem'
                                             }}
                                         >
-                                            สร้าง PreOrder: {request.productName}
+                                            Create PreOrder: {request.productName}
                                         </button>
                                     )}
                                 </td>
@@ -388,7 +388,7 @@ const CustomRequestManager: React.FC = () => {
 
                 {getFilteredRequests().length === 0 && (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                        ไม่พบคำขอที่ตรงกับเงื่อนไข
+                        No requests found matching the criteria
                     </div>
                 )}
             </div>

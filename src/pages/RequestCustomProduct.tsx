@@ -16,6 +16,7 @@ const RequestCustomProduct: React.FC = () => {
     });
 
     const [estimatedTotal, setEstimatedTotal] = useState<number | null>(null);
+    const [showNotification, setShowNotification] = useState(false);
 
     // Mock Rates
     const rates: Record<string, number> = {
@@ -75,7 +76,10 @@ const RequestCustomProduct: React.FC = () => {
         // Save to localStorage
         localStorage.setItem('custom_requests', JSON.stringify(existingRequests));
         
-        alert('Custom product request submitted successfully!');
+        // Show theme-aware notification
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+        
         setFormData({
             productName: '',
             link: '',
@@ -91,18 +95,18 @@ const RequestCustomProduct: React.FC = () => {
         <div style={{
             padding: '40px 20px',
             minHeight: '100vh',
-            background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
-            color: '#fff',
+            background: 'var(--bg-color)',
+            color: 'var(--text-main)',
             display: 'flex',
             justifyContent: 'center'
         }}>
             <div style={{
                 width: '100%',
                 maxWidth: '600px',
-                background: '#1a1a1a',
+                background: 'var(--card-bg)',
                 padding: '30px',
                 borderRadius: '20px',
-                border: '1px solid #333',
+                border: '1px solid var(--border-color)',
                 boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
             }}>
                 <button
@@ -110,7 +114,7 @@ const RequestCustomProduct: React.FC = () => {
                     style={{
                         background: 'transparent',
                         border: 'none',
-                        color: '#aaa',
+                        color: 'var(--text-muted)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -121,10 +125,10 @@ const RequestCustomProduct: React.FC = () => {
                     ← Back to Pre-Order
                 </button>
 
-                <h1 style={{ fontSize: '2rem', marginBottom: '10px', color: '#FF5722', textAlign: 'center' }}>
+                <h1 style={{ fontSize: '2rem', marginBottom: '10px', color: 'var(--primary-color)', textAlign: 'center' }}>
                     Request Custom Product
                 </h1>
-                <p style={{ textAlign: 'center', color: '#888', marginBottom: '30px' }}>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '30px' }}>
                     Send us a link, and we'll order it for you!
                 </p>
 
@@ -132,7 +136,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Region Selector */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Select Region / Rate</label>
+                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: 'var(--text-main)' }}>Select Region / Rate</label>
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             {['US', 'JP', 'CN', 'KR'].map(region => (
                                 <button
@@ -142,9 +146,9 @@ const RequestCustomProduct: React.FC = () => {
                                     style={{
                                         padding: '10px 25px',
                                         borderRadius: '25px',
-                                        border: formData.region === region ? '1px solid #FF5722' : '1px solid #333',
-                                        background: formData.region === region ? '#FF5722' : 'transparent',
-                                        color: formData.region === region ? 'white' : '#aaa',
+                                        border: formData.region === region ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
+                                        background: formData.region === region ? 'var(--primary-color)' : 'transparent',
+                                        color: formData.region === region ? 'white' : 'var(--text-muted)',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s',
                                         fontWeight: 'bold'
@@ -161,7 +165,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Product Name */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px' }}>Product Name</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Product Name</label>
                         <input
                             type="text"
                             required
@@ -171,9 +175,9 @@ const RequestCustomProduct: React.FC = () => {
                                 width: '100%',
                                 padding: '12px',
                                 borderRadius: '10px',
-                                border: '1px solid #444',
-                                background: '#222',
-                                color: 'white',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--input-bg)',
+                                color: 'var(--text-main)',
                                 outline: 'none'
                             }}
                             placeholder="e.g. Hatsune Miku Figure 2024"
@@ -182,7 +186,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Product Link */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px' }}>Product Link (URL)</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Product Link (URL)</label>
                         <input
                             type="url"
                             required
@@ -192,9 +196,9 @@ const RequestCustomProduct: React.FC = () => {
                                 width: '100%',
                                 padding: '12px',
                                 borderRadius: '10px',
-                                border: '1px solid #444',
-                                background: '#222',
-                                color: 'white',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--input-bg)',
+                                color: 'var(--text-main)',
                                 outline: 'none'
                             }}
                             placeholder="https://..."
@@ -203,7 +207,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Details */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px' }}>Details (Size, Color, etc.)</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Details (Size, Color, etc.)</label>
                         <textarea
                             value={formData.details}
                             onChange={(e) => handleChange('details', e.target.value)}
@@ -225,7 +229,7 @@ const RequestCustomProduct: React.FC = () => {
                     {/* Price & Quantity */}
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px' }}>Price (in Foreign Currency)</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Price (in Foreign Currency)</label>
                             <input
                                 type="number"
                                 required
@@ -272,12 +276,12 @@ const RequestCustomProduct: React.FC = () => {
                         marginTop: '10px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                            <span style={{ color: '#aaa' }}>Estimated Total:</span>
-                            <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#FF5722' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Estimated Total:</span>
+                            <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--primary-color)' }}>
                                 {estimatedTotal ? `≈ ฿${estimatedTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '---'}
                             </span>
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: '#666', margin: 0 }}>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
                             *Includes estimated shipping to Thailand. Final price may vary.
                         </p>
                     </div>
@@ -286,7 +290,7 @@ const RequestCustomProduct: React.FC = () => {
                         type="submit"
                         style={{
                             padding: '15px',
-                            background: '#FF5722',
+                            background: 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '10px',
@@ -296,14 +300,53 @@ const RequestCustomProduct: React.FC = () => {
                             marginTop: '10px',
                             transition: 'background 0.3s'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#F4511E'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#FF5722'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary-color)'}
                     >
                         Submit Request
                     </button>
 
                 </form>
             </div>
+            
+            {/* Theme-aware Notification */}
+            {showNotification && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    background: 'var(--card-bg)',
+                    color: 'var(--text-main)',
+                    padding: '15px 20px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--primary-color)',
+                    boxShadow: '0 4px 20px rgba(255, 87, 34, 0.3)',
+                    zIndex: 1000,
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    animation: 'slideIn 0.3s ease-out',
+                    maxWidth: '300px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ color: 'var(--primary-color)', fontSize: '1.2rem' }}>✓</span>
+                        Custom product request submitted successfully!
+                    </div>
+                </div>
+            )}
+            
+            {/* Notification Animation */}
+            <style>{`
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

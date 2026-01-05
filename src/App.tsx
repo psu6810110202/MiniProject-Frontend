@@ -25,6 +25,7 @@ import AddProduct from './pages/AddProduct';
 import EditProduct from './pages/EditProduct';
 
 import { useLanguage } from './contexts/LanguageContext';
+import { useTheme } from './contexts/ThemeContext';
 import { useAuth } from './contexts/AuthContext';
 import { useProducts } from './contexts/ProductContext';
 import { useCart } from './contexts/CartContext';
@@ -44,20 +45,14 @@ import ScrollToTop from './components/ScrollToTop';
 
 // --- Navbar Component ---
 
-// Remove NavbarProps interface as it is no longer needed
-// interface NavbarProps {
-//   points: number;
-// }
-
 const Navbar: React.FC = () => {
   const { points } = usePoints();
   const { t, language, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { isLoggedIn, logout } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
   const navigate = useNavigate();
 
-  // เรายังต้องการ state เพื่อเปลี่ยน icon พระอาทิตย์/พระจันทร์
-  const [theme, setTheme] = useState('dark');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -71,20 +66,6 @@ const Navbar: React.FC = () => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    // เปลี่ยน Theme รวมของเว็บ (Body, Cards, Text)
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
 
   const handleLogout = () => {
@@ -704,8 +685,8 @@ const Footer: React.FC = () => {
   const { t } = useLanguage();
   return (
     <footer style={{
-      backgroundColor: 'var(--bg-color)',
-      borderTop: '2px solid var(--border-color)',
+      backgroundColor: '#0a0a0a', 
+      borderTop: '2px solid #FF5722', 
       padding: '60px 40px',
       marginTop: 'auto'
     }}>
@@ -720,8 +701,8 @@ const Footer: React.FC = () => {
         {/* Brand Section */}
         <div style={{ flex: '1 1 300px' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '900', margin: '0 0 20px 0', letterSpacing: '-1px' }}>
-            <span style={{ color: 'var(--text-main)' }}>DOM</span>
-            <span style={{ color: '#FF5722' }}>PORT</span>
+            <span style={{ color: '#FFFFFF' }}>DOM</span> 
+            <span style={{ color: '#FF5722' }}>PORT</span> 
           </h2>
         </div>
 
@@ -729,30 +710,30 @@ const Footer: React.FC = () => {
         <div style={{ display: 'flex', gap: '80px', flexWrap: 'wrap' }}>
           {/* Shop Column */}
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('shop')}</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#FFFFFF' }}>{t('shop')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link to="/catalog" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('all_products')}</Link>
-              <Link to="/preorder" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('preorder')}</Link>
-              <Link to="/regular-products" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>Regular Products</Link>
+              <Link to="/catalog" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('all_products')}</Link>
+              <Link to="/preorder" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('preorder')}</Link>
+              <Link to="/regular-products" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>Regular Products</Link>
             </div>
           </div>
 
           {/* About Column */}
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('who_we_are')}</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#FFFFFF' }}>{t('who_we_are')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('about')}</Link>
-              <Link to="/updates" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('updates')}</Link>
-              <Link to="/about" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('for_fandoms')}</Link>
+              <Link to="/about" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('about')}</Link>
+              <Link to="/updates" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('updates')}</Link>
+              <Link to="/about" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('for_fandoms')}</Link>
             </div>
           </div>
 
           {/* Support Column */}
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: 'var(--text-main)' }}>{t('support')}</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#FFFFFF' }}>{t('support')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link to="/call-center" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('help_center')}</Link>
-              <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-muted)', transition: 'color 0.2s' }}>{t('track_order')}</a>
+              <Link to="/call-center" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('help_center')}</Link>
+              <a href="https://track.thailandpost.co.th/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('track_order')}</a>
             </div>
           </div>
         </div>

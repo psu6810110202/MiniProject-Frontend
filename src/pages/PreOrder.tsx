@@ -51,9 +51,9 @@ const PreOrder: React.FC<PreOrderProps> = () => {
     return (
         <div style={{
             padding: '40px 20px',
-            background: 'linear-gradient(to bottom, #121212, #1f1f1f)',
+            background: 'var(--bg-color)',
             minHeight: '100vh',
-            color: '#fff'
+            color: 'var(--text-main)'
         }}>
             {/* Header Section */}
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -67,7 +67,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                 }}>
                     Pre Order
                 </h1>
-                <p style={{ color: '#aaa', fontSize: '1.2rem' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
                     Pre-Order Items & Custom Requests
                 </p>
 
@@ -83,9 +83,9 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                 width: '100%',
                                 padding: '12px 50px 12px 20px',
                                 borderRadius: '25px',
-                                border: '1px solid #333',
-                                background: '#1a1a1a',
-                                color: '#fff',
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--input-bg)',
+                                color: 'var(--text-main)',
                                 fontSize: '1rem',
                                 outline: 'none'
                             }}
@@ -95,7 +95,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                             right: '20px',
                             top: '50%',
                             transform: 'translateY(-50%)',
-                            color: '#aaa'
+                            color: 'var(--text-muted)'
                         }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
@@ -118,10 +118,10 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                         <div style={{ textAlign: 'left' }}>
-                            <h3 style={{ fontSize: '1rem', marginBottom: '5px', color: '#FF5722', margin: 0 }}>
+                            <h3 style={{ fontSize: '1rem', marginBottom: '5px', color: 'var(--primary-color)', margin: 0 }}>
                                 Can't find it?
                             </h3>
-                            <p style={{ color: '#aaa', fontSize: '0.8rem', margin: 0 }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
                                 Request a custom order provided by us.
                             </p>
                         </div>
@@ -160,18 +160,18 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                 {/* Sidebar Filters */}
                 <aside style={{
                     flex: '0 0 250px',
-                    background: '#1a1a1a',
+                    background: 'var(--card-bg)',
                     padding: '25px',
                     borderRadius: '15px',
-                    border: '1px solid #333',
+                    border: '1px solid var(--border-color)',
                     position: 'sticky',
                     top: '100px'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0 }}>Filters</h2>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, color: 'var(--text-main)' }}>Filters</h2>
                         <button
                             onClick={() => { setSelectedFandoms([]); setSelectedCategories([]); }}
-                            style={{ background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}
+                            style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}
                         >
                             Reset All
                         </button>
@@ -179,17 +179,17 @@ const PreOrder: React.FC<PreOrderProps> = () => {
 
                     {/* Fandom Filter */}
                     <div style={{ marginBottom: '30px' }}>
-                        <h3 style={{ fontSize: '0.9rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Fandoms</h3>
+                        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Fandoms</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {allFandoms.map(fandom => (
-                                <label key={fandom} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: selectedFandoms.includes(fandom) ? '#fff' : '#aaa' }}>
+                                <label key={fandom} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: selectedFandoms.includes(fandom) ? 'var(--text-main)' : 'var(--text-muted)' }}>
                                     <input
                                         type="checkbox"
                                         checked={selectedFandoms.includes(fandom)}
                                         onChange={() => toggleFilter(selectedFandoms, setSelectedFandoms, fandom)}
-                                        style={{ accentColor: '#FF5722' }}
+                                        style={{ accentColor: 'var(--primary-color)' }}
                                     />
-                                    {fandom} <span style={{ color: '#666', fontSize: '0.8rem' }}>({fandomCounts[fandom] || 0})</span>
+                                    {fandom} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>({fandomCounts[fandom] || 0})</span>
                                 </label>
                             ))}
                         </div>
@@ -197,17 +197,17 @@ const PreOrder: React.FC<PreOrderProps> = () => {
 
                     {/* Category Filter */}
                     <div>
-                        <h3 style={{ fontSize: '0.9rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Categories</h3>
+                        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Categories</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {allCategories.map(cat => (
-                                <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: selectedCategories.includes(cat) ? '#fff' : '#aaa' }}>
+                                <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: selectedCategories.includes(cat) ? 'var(--text-main)' : 'var(--text-muted)' }}>
                                     <input
                                         type="checkbox"
                                         checked={selectedCategories.includes(cat)}
                                         onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)}
-                                        style={{ accentColor: '#FF5722' }}
+                                        style={{ accentColor: 'var(--primary-color)' }}
                                     />
-                                    {cat} <span style={{ color: '#666', fontSize: '0.8rem' }}>({categoryCounts[cat] || 0})</span>
+                                    {cat} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>({categoryCounts[cat] || 0})</span>
                                 </label>
                             ))}
                         </div>
@@ -225,14 +225,14 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                             <div
                                 key={item.id}
                                 style={{
-                                    background: '#252525',
+                                    background: 'var(--card-bg)',
                                     borderRadius: '20px',
                                     overflow: 'hidden',
                                     position: 'relative',
                                     transform: 'translateY(0)',
                                     boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
                                     transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                                    border: '1px solid #333',
+                                    border: '1px solid var(--border-color)',
                                     cursor: 'pointer'
                                 }}
                                 onClick={() => {
@@ -276,7 +276,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                     <div style={{
                                         position: 'absolute',
                                         bottom: '10px', left: '10px',
-                                        background: '#FF5722',
+                                        background: 'var(--primary-color)',
                                         padding: '5px 12px',
                                         borderRadius: '15px',
                                         fontSize: '0.8rem',
@@ -293,7 +293,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                         to={`/preorder/${item.id}`}
                                         style={{ textDecoration: 'none', color: 'inherit' }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.color = '#FF5722';
+                                            e.currentTarget.style.color = 'var(--primary-color)';
                                         }}
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.color = 'inherit';
@@ -307,18 +307,18 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                             transition: 'color 0.2s'
                                         }}>{item.name}</h2>
                                     </Link>
-                                    <p style={{ color: '#bbb', fontSize: '0.95rem', marginBottom: '20px', height: '40px', overflow: 'hidden' }}>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '20px', height: '40px', overflow: 'hidden' }}>
                                         {item.description}
                                     </p>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '20px' }}>
                                         <div>
-                                            <div style={{ fontSize: '0.9rem', color: '#888' }}>{t('total_price')}</div>
-                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>฿{item.price.toLocaleString()}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('total_price')}</div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--text-main)' }}>฿{item.price.toLocaleString()}</div>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontSize: '0.9rem', color: '#ff7043' }}>{t('deposit')}</div>
-                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#FF5722' }}>฿{item.deposit.toLocaleString()}</div>
+                                            <div style={{ fontSize: '0.9rem', color: 'var(--primary-color)' }}>{t('deposit')}</div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>฿{item.deposit.toLocaleString()}</div>
                                         </div>
                                     </div>
 

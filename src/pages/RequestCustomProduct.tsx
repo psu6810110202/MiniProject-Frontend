@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const RequestCustomProduct: React.FC = () => {
-    const { t } = useLanguage();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [formData, setFormData] = useState({
         productName: '',
@@ -44,8 +44,47 @@ const RequestCustomProduct: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        alert('Custom product request submitted!');
-        navigate('/preorder'); // Go back to PreOrder or Track Ticket
+        
+        // Generate new request ID
+        const requestId = `REQ${Date.now().toString().slice(-6)}`;
+        
+        // Create new request object
+        const newRequest = {
+            id: requestId,
+            productName: formData.productName,
+            link: formData.link,
+            details: formData.details,
+            region: formData.region,
+            price: parseFloat(formData.price),
+            quantity: formData.quantity,
+            estimatedTotal: estimatedTotal || 0,
+            status: 'pending' as const,
+            userName: user?.name || user?.username || 'Unknown User',
+            userEmail: user?.email || '-',
+            userId: user?.id || 'unknown',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Get existing requests from localStorage
+        const existingRequests = JSON.parse(localStorage.getItem('custom_requests') || '[]');
+        
+        // Add new request
+        existingRequests.push(newRequest);
+        
+        // Save to localStorage
+        localStorage.setItem('custom_requests', JSON.stringify(existingRequests));
+        
+        alert('Custom product request submitted successfully!');
+        setFormData({
+            productName: '',
+            link: '',
+            details: '',
+            region: 'JP',
+            price: '',
+            quantity: 1
+        });
+        navigate('/preorder');
     };
 
     return (

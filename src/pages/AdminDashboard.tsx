@@ -294,6 +294,35 @@ const AdminDashboard: React.FC = () => {
                         Manage Tickets
                     </button>
                 </div>
+
+                {/* Manage Custom Requests */}
+                <div style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    border: '1px solid #333',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                }}>
+                    <div>
+                        <h3>Custom Requests</h3>
+                        <p style={{ color: '#888' }}>รับคำขอสินค้าแบบกำหนดเองจากผู้ใช้</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/profile/custom-requests')}
+                        style={{
+                            marginTop: '15px',
+                            padding: '10px 20px',
+                            background: '#FF5722',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            width: '100%'
+                        }}>
+                        Manage Requests
+                    </button>
+                </div>
             </div>
         </div >
     );

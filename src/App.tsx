@@ -32,6 +32,7 @@ import { useCart } from './contexts/CartContext';
 import FandomManager from './pages/FandomManager'; // Import FandomManager
 import FandomList from './pages/FandomList';
 import TicketManager from './pages/TicketManager';
+import CustomRequestManager from './pages/CustomRequestManager';
 
 import AllFandom from './pages/AllFandom';
 import FandomDetail from './pages/FandomDetail';
@@ -846,6 +847,7 @@ function MainLayout() {
             <Route path="/profile/fandoms/:id" element={<FandomManager />} />
             <Route path="/profile/fandom/:name" element={<FandomManager />} />
             <Route path="/profile/tickets" element={<TicketManager />} />
+            <Route path="/profile/custom-requests" element={<CustomRequestManager />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/call-center" element={<CallCenter />} />

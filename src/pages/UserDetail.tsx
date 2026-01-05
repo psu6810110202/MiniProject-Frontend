@@ -44,7 +44,7 @@ const UserDetail: React.FC = () => {
                     setUserOrders(orders);
                 } else {
                     alert('User not found');
-                    navigate('/admin/users');
+                    navigate('/profile/users');
                 }
             }
         };
@@ -106,7 +106,7 @@ const UserDetail: React.FC = () => {
         <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', color: 'var(--text-main)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <button
-                    onClick={() => navigate('/admin/users')}
+                    onClick={() => navigate('/profile/users')}
                     style={{ background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
                 >
                     ← Back to User List

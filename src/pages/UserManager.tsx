@@ -130,7 +130,7 @@ const UserManager: React.FC = () => {
                                         <button onClick={() => handleRestoreUser(user.id)} style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Restore</button>
                                     </>
                                 ) : (
-                                    <button onClick={() => navigate('/admin/users/' + user.id)} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
+                                    <button onClick={() => navigate('/profile/users/' + user.id)} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
                                 )}
                             </td>
                         </tr>

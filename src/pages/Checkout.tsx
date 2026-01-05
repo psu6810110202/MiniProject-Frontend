@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { usePoints } from '../hooks/usePoints';
 import { useNavigate } from 'react-router-dom';
 import { type Order } from '../data/mockOrders';
 
@@ -11,6 +12,7 @@ const Checkout: React.FC = () => {
 
     const { cartItems, totalAmount, clearCart, addOrder } = useCart();
     const { user } = useAuth();
+    const { addPoints, calculatePointsFromAmount } = usePoints();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -119,6 +121,14 @@ const Checkout: React.FC = () => {
             };
 
             addOrder(newOrder);
+            
+            // Award points after successful payment
+            const earnedPoints = calculatePointsFromAmount(totals.total);
+            if (earnedPoints > 0) {
+                addPoints(earnedPoints);
+                console.log(`Payment successful! Added ${earnedPoints} points to user account.`);
+            }
+            
             clearCart();
             navigate(`/profile/orders/${orderId}`, { state: { order: newOrder } });
         } catch {

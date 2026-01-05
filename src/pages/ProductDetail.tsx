@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { usePoints } from '../hooks/usePoints';
 import { preorderItems } from '../data/preorderData';
 import { regularProducts } from '../data/regularProducts';
 
@@ -12,6 +13,7 @@ const ProductDetail: React.FC = () => {
   const { items, likedProductIds, toggleLikeProduct } = useProducts();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { points, addPoints, calculatePointsFromAmount } = usePoints();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -143,6 +145,9 @@ const ProductDetail: React.FC = () => {
         fandom: product.fandom,
         image: product.image
       });
+
+      // Note: Points will be awarded after payment completion
+      console.log(`Item added to cart. Points will be awarded after payment completion.`);
 
       setTimeout(() => {
         setAddingToCart(false);
@@ -424,6 +429,36 @@ const ProductDetail: React.FC = () => {
             }}>
               {product.description}
             </p>
+          </div>
+
+          {/* Points Information */}
+          <div style={{
+            background: 'rgba(76, 175, 80, 0.1)',
+            border: '1px solid rgba(76, 175, 80, 0.3)',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '10px'
+            }}>
+              <span style={{ fontWeight: 'bold', color: '#4CAF50' }}>Your Points:</span>
+              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4CAF50' }}>
+                {points.toLocaleString()} pts
+              </span>
+            </div>
+            <div style={{
+              fontSize: '0.85rem',
+              color: 'var(--text-muted)'
+            }}>
+              You'll earn <strong>{calculatePointsFromAmount(product.price * quantity)} points</strong> after completing payment
+              <div style={{ fontSize: '0.75rem', marginTop: '5px' }}>
+                (1 point per ฿100 spent • Points awarded after successful payment)
+              </div>
+            </div>
           </div>
 
           {/* Quantity Selector */}

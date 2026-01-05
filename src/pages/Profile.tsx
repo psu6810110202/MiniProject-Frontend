@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { usePoints } from '../hooks/usePoints';
 
 import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -16,6 +17,7 @@ const Profile: React.FC = () => {
 
     const { user, updateUser, token, logout } = useAuth();
     const { userOrders } = useCart();
+    const { points } = usePoints();
     const { items, likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom, fandomImages } = useProducts();
     const navigate = useNavigate();
 
@@ -422,6 +424,41 @@ const Profile: React.FC = () => {
                                     {user?.username || user?.name}
                                 </h2>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{user?.email}</p>
+                                
+                                {/* Points Display */}
+                                <div style={{
+                                    background: 'rgba(76, 175, 80, 0.1)',
+                                    border: '1px solid rgba(76, 175, 80, 0.3)',
+                                    borderRadius: '8px',
+                                    padding: '12px 16px',
+                                    marginTop: '15px',
+                                    display: 'inline-block'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px'
+                                    }}>
+                                        <span style={{ fontWeight: 'bold', color: '#4CAF50', fontSize: '0.9rem' }}>
+                                            Your Points:
+                                        </span>
+                                        <span style={{
+                                            fontSize: '1.3rem',
+                                            fontWeight: 'bold',
+                                            color: '#4CAF50'
+                                        }}>
+                                            {points.toLocaleString()} pts
+                                        </span>
+                                    </div>
+                                    <div style={{
+                                        fontSize: '0.75rem',
+                                        color: 'var(--text-muted)',
+                                        marginTop: '4px'
+                                    }}>
+                                        Earn points with every purchase (1 point per ฿100)
+                                    </div>
+                                </div>
+                                
                                 {/* Social Links Display or Edit */}
                                 {!isEditing && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>

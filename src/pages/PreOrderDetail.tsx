@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { productAPI, type Product } from '../services/api';
-import { useLanguage } from '../contexts/LanguageContext';
+
 
 const PreOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, cartItems, purchasedItems, userOrders } = useCart();
   const { likedProductIds, toggleLikeProduct } = useProducts();
-  const { t } = useLanguage();
-  const navigate = useNavigate();
+
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -188,9 +187,9 @@ const PreOrderDetail: React.FC = () => {
         fontSize: '0.9rem',
         color: 'var(--text-muted)'
       }}>
-        <Link to="/" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Home</Link>
+        <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/preorder" style={{ color: 'var(--text-muted', textDecoration: 'none' }}>Pre-Orders</Link>
+        <Link to="/preorder" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Pre-Orders</Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
       </div>

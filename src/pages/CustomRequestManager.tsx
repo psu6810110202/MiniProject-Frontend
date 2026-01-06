@@ -210,7 +210,7 @@ const CustomRequestManager: React.FC = () => {
         return labels[status] || status;
     };
 
-    if (role !== 'admin') return null;
+    if(role !== 'admin') return null;
 
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>

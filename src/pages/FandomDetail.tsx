@@ -1,15 +1,15 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProducts } from '../contexts/ProductContext';
-import { useCart } from '../contexts/CartContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const FandomDetail: React.FC = () => {
     const { name } = useParams<{ name: string }>();
     const { items, fandomImages, likedProductIds, toggleLikeProduct } = useProducts();
-    const { addToCart } = useCart();
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const { theme } = useTheme();
 
     const decodedName = decodeURIComponent(name || '');
 
@@ -20,11 +20,6 @@ const FandomDetail: React.FC = () => {
     const fandomImage = (fandomImages && fandomImages[decodedName])
         ? fandomImages[decodedName]
         : fandomItems[0]?.image;
-
-    const handleAddToCart = (item: any) => {
-        addToCart(item);
-        alert(`${t('added_to_cart')}: ${item.name}`);
-    };
 
     if (!decodedName) return <div>{t('fandom_not_found')}</div>;
 
@@ -170,22 +165,6 @@ const FandomDetail: React.FC = () => {
                                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                                 </svg>
                                             )}
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleAddToCart(item);
-                                            }}
-                                            style={{
-                                                padding: '8px 15px',
-                                                background: '#FF5722',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '5px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            {t('add_to_cart') || 'Add'}
                                         </button>
                                     </div>
                                 </div>

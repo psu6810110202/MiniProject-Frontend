@@ -321,31 +321,6 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                             <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>฿{item.deposit.toLocaleString()}</div>
                                         </div>
                                     </div>
-
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/preorder/${item.id}`);
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            background: 'linear-gradient(45deg, #FF5722, #F4511E)',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '10px',
-                                            fontWeight: 'bold',
-                                            fontSize: '1rem',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.1s',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '1px'
-                                        }}
-                                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-                                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                    >
-                                        {t('view')}
-                                    </button>
                                 </div>
                             </div>
                         ))}

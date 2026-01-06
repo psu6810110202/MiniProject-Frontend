@@ -506,7 +506,7 @@ const Home: React.FC = () => {
             color: 'var(--text-main)',
             fontWeight: 'bold'
           }}>
-            All Fandom
+            {t('all_fandoms')}
           </h2>
           <Link to="/fandoms" style={{
             color: '#FF5722',
@@ -517,7 +517,7 @@ const Home: React.FC = () => {
             alignItems: 'center',
             gap: '5px'
           }}>
-            View All Fandom →
+            {t('view_all_fandoms')}
           </Link>
         </div>
 
@@ -603,6 +603,7 @@ const Home: React.FC = () => {
         width: '100%',
         boxSizing: 'border-box'
       }}>
+        {/* Section Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -616,7 +617,7 @@ const Home: React.FC = () => {
             color: 'var(--text-main)',
             fontWeight: 'bold'
           }}>
-            Categories
+            {t('categories')}
           </h2>
           <Link to="/catalog" style={{
             color: '#FF5722',
@@ -627,7 +628,7 @@ const Home: React.FC = () => {
             alignItems: 'center',
             gap: '5px'
           }}>
-            View All Categories →
+            {t('view_all_categories')}
           </Link>
         </div>
 

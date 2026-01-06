@@ -65,10 +65,10 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                     WebkitTextFillColor: 'transparent',
                     marginBottom: '10px'
                 }}>
-                    Pre Order
+                    {t('pre_order')}
                 </h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
-                    Pre-Order Items & Custom Requests
+                    {t('preorder_items_custom_requests')}
                 </p>
 
                 {/* Search Bar */}
@@ -119,10 +119,10 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                         <div style={{ textAlign: 'left' }}>
                             <h3 style={{ fontSize: '1rem', marginBottom: '5px', color: 'var(--primary-color)', margin: 0 }}>
-                                Can't find it?
+                                {t('cant_find_it')}
                             </h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
-                                Request a custom order provided by us.
+                                {t('request_custom_order_provided')}
                             </p>
                         </div>
                         <button
@@ -149,7 +149,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                 e.currentTarget.style.boxShadow = '0 4px 10px rgba(255, 87, 34, 0.3)';
                             }}
                         >
-                            Order Custom Product
+                            {t('order_custom_product')}
                         </button>
                     </div>
                 </div>

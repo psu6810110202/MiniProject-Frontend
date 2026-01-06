@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const UserManager: React.FC = () => {
     const { role } = useAuth();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [users, setUsers] = useState<any[]>([]);
 
@@ -147,11 +149,11 @@ const UserManager: React.FC = () => {
                 onClick={() => navigate('/profile')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
             >
-                ← Back to Profile
+                ← {t('back_to_profile')}
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
-                <h1 style={{ margin: 0 }}>User Management</h1>
+                <h1 style={{ margin: 0 }}>{t('user_management')}</h1>
                 <button
                     onClick={() => {
                         const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
@@ -191,27 +193,27 @@ const UserManager: React.FC = () => {
                         cursor: 'pointer',
                         fontSize: '0.8rem'
                     }}>
-                    🔧 Fix Duplicates
+                    🔧 {t('fix_duplicates')}
                 </button>
             </div>
 
             <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                Active Users <span style={{ fontSize: '0.8rem', background: '#444', padding: '2px 8px', borderRadius: '10px' }}>{activeUsers.length}</span>
+                {t('active_users')} <span style={{ fontSize: '0.8rem', background: '#444', padding: '2px 8px', borderRadius: '10px' }}>{activeUsers.length}</span>
             </h3>
-            <UserTable list={activeUsers} emptyMsg="No active users found." type="active" />
+            <UserTable list={activeUsers} emptyMsg={t('no_active_users_found')} type="active" />
 
             <div style={{ marginTop: '40px' }}>
                 <h3 style={{ marginBottom: '15px', color: '#F44336', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    🚫 Blacklisted Users <span style={{ fontSize: '0.8rem', background: '#F44336', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{blacklistedUsers.length}</span>
+                    🚫 {t('blacklisted_users')} <span style={{ fontSize: '0.8rem', background: '#F44336', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{blacklistedUsers.length}</span>
                 </h3>
-                <UserTable list={blacklistedUsers} emptyMsg="No blacklisted users." type="blacklist" />
+                <UserTable list={blacklistedUsers} emptyMsg={t('no_blacklisted_users')} type="blacklist" />
             </div>
 
             <div style={{ marginTop: '40px', borderTop: '1px solid #444', paddingTop: '30px' }}>
                 <h3 style={{ marginBottom: '15px', color: '#888', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    🗑️ Recent Deletions (30 Days) <span style={{ fontSize: '0.8rem', background: '#666', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{deletedUsers.length}</span>
+                    🗑️ {t('recent_deletions')} <span style={{ fontSize: '0.8rem', background: '#666', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{deletedUsers.length}</span>
                 </h3>
-                <UserTable list={deletedUsers} emptyMsg="Recycle bin is empty." type="deleted" />
+                <UserTable list={deletedUsers} emptyMsg={t('recycle_bin_empty')} type="deleted" />
             </div>
         </div>
     );

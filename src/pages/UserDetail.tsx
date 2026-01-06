@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const UserDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { role } = useAuth();
+    const { t } = useLanguage();
     const [user, setUser] = useState<any | null>(null);
     const [userOrders, setUserOrders] = useState<any[]>([]);
 
@@ -130,14 +132,14 @@ const UserDetail: React.FC = () => {
             </div>
 
             <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                User Details: {user.username || user.name}
+                {t('user_details')}: {user.username || user.name}
                 {user.isBlacklisted && <span style={{ fontSize: '1rem', background: '#F44336', color: 'white', padding: '5px 10px', borderRadius: '15px' }}>Blacklisted</span>}
                 {user.deletedAt && <span style={{ fontSize: '1rem', background: '#777', color: 'white', padding: '5px 10px', borderRadius: '15px' }}>Deleted</span>}
             </h1>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
                 <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
-                    <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>Account Info</h3>
+                    <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>{t('account_info')}</h3>
                     <p><strong>ID:</strong> {user.id}</p>
                     <p><strong>Username:</strong> {user.username || '-'}</p>
                     <p><strong>Name:</strong> {user.name || '-'}</p>
@@ -161,14 +163,14 @@ const UserDetail: React.FC = () => {
                 </div>
 
                 <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
-                    <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>Contact & Address</h3>
+                    <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>{t('contact_address')}</h3>
                     <p><strong>Full Name:</strong> {user.name || '-'}</p>
                     <p><strong>Phone:</strong> {user.phone || '-'}</p>
                     <p><strong>Address:</strong> {user.house_number ? `${user.house_number}, ${user.sub_district || ''}, ${user.district || ''}, ${user.province || ''}` : 'No address set'}</p>
                 </div>
             </div>
 
-            <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>Order History</h3>
+            <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>{t('order_history')}</h3>
             <div style={{ overflowX: 'auto', background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
                 {userOrders.length > 0 ? (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>

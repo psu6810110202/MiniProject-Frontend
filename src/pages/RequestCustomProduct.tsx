@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const RequestCustomProduct: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useLanguage();
 
     const [formData, setFormData] = useState({
         productName: '',
@@ -122,21 +124,21 @@ const RequestCustomProduct: React.FC = () => {
                         fontSize: '0.9rem'
                     }}
                 >
-                    ← Back to Pre-Order
+                    ← {t('back_to_preorder')}
                 </button>
 
                 <h1 style={{ fontSize: '2rem', marginBottom: '10px', color: 'var(--primary-color)', textAlign: 'center' }}>
-                    Request Custom Product
+                    {t('request_custom_product')}
                 </h1>
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '30px' }}>
-                    Send us a link, and we'll order it for you!
+                    {t('send_us_link_order')}
                 </p>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                     {/* Region Selector */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: 'var(--text-main)' }}>Select Region / Rate</label>
+                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', color: 'var(--text-main)' }}>{t('select_region_rate')}</label>
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             {['US', 'JP', 'CN', 'KR'].map(region => (
                                 <button
@@ -165,7 +167,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Product Name */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Product Name</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('product_name')}</label>
                         <input
                             type="text"
                             required
@@ -186,7 +188,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Product Link */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Product Link (URL)</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('product_link_url')}</label>
                         <input
                             type="url"
                             required
@@ -207,7 +209,7 @@ const RequestCustomProduct: React.FC = () => {
 
                     {/* Details */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Details (Size, Color, etc.)</label>
+                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('details_size_color')}</label>
                         <textarea
                             value={formData.details}
                             onChange={(e) => handleChange('details', e.target.value)}
@@ -229,7 +231,7 @@ const RequestCustomProduct: React.FC = () => {
                     {/* Price & Quantity */}
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>Price (in Foreign Currency)</label>
+                            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-main)' }}>{t('price_foreign_currency')}</label>
                             <input
                                 type="number"
                                 required
@@ -248,7 +250,7 @@ const RequestCustomProduct: React.FC = () => {
                             />
                         </div>
                         <div style={{ width: '100px' }}>
-                            <label style={{ display: 'block', marginBottom: '8px' }}>Quantity</label>
+                            <label style={{ display: 'block', marginBottom: '8px' }}>{t('quantity')}</label>
                             <input
                                 type="number"
                                 min="1"
@@ -276,13 +278,13 @@ const RequestCustomProduct: React.FC = () => {
                         marginTop: '10px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Estimated Total:</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{t('estimated_total')}:</span>
                             <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--primary-color)' }}>
                                 {estimatedTotal ? `≈ ฿${estimatedTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '---'}
                             </span>
                         </div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                            *Includes estimated shipping to Thailand. Final price may vary.
+                            *{t('includes_estimated_shipping')}
                         </p>
                     </div>
 
@@ -303,7 +305,7 @@ const RequestCustomProduct: React.FC = () => {
                         onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-hover)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary-color)'}
                     >
-                        Submit Request
+                        {t('submit_request')}
                     </button>
 
                 </form>
@@ -329,7 +331,7 @@ const RequestCustomProduct: React.FC = () => {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: 'var(--primary-color)', fontSize: '1.2rem' }}>✓</span>
-                        Custom product request submitted successfully!
+                        {t('custom_product_request_submitted')}
                     </div>
                 </div>
             )}

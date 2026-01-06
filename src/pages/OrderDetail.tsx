@@ -142,31 +142,31 @@ const OrderDetail: React.FC = () => {
         return [
             {
                 step: 'start_production',
-                label: 'Start Production',
+                label: t('start_production'),
                 status: (isConfirmed || isShipped || isDelivered) ? 'completed' : 'upcoming',
                 date: getDate(isConfirmed, 1)
             },
             {
                 step: 'production_completed',
-                label: 'Production Completed',
+                label: t('production_completed'),
                 status: (isShipped || isDelivered) ? 'completed' : (isConfirmed ? 'in_progress' : 'upcoming'),
                 date: getDate(isShipped, 14)
             },
             {
                 step: 'shipping_to_th',
-                label: 'Shipping to Thailand',
+                label: t('shipping_to_thailand'),
                 status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
                 date: getDate(isShipped, 20)
             },
             {
                 step: 'arrived_th',
-                label: 'Arrived in Thailand',
+                label: t('arrived_in_thailand'),
                 status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
                 date: getDate(isShipped, 25)
             },
             {
                 step: 'domestic_shipping',
-                label: 'Start Domestic Shipping',
+                label: t('start_domestic_shipping'),
                 status: (isShipped || isDelivered) ? 'completed' : 'upcoming',
                 date: getDate(isShipped, 27)
             }

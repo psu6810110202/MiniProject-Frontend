@@ -104,8 +104,8 @@ const Navbar: React.FC = () => {
           </span>
         </Link>
         <div style={{ display: 'flex', gap: '20px' }}>
-          <Link to="/preorder" style={linkStyle}>Pre order</Link>
-          <Link to="/fandoms" style={linkStyle}>All fandom</Link>
+          <Link to="/preorder" style={linkStyle}>{t('pre_order')}</Link>
+          <Link to="/fandoms" style={linkStyle}>{t('all_fandoms')}</Link>
         </div>
       </div>
 

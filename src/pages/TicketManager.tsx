@@ -187,12 +187,12 @@ const TicketManager: React.FC = () => {
                 onClick={() => navigate('/profile')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '5px' }}
             >
-                ← Back to Profile
+                ← {t('back_to_profile')}
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <h1 style={{ margin: 0, borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
-                    Ticket Management 🎫
+                    {t('ticket_management')} 🎫
                 </h1>
                 <div style={{ color: '#888' }}>
                     Total Tickets: {getFilteredTickets().length}
@@ -379,7 +379,7 @@ const TicketManager: React.FC = () => {
                         maxHeight: '90vh', overflowY: 'auto', border: '1px solid #FF5722'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ margin: 0 }}>Ticket Details: {selectedTicket.id}</h2>
+                            <h2 style={{ margin: 0 }}>{t('ticket_details')}: {selectedTicket.id}</h2>
                             <button onClick={() => setSelectedTicket(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.5rem' }}>✕</button>
                         </div>
 

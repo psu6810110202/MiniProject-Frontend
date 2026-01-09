@@ -67,6 +67,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
     return (
         <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+            {name && <input type="hidden" name={name} value={value} />}
             <div
                 onClick={() => !disabled && setIsOpen(!isOpen)}
                 style={{

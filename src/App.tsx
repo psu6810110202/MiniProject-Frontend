@@ -36,7 +36,6 @@ import CustomRequestManager from './pages/CustomRequestManager';
 
 import AllFandom from './pages/AllFandom';
 import FandomDetail from './pages/FandomDetail';
-import RegularProducts from './pages/RegularProducts';
 
 import ProductDetail from './pages/ProductDetail';
 import RequestCustomProduct from './pages/RequestCustomProduct';
@@ -721,8 +720,6 @@ function MainLayout() {
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/preorder/:id" element={<PreOrderDetail />} />
             <Route path="/product/:id" element={<PreOrderDetail />} />
-            <Route path="/regular-products" element={<RegularProducts />} />
-            <Route path="/regular-products/:id" element={<ProductDetail />} />
             <Route path="/fandoms" element={<AllFandom />} />
             <Route path="/fandoms/:name" element={<FandomDetail />} />
             <Route path="/fandoms/:name/:id" element={<ProductDetail />} />
@@ -746,7 +743,6 @@ function MainLayout() {
             <Route path="/profile/tickets" element={<TicketManager />} />
             <Route path="/profile/custom-requests" element={<CustomRequestManager />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/call-center" element={<CallCenter />} />
             <Route path="/call-center/new-ticket" element={<CreateTicket />} />
             <Route path="/customer-chat" element={<CustomerChat />} />

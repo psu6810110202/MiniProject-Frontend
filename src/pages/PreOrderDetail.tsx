@@ -22,14 +22,14 @@ const PreOrderDetail: React.FC = () => {
   // Convert PreOrderItem to Product format
   const convertPreOrderToProduct = (item: PreOrderItem): Product => {
     return {
-      product_id: item.id.toString(),
+      product_id: `P${item.id}`,
       name: item.name,
       description: item.description || `${item.name} - Exclusive pre-order item from our premium collection. Limited availability.`,
       price: item.price,
       category: 'Pre-Order',
       fandom: 'Exclusive',
       image: item.image,
-      stock: 100, // Pre-orders typically have unlimited stock
+      stock: 999999, // Unlimited stock
       is_preorder: true,
       release_date: item.releaseDate,
       deposit_amount: item.deposit,
@@ -49,7 +49,8 @@ const PreOrderDetail: React.FC = () => {
       setLoading(true);
 
       // Find product in pre-order items only
-      const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
+      const cleanId = productId.replace(/^P/i, '');
+      const preOrderItem = preorderItems.find(item => item.id.toString() === cleanId);
 
       if (preOrderItem) {
         const convertedProduct = convertPreOrderToProduct(preOrderItem);
@@ -82,7 +83,9 @@ const PreOrderDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (!product) return;
 
-    const safeId = isNaN(Number(product.product_id)) ? Date.now() : Number(product.product_id);
+    // Strip 'P' prefix for logic that requires numeric ID
+    const rawId = product.product_id.toString().replace(/^P/i, '');
+    const safeId = isNaN(Number(rawId)) ? Date.now() : Number(rawId);
 
     // 1. Check if already purchased (in history or past orders)
     const alreadyPurchased = purchasedItems.includes(safeId) ||
@@ -421,7 +424,7 @@ const PreOrderDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock} units
+              Max: {product.stock > 900000 ? 'Unlimited' : `${product.stock} units`}
             </span>
           </div>
 
@@ -466,7 +469,8 @@ const PreOrderDetail: React.FC = () => {
 
             <button
               onClick={() => {
-                if (product?.product_id) toggleLikeProduct(Number(product.product_id));
+                const id = product?.product_id ? product.product_id.toString().replace(/^P/i, '') : '';
+                if (id) toggleLikeProduct(Number(id));
               }}
               style={{
                 width: '60px',
@@ -487,7 +491,7 @@ const PreOrderDetail: React.FC = () => {
                 e.currentTarget.style.background = 'transparent';
               }}
             >
-              {product && likedProductIds.includes(Number(product.product_id)) ? (
+              {product && likedProductIds.includes(Number(product.product_id.toString().replace(/^P/i, ''))) ? (
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
@@ -512,7 +516,7 @@ const PreOrderDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Stock:</strong> {product.stock} units</div>
+              <div><strong>Stock:</strong> {product.stock > 900000 ? 'Unlimited' : `${product.stock} units`}</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
             </div>
           </div>

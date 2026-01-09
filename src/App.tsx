@@ -5,7 +5,6 @@ import Register from './pages/Register';
 import AboutUs from './pages/AboutUs';
 import PreOrder from './pages/PreOrder';
 import Updates from './pages/Updates';
-import Catalog from './pages/Catalog';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 // import AdminDashboard from './pages/AdminDashboard'; // AdminDashboard is used within Profile page now
@@ -51,19 +50,26 @@ const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { isLoggedIn, logout } = useAuth();
   const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // สำหรับเปลี่ยนหน้าเว็ํบ
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  // HTMLDivElement คือ จุดอ้างอิง hitbox ใช้ร่วมกับบรรทัด 62
+
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        // !dropdownRef.current.contains(event.target as Node) คือ จุดที่คลิก ไม่ได้อยู่ข้างในกล่องเมนูใช่ไหม?
+        // event.target คือ จุดที่คลิก
+        // .contains() คือ ตรวจสอบว่าจุดที่คลิกอยู่ในกล่องเมนูหรือไม่
         setIsDropdownOpen(false);
       }
     };
+    // document เป็นค่า global และมาจาก Web API โดยตรง
+    // addEventListner เป็นฟังก์ชันที่ใช้เพื่อจับ event
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -73,7 +79,7 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // ✅ 1. Navbar Style: ล็อคเป็นสีดำ (ไม่ใช้ตัวแปร Theme)
+  // React.CSSProperties ไว้ล็อคสไตล์
   const navStyle: React.CSSProperties = {
     padding: '10px 40px',
     background: '#0a0a0a', // สีดำเสมอ
@@ -89,13 +95,14 @@ const Navbar: React.FC = () => {
 
   // ✅ 2. Link Style: ล็อคตัวหนังสือเป็นสีขาว (เพื่อให้เห็นบนแถบดำ)
   const linkStyle = {
-    textDecoration: 'none',
+    textDecoration: 'none', // ไม่มีเส้นใต้
     color: '#ffffff', // ขาวเสมอ
     fontWeight: '500'
   };
 
   return (
     <nav style={navStyle}>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <span style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>
@@ -103,6 +110,7 @@ const Navbar: React.FC = () => {
             <span style={{ color: '#FF5722' }}>Port</span>
           </span>
         </Link>
+
         <div style={{ display: 'flex', gap: '20px' }}>
           <Link to="/preorder" style={linkStyle}>{t('pre_order')}</Link>
           <Link to="/fandoms" style={linkStyle}>{t('all_fandoms')}</Link>
@@ -112,7 +120,7 @@ const Navbar: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
 
         {/* Search Icon */}
-        <Link to="/catalog" style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+        <Link to="/fandoms" style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -429,14 +437,6 @@ const Home: React.FC = () => {
     });
   }, [items, fandomImages]);
 
-  const categories = React.useMemo(() => {
-    const unique = Array.from(new Set(items.map(item => item.category)));
-    return unique.map(c => {
-      const item = items.find(i => i.category === c);
-      return { name: c, image: item?.image };
-    });
-  }, [items]);
-
   return (
     <div>
       {/* Hero Section */}
@@ -466,7 +466,7 @@ const Home: React.FC = () => {
         </p>
 
         <div style={{ marginTop: '40px', display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link to="/catalog" style={{
+          <Link to="/fandoms" style={{
             padding: '15px 40px',
             fontSize: '1.1rem',
             background: '#FF5722',
@@ -594,90 +594,6 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Categories Section */}
-      <div style={{
-        padding: '60px 40px',
-        background: 'var(--bg-color)',
-        maxWidth: '1600px',
-        margin: '0 auto',
-        width: '100%',
-        boxSizing: 'border-box'
-      }}>
-        {/* Section Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'end',
-          marginBottom: '30px',
-          padding: '0 10px'
-        }}>
-          <h2 style={{
-            fontSize: '2.5rem',
-            margin: 0,
-            color: 'var(--text-main)',
-            fontWeight: 'bold'
-          }}>
-            {t('categories')}
-          </h2>
-          <Link to="/catalog" style={{
-            color: '#FF5722',
-            textDecoration: 'none',
-            fontWeight: 'bold',
-            fontSize: '1.1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px'
-          }}>
-            {t('view_all_categories')}
-          </Link>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          overflowX: 'auto',
-          gap: '40px',
-          padding: '10px',
-          scrollBehavior: 'smooth',
-          paddingBottom: '20px'
-        }} className="custom-scrollbar">
-          {categories.slice(0, 6).map((c, i) => (
-            <Link key={i} to="/catalog" style={{ textDecoration: 'none' }}>
-              <div style={{
-                flex: '0 0 220px',
-                cursor: 'pointer',
-                transition: 'transform 0.3s'
-              }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-
-                <div style={{
-                  width: '220px',
-                  height: '220px',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
-                  marginBottom: '20px',
-                  position: 'relative'
-                }}>
-                  <img src={c.image} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0, left: 0, right: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)',
-                    padding: '20px',
-                    height: '50%',
-                    display: 'flex', alignItems: 'end', justifyContent: 'center'
-                  }}>
-                  </div>
-                </div>
-                <h3 style={{ textAlign: 'center', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 'bold' }}>{c.name}</h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-
     </div>
   );
 };
@@ -686,8 +602,8 @@ const Footer: React.FC = () => {
   const { t } = useLanguage();
   return (
     <footer style={{
-      backgroundColor: '#0a0a0a', 
-      borderTop: '2px solid #FF5722', 
+      backgroundColor: '#0a0a0a',
+      borderTop: '2px solid #FF5722',
       padding: '60px 40px',
       marginTop: 'auto'
     }}>
@@ -702,8 +618,8 @@ const Footer: React.FC = () => {
         {/* Brand Section */}
         <div style={{ flex: '1 1 300px' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '900', margin: '0 0 20px 0', letterSpacing: '-1px' }}>
-            <span style={{ color: '#FFFFFF' }}>DOM</span> 
-            <span style={{ color: '#FF5722' }}>PORT</span> 
+            <span style={{ color: '#FFFFFF' }}>DOM</span>
+            <span style={{ color: '#FF5722' }}>PORT</span>
           </h2>
         </div>
 
@@ -713,9 +629,8 @@ const Footer: React.FC = () => {
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#FFFFFF' }}>{t('shop')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link to="/catalog" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('all_products')}</Link>
               <Link to="/preorder" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('preorder')}</Link>
-              <Link to="/regular-products" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>Regular Products</Link>
+              <Link to="/fandoms" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('fandoms')}</Link>
             </div>
           </div>
 
@@ -725,7 +640,6 @@ const Footer: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <Link to="/about" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('about')}</Link>
               <Link to="/updates" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('updates')}</Link>
-              <Link to="/about" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('for_fandoms')}</Link>
             </div>
           </div>
 
@@ -804,9 +718,9 @@ function MainLayout() {
         <div style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/catalog" element={<Catalog />} />
             <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
             <Route path="/preorder/:id" element={<PreOrderDetail />} />
+            <Route path="/product/:id" element={<PreOrderDetail />} />
             <Route path="/regular-products" element={<RegularProducts />} />
             <Route path="/regular-products/:id" element={<ProductDetail />} />
             <Route path="/fandoms" element={<AllFandom />} />

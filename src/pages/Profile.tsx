@@ -424,7 +424,7 @@ const Profile: React.FC = () => {
                                     {user?.username || user?.name}
                                 </h2>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{user?.email}</p>
-                                
+
                                 {/* Points Display */}
                                 <div style={{
                                     background: 'rgba(76, 175, 80, 0.1)',
@@ -458,7 +458,7 @@ const Profile: React.FC = () => {
                                         Earn points with every purchase (1 point per ฿100)
                                     </div>
                                 </div>
-                                
+
                                 {/* Social Links Display or Edit */}
                                 {!isEditing && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
@@ -526,21 +526,6 @@ const Profile: React.FC = () => {
                             </div>
                         </div>
 
-                        <div style={{
-                            marginTop: '15px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            background: 'rgba(255, 193, 7, 0.1)',
-                            padding: '8px 20px',
-                            borderRadius: '20px',
-                            border: '1px solid #FFC107'
-                        }}>
-                            <span style={{ fontSize: '1.2rem' }}>💎</span>
-                            <span style={{ color: '#FFC107', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                {user?.points || 0} {t('points')}
-                            </span>
-                        </div>
                     </div>
                 </div>
 

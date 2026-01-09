@@ -11,7 +11,7 @@ interface PreOrderProps {
 const PreOrder: React.FC<PreOrderProps> = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const [hoveredId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Filter State
@@ -237,7 +237,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                 }}
                                 onClick={() => {
                                     console.log('Navigating to pre-order detail:', item.id, item.name);
-                                    navigate(`/preorder/${item.id}`);
+                                    navigate(`/product/P${item.id}`);
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'translateY(-10px)';
@@ -290,7 +290,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
 
                                 <div style={{ padding: '20px' }}>
                                     <Link
-                                        to={`/preorder/${item.id}`}
+                                        to={`/product/P${item.id}`}
                                         style={{ textDecoration: 'none', color: 'inherit' }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.color = 'var(--primary-color)';

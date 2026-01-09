@@ -24,7 +24,7 @@ export interface Order {
   order_id: string;
   user_id: string;
   total_amount: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered';
   shipping_address: string;
   created_at: string;
   items: OrderItem[];
@@ -41,9 +41,9 @@ export interface OrderItem {
 export interface Payment {
   payment_id: string;
   order_id: string;
-  payment_method: 'credit_card' | 'promptpay' | 'cash_on_delivery';
+  payment_method: 'promptpay';
   amount: number;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'completed';
   transaction_id?: string;
   created_at: string;
 }
@@ -57,10 +57,12 @@ export interface Shipment {
   created_at: string;
 }
 
+// Interface for Timeline Events: ใช้แสดงความคืบหน้าของสินค้าหรือออเดอร์
 export interface TimelineEvent {
   event_id: string;
   product_id?: string;
   order_id?: string;
+  // ประเภทของเหตุการณ์: ผลิต, ขนส่ง, ตรวจสอบคุณภาพ, จ่ายเงิน, ทั่วไป
   event_type: 'production' | 'shipping' | 'quality_check' | 'payment' | 'general';
   title: string;
   description: string;

@@ -14,12 +14,7 @@ interface User {
     district?: string;
     province?: string;
     postal_code?: string;
-    facebook?: string;
-    twitter?: string;
-    line?: string;
-    facebookName?: string;
-    twitterName?: string;
-    lineName?: string;
+
     isBlacklisted?: boolean;
 }
 

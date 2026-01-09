@@ -60,12 +60,6 @@ const Profile: React.FC = () => {
         district: string;
         province: string;
         postal_code: string;
-        facebook?: string;
-        twitter?: string;
-        line?: string;
-        facebookName?: string;
-        twitterName?: string;
-        lineName?: string;
     }>({
         username: '',
         name: '',
@@ -75,12 +69,7 @@ const Profile: React.FC = () => {
         district: '',
         province: '',
         postal_code: '',
-        facebook: '',
-        twitter: '',
-        line: '',
-        facebookName: '',
-        twitterName: '',
-        lineName: '',
+
     });
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -120,12 +109,7 @@ const Profile: React.FC = () => {
                 district: user.district || '',
                 province: user.province || '',
                 postal_code: user.postal_code || '',
-                facebook: user.facebook || '',
-                twitter: user.twitter || '',
-                line: user.line || '',
-                facebookName: user.facebookName || '',
-                twitterName: user.twitterName || '',
-                lineName: user.lineName || '',
+
             });
         }
     }, [user]);
@@ -459,35 +443,7 @@ const Profile: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Social Links Display or Edit */}
-                                {!isEditing && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                                        {user?.facebook && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <a href={user.facebook} target="_blank" rel="noreferrer" style={{ color: '#1877F2', textDecoration: 'none', fontWeight: 'bold' }}>
-                                                    Facebook
-                                                </a>
-                                                {user.facebookName && <span style={{ color: 'var(--text-muted)' }}>Name: {user.facebookName}</span>}
-                                            </div>
-                                        )}
-                                        {user?.twitter && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <a href={user.twitter} target="_blank" rel="noreferrer" style={{ color: '#1DA1F2', textDecoration: 'none', fontWeight: 'bold' }}>
-                                                    Twitter
-                                                </a>
-                                                {user.twitterName && <span style={{ color: 'var(--text-muted)' }}>Name: {user.twitterName}</span>}
-                                            </div>
-                                        )}
-                                        {user?.line && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <a href={user.line} target="_blank" rel="noreferrer" style={{ color: '#00C300', textDecoration: 'none', fontWeight: 'bold' }}>
-                                                    Line
-                                                </a>
-                                                {user.lineName && <span style={{ color: 'var(--text-muted)' }}>Name: {user.lineName}</span>}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'end' }}>
                                 {user?.role !== 'admin' && (
@@ -554,24 +510,7 @@ const Profile: React.FC = () => {
 
 
 
-                        <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>{t('social_media')}</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                            <div>
-                                <label style={labelStyle}>{t('facebook_url')}</label>
-                                <input name="facebook" value={formData.facebook || ''} onChange={handleAddressChange} style={inputStyle} placeholder="https://facebook.com/..." />
-                                <input name="facebookName" value={formData.facebookName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('facebook_name_placeholder')} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>{t('twitter_url')}</label>
-                                <input name="twitter" value={formData.twitter || ''} onChange={handleAddressChange} style={inputStyle} placeholder={t('twitter_url_placeholder')} />
-                                <input name="twitterName" value={formData.twitterName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('twitter_name_placeholder')} />
-                            </div>
-                            <div>
-                                <label style={labelStyle}>{t('line_id_url')}</label>
-                                <input name="line" value={formData.line || ''} onChange={handleAddressChange} style={inputStyle} placeholder={t('line_id_placeholder')} />
-                                <input name="lineName" value={formData.lineName || ''} onChange={handleAddressChange} style={{ ...inputStyle, marginTop: '5px' }} placeholder={t('line_name_placeholder')} />
-                            </div>
-                        </div>
+
 
                         <h4 style={{ color: 'var(--text-main)', marginTop: '10px', marginBottom: '15px' }}>{t('address')}</h4>
 

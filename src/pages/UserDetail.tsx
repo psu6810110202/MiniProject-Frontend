@@ -148,18 +148,7 @@ const UserDetail: React.FC = () => {
                     <p><strong>Password:</strong> {user.password ? String(user.password) : '<No Password>'}</p>
                     <p><strong>Points:</strong> {user.points || 0}</p>
 
-                    <h4 style={{ color: '#FF5722', marginTop: '20px', marginBottom: '10px', borderTop: '1px solid #444', paddingTop: '10px' }}>Social Contacts</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <p>
-                            <strong>Facebook:</strong> {user.facebook ? <span>{user.facebookName ? `Name: ${user.facebookName} - ` : ''}<a href={user.facebook} target="_blank" rel="noreferrer" style={{ color: '#1877F2' }}>Open Link</a></span> : <span style={{ color: '#666' }}>-</span>}
-                        </p>
-                        <p>
-                            <strong>Twitter:</strong> {user.twitter ? <span>{user.twitterName ? `Name: ${user.twitterName} - ` : ''}<a href={user.twitter} target="_blank" rel="noreferrer" style={{ color: '#1DA1F2' }}>Open Link</a></span> : <span style={{ color: '#666' }}>-</span>}
-                        </p>
-                        <p>
-                            <strong>Line:</strong> {user.line ? <span>{user.lineName ? `Name: ${user.lineName} - ` : ''}<a href={user.line} target="_blank" rel="noreferrer" style={{ color: '#00C300' }}>Open Link</a></span> : <span style={{ color: '#666' }}>-</span>}
-                        </p>
-                    </div>
+
                 </div>
 
                 <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>

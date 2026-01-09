@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 interface Ticket {
@@ -90,8 +90,8 @@ const TicketManager: React.FC = () => {
     };
 
     const updateTicketStatus = (ticketId: string, newStatus: Ticket['status']) => {
-        const updatedTickets = tickets.map(ticket => 
-            ticket.id === ticketId 
+        const updatedTickets = tickets.map(ticket =>
+            ticket.id === ticketId
                 ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
                 : ticket
         );
@@ -102,17 +102,17 @@ const TicketManager: React.FC = () => {
     const addAdminResponse = () => {
         if (!selectedTicket || !responseText.trim()) return;
 
-        const updatedTickets = tickets.map(ticket => 
-            ticket.id === selectedTicket.id 
-                ? { 
-                    ...ticket, 
+        const updatedTickets = tickets.map(ticket =>
+            ticket.id === selectedTicket.id
+                ? {
+                    ...ticket,
                     adminResponse: responseText,
                     status: 'in_progress' as Ticket['status'],
                     updatedAt: new Date().toISOString()
                 }
                 : ticket
         );
-        
+
         setTickets(updatedTickets);
         localStorage.setItem('admin_tickets', JSON.stringify(updatedTickets));
         setSelectedTicket({ ...selectedTicket, adminResponse: responseText, status: 'in_progress' });
@@ -391,8 +391,8 @@ const TicketManager: React.FC = () => {
                                 </div>
                                 <div>
                                     <span style={{ color: '#888' }}>สถานะ:</span>
-                                    <span style={{ 
-                                        marginLeft: '10px', 
+                                    <span style={{
+                                        marginLeft: '10px',
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         background: getStatusColor(selectedTicket.status),
@@ -412,7 +412,7 @@ const TicketManager: React.FC = () => {
                                 </div>
                                 <div>
                                     <span style={{ color: '#888' }}>ความสำคัญ:</span>
-                                    <span style={{ 
+                                    <span style={{
                                         marginLeft: '10px',
                                         padding: '4px 8px',
                                         borderRadius: '4px',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useProducts } from '../contexts/ProductContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useProducts } from '../../contexts/ProductContext';
 
 interface Product {
     product_id: string;
@@ -21,57 +21,9 @@ const ProductManager: React.FC = () => {
     const navigate = useNavigate();
 
     // Use Context instead of raw fetch to get frontend mock data + api data
-    const { items } = useProducts();
+    const { items, deleteItem } = useProducts();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-
-    // Mappings for ID Generation
-    const fandomMap: Record<string, number> = {
-        'Hazbin hotel': 1,
-        'Undertale': 2,
-        'Genshin impact': 3,
-        'Identity V': 4,
-        'Alien stage': 5,
-        'Cookie run kingdom': 6,
-        'Project sekai': 7,
-        'Milgram': 8
-    };
-
-    const categoryMap: Record<string, number> = {
-        'Prop Replica': 1,
-        'Apparel': 2,
-        'Figure': 3,
-        'Plush': 4,
-        'Book': 5,
-        'Cushion': 6,
-        'Acrylic Stand': 7
-    };
-
-    const generateCustomIdMap = (allItems: any[]) => {
-        const map = new Map<string, string>();
-        const fandomCounters: Record<string, number> = {};
-
-        // Sort by ID to ensure consistent running numbers
-        const sorted = [...allItems].sort((a, b) => Number(a.id) - Number(b.id));
-
-        sorted.forEach(item => {
-            const fName = item.fandom;
-            // Initialize count for this fandom if new
-            if (!fandomCounters[fName]) fandomCounters[fName] = 0;
-            fandomCounters[fName]++; // Increment count (1, 2, 3...)
-
-            const fId = fandomMap[fName] || 9;
-            const cId = categoryMap[item.category] || 9;
-            const runNum = fandomCounters[fName]; // Use the running number
-
-            // ID = Fandom + Category + RunningNumber
-            // Example: Fandom 1, Cat 1, 1st item -> 111
-            // Example: Fandom 1, Cat 2, 2nd item -> 122
-            map.set(String(item.id), `${fId}${cId}${runNum}`);
-        });
-
-        return map;
-    };
 
     useEffect(() => {
         if (role !== 'admin') {
@@ -79,16 +31,10 @@ const ProductManager: React.FC = () => {
             return;
         }
 
-        // Generate ID Map based on ALL items
-        const idMap = generateCustomIdMap(items);
-
-        // Map Context Items to our State
         setProducts(items.map(item => ({
             ...item,
-            // Use the mapped ID or fallback
-            product_id: idMap.get(String(item.id)) || String(item.id),
-            // Mock items don't have stock, default to 0
-            stock_qty: 0,
+            product_id: String(item.id),
+            stock_qty: (item as any).stock_qty || 10, // Default or fetch from backend
             category_id: item.category
         })));
         setLoading(false);
@@ -96,6 +42,7 @@ const ProductManager: React.FC = () => {
 
     const handleDelete = async (id: string | number) => {
         if (!window.confirm('Are you sure you want to delete this product?')) return;
+        deleteItem(id);
         setProducts(prev => prev.filter(p => p.id !== id && p.product_id !== String(id)));
     };
 

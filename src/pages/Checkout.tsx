@@ -4,7 +4,6 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePoints } from '../hooks/usePoints';
 import { useNavigate } from 'react-router-dom';
-import { type Order } from '../data/mockOrders';
 
 type PaymentMethodId = 'bank' | 'truemoney';
 
@@ -105,7 +104,7 @@ const Checkout: React.FC = () => {
             await new Promise(resolve => setTimeout(resolve, 1200));
 
             const orderId = `ORD-${Date.now().toString().slice(-6)}`;
-            const newOrder: Order = {
+            const newOrder: any = {
                 id: orderId,
                 date: new Date().toISOString().split('T')[0],
                 status: 'pending',
@@ -121,14 +120,14 @@ const Checkout: React.FC = () => {
             };
 
             addOrder(newOrder);
-            
+
             // Award points after successful payment
             const earnedPoints = calculatePointsFromAmount(totals.total);
             if (earnedPoints > 0) {
                 addPoints(earnedPoints);
                 console.log(`Payment successful! Added ${earnedPoints} points to user account.`);
             }
-            
+
             clearCart();
             navigate(`/profile/orders/${orderId}`, { state: { order: newOrder } });
         } catch {

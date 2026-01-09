@@ -178,7 +178,7 @@ const UserDetail: React.FC = () => {
                                     <td style={{ padding: '10px' }}>#{order.id}</td>
                                     <td style={{ padding: '10px' }}>{new Date(order.date).toLocaleDateString()}</td>
                                     <td style={{ padding: '10px' }}>{order.items?.length || 0}</td>
-                                    <td style={{ padding: '10px' }}>฿{order.total?.toLocaleString()}</td>
+                                    <td style={{ padding: '10px' }}>฿{order.totalAmount?.toLocaleString()}</td>
                                     <td style={{ padding: '10px', color: '#4CAF50' }}>{order.status}</td>
                                 </tr>
                             ))}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const EditProduct: React.FC = () => {
     const { id } = useParams<{ id: string }>(); // This will be the custom ID (e.g. 111) or UUID

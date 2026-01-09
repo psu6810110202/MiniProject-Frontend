@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
-import { type OrderItem } from '../data/mockOrders';
 
 const OrderDetail: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();
@@ -378,7 +377,7 @@ const OrderDetail: React.FC = () => {
                 <h3 style={{ color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '15px', marginBottom: '20px' }}>Items</h3>
 
                 <div style={{ display: 'grid', gap: '15px' }}>
-                    {order.items.map((item: OrderItem, idx: number) => (
+                    {order.items.map((item: any, idx: number) => (
                         <div key={idx} style={{
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -407,7 +406,7 @@ const OrderDetail: React.FC = () => {
                     fontWeight: 'bold',
                     color: 'var(--text-main)'
                 }}>
-                    Total: ฿{order.total.toLocaleString()}
+                    Total: ฿{order.totalAmount.toLocaleString()}
                 </div>
 
 

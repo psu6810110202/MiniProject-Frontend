@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { preorderItems, type PreOrderItem } from '../data/preorderData';
+import { preorderItems, type PreOrderItem } from '../../data/preorderData';
 
 interface CustomRequest {
     id: string;
@@ -39,74 +39,20 @@ const CustomRequestManager: React.FC = () => {
     }, [role, navigate]);
 
     const loadRequests = () => {
-        const mockRequests: CustomRequest[] = [
-            {
-                id: 'REQ001',
-                productName: 'Hatsune Miku Figure 2024 Limited Edition',
-                link: 'https://example.com/miku-figure-2024',
-                details: 'ต้องการรุ่น Limited Edition พร้อมกล่องแท้ สีเดิมทุกอย่าง',
-                region: 'JP',
-                price: 15000,
-                quantity: 1,
-                estimatedTotal: 4600,
-                status: 'pending',
-                userName: 'สมชาย ใจดี',
-                userEmail: 'somchai@email.com',
-                userId: 'user123',
-                createdAt: '2025-01-05T09:30:00Z',
-                updatedAt: '2025-01-05T09:30:00Z'
-            },
-            {
-                id: 'REQ002',
-                productName: 'Genshin Impact Zhongli Cosplay Costume',
-                link: 'https://example.com/zhongli-cosplay',
-                details: 'ไซส์ L พร้อมอุปกรณ์ครบชุด ต้องการของแท้',
-                region: 'CN',
-                price: 800,
-                quantity: 1,
-                estimatedTotal: 5000,
-                status: 'approved',
-                userName: 'มานี รักดี',
-                userEmail: 'manee@email.com',
-                userId: 'user456',
-                createdAt: '2025-01-04T14:20:00Z',
-                updatedAt: '2025-01-05T10:15:00Z',
-                adminNotes: 'อนุมัติแล้ว รอการชำระเงินจากลูกค้า'
-            },
-            {
-                id: 'REQ003',
-                productName: 'K-Pop BTS Group Photo Set',
-                link: 'https://example.com/bts-photoset',
-                details: 'เซ็ตรูปสมาชิกทั้ง 7 คน พร้อมลายเซ็น',
-                region: 'KR',
-                price: 45000,
-                quantity: 2,
-                estimatedTotal: 3430,
-                status: 'rejected',
-                userName: 'วิชัย มั่นคง',
-                userEmail: 'wichai@email.com',
-                userId: 'user789',
-                createdAt: '2025-01-03T16:45:00Z',
-                updatedAt: '2025-01-04T11:30:00Z',
-                adminNotes: 'สินค้าหมด ไม่สามารถสั่งซื้อได้'
-            }
-        ];
-
         const storedRequests = localStorage.getItem('custom_requests');
         if (storedRequests) {
             setRequests(JSON.parse(storedRequests));
         } else {
-            setRequests(mockRequests);
-            localStorage.setItem('custom_requests', JSON.stringify(mockRequests));
+            setRequests([]);
         }
     };
 
     const updateRequestStatus = (requestId: string, newStatus: CustomRequest['status'], notes?: string) => {
-        const updatedRequests = requests.map(request => 
-            request.id === requestId 
-                ? { 
-                    ...request, 
-                    status: newStatus, 
+        const updatedRequests = requests.map(request =>
+            request.id === requestId
+                ? {
+                    ...request,
+                    status: newStatus,
                     adminNotes: notes || request.adminNotes,
                     updatedAt: new Date().toISOString()
                 }
@@ -114,12 +60,12 @@ const CustomRequestManager: React.FC = () => {
         );
         setRequests(updatedRequests);
         localStorage.setItem('custom_requests', JSON.stringify(updatedRequests));
-        
+
         if (selectedRequest && selectedRequest.id === requestId) {
-            setSelectedRequest({ 
-                ...selectedRequest, 
-                status: newStatus, 
-                adminNotes: notes || selectedRequest.adminNotes 
+            setSelectedRequest({
+                ...selectedRequest,
+                status: newStatus,
+                adminNotes: notes || selectedRequest.adminNotes
             });
         }
     };
@@ -135,10 +81,10 @@ const CustomRequestManager: React.FC = () => {
     const createPreorderFromRequest = (request: CustomRequest) => {
         // Generate new PreOrder ID
         const newPreorderId = Math.max(...preorderItems.map(item => item.id), 0) + 1;
-        
+
         // Calculate deposit (20% of total price)
         const depositAmount = Math.round(request.estimatedTotal * 0.2);
-        
+
         // Create new PreOrder item from request
         const newPreorderItem: PreOrderItem = {
             id: newPreorderId,
@@ -151,21 +97,21 @@ const CustomRequestManager: React.FC = () => {
             fandom: 'Custom Request',
             category: 'Other'
         };
-        
+
         // Get existing preorders from localStorage
         const existingPreorders = JSON.parse(localStorage.getItem('preorderItems') || '[]');
-        
+
         // Add new preorder
         existingPreorders.push(newPreorderItem);
-        
+
         // Save to localStorage
         localStorage.setItem('preorderItems', JSON.stringify(existingPreorders));
-        
+
         // Update request status to "ordered" with preorder ID
         updateRequestStatus(request.id, 'ordered', `สร้าง PreOrder ID: ${newPreorderId}`);
-        
+
         alert(`สร้าง PreOrder สำเร็จแล้ว! PreOrder ID: ${newPreorderId}`);
-        
+
         // Navigate to PreOrder Manager to see the new preorder
         navigate('/profile/preorders');
     };
@@ -210,7 +156,7 @@ const CustomRequestManager: React.FC = () => {
         return labels[status] || status;
     };
 
-    if(role !== 'admin') return null;
+    if (role !== 'admin') return null;
 
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
@@ -225,8 +171,10 @@ const CustomRequestManager: React.FC = () => {
                 <h1 style={{ margin: 0, borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
                     Custom Request Management 🛍️
                 </h1>
-                <div style={{ color: '#888' }}>
-                    Total Requests: {getFilteredRequests().length}
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <div style={{ color: '#888' }}>
+                        Total Requests: {getFilteredRequests().length}
+                    </div>
                 </div>
             </div>
 
@@ -417,8 +365,8 @@ const CustomRequestManager: React.FC = () => {
                                 </div>
                                 <div>
                                     <span style={{ color: '#888' }}>สถานะ:</span>
-                                    <span style={{ 
-                                        marginLeft: '10px', 
+                                    <span style={{
+                                        marginLeft: '10px',
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         background: getStatusColor(selectedRequest.status),
@@ -445,9 +393,9 @@ const CustomRequestManager: React.FC = () => {
                             <div style={{ marginBottom: '15px' }}>
                                 <span style={{ color: '#888' }}>ลิงก์สินค้า:</span>
                                 <div style={{ marginTop: '5px' }}>
-                                    <a 
-                                        href={selectedRequest.link} 
-                                        target="_blank" 
+                                    <a
+                                        href={selectedRequest.link}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         style={{ color: '#2196F3', textDecoration: 'none' }}
                                     >

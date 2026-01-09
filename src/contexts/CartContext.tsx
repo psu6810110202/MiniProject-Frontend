@@ -1,21 +1,29 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type Item } from '../data/mockItem';
-import { type Order } from '../data/mockOrders';
 import { useAuth } from './AuthContext';
 
 export interface CartItem extends Item {
     quantity: number;
 }
 
+export interface Order {
+    id: string;
+    items: CartItem[];
+    totalAmount: number;
+    date: string;
+    status: string;
+    // Add other properties if needed
+}
+
 interface CartContextType {
     cartItems: CartItem[];
     addToCart: (item: Item) => void;
-    removeFromCart: (id: number) => void;
+    removeFromCart: (id: number | string) => void;
     clearCart: () => void;
-    updateQuantity: (id: number, quantity: number) => void;
+    updateQuantity: (id: number | string, quantity: number) => void;
     totalAmount: number;
     totalItems: number;
-    purchasedItems: number[];
+    purchasedItems: (number | string)[];
     addToHistory: (items: CartItem[]) => void;
     userOrders: Order[];
     addOrder: (order: Order) => void;
@@ -36,7 +44,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return saved ? JSON.parse(saved) : [];
         } catch { return []; }
     });
-    const [purchasedItems, setPurchasedItems] = useState<number[]>(() => {
+    const [purchasedItems, setPurchasedItems] = useState<(number | string)[]>(() => {
         try {
             const saved = localStorage.getItem(getStorageKey('purchasedItems'));
             return saved ? JSON.parse(saved) : [];
@@ -93,11 +101,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
     };
 
-    const removeFromCart = (id: number) => {
+    const removeFromCart = (id: number | string) => {
         setCartItems(prev => prev.filter(i => i.id !== id));
     };
 
-    const updateQuantity = (id: number, quantity: number) => {
+    const updateQuantity = (id: number | string, quantity: number) => {
         if (quantity <= 0) {
             removeFromCart(id);
             return;

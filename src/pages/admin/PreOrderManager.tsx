@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { type PreOrderItem, preorderItems } from '../data/preorderData';
+import { useProducts } from '../../contexts/ProductContext';
+import { type PreOrderItem, preorderItems } from '../../data/preorderData';
 
 // Add Pre-Order Modal Component
 interface AddPreOrderModalProps {
@@ -24,10 +24,10 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Generate new ID (max existing ID + 1)
         const newId = Math.max(...preorderItems.map(item => item.id), 0) + 1;
-        
+
         const newItem: PreOrderItem = {
             id: newId,
             name: formData.name,
@@ -54,13 +54,13 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd }) =
             zIndex: 2000, padding: '20px'
         }}>
             <div style={{
-                background: '#1a1a1a', 
-                padding: '40px', 
-                borderRadius: '20px', 
-                width: '100%', 
+                background: '#1a1a1a',
+                padding: '40px',
+                borderRadius: '20px',
+                width: '100%',
                 maxWidth: '500px',
-                maxHeight: '90vh', 
-                overflowY: 'auto', 
+                maxHeight: '90vh',
+                overflowY: 'auto',
                 border: '1px solid #FF5722'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -349,7 +349,7 @@ const PreOrderManager: React.FC = () => {
                 <h1 style={{ margin: 0, borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
                     Pre-Order Management 📦
                 </h1>
-                <button 
+                <button
                     onClick={() => setShowAddModal(true)}
                     style={{
                         padding: '12px 25px',

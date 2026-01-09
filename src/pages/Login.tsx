@@ -58,7 +58,7 @@ const Login: React.FC = () => {
             localStorage.setItem('mock_users_db', JSON.stringify(currentDB));
         }
 
-        }, []);
+    }, []);
 
     const isDark = theme === 'dark';
 
@@ -244,78 +244,9 @@ const Login: React.FC = () => {
                 return;
             }
 
-            const getPersistedUser = (defaultUser: any) => {
-                try {
-                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                    const saved = db[defaultUser.id];
-                    return saved ? { ...defaultUser, ...saved } : defaultUser;
-                } catch { return defaultUser; }
-            };
-
-            const saveToMockDB = (user: any) => {
-                try {
-                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                    db[user.id] = user;
-                    localStorage.setItem('mock_users_db', JSON.stringify(db));
-                } catch (e) { console.error("Failed to save to mock DB", e); }
-            };
-
-            if (formData.username === 'demo') {
-                const defaultUser = { id: 'mock-1', name: 'Demo User', email: 'demo@example.com', role: 'user', points: 0 };
-                const userToLogin = getPersistedUser(defaultUser);
-                const validPass = userToLogin.password || '1234';
-
-                if (userToLogin.isBlacklisted) {
-                    setShowBlacklistModal(true); setLoading(false); return;
-                }
-                if (userToLogin.deletedAt) {
-                    alert('Account is pending deletion.');
-                    setLoading(false); return;
-                }
-
-                if (formData.password === validPass) {
-                    saveToMockDB(userToLogin);
-                    login('mock-user-token', userToLogin, rememberMe);
-                    navigate('/');
-                } else { setError('Invalid password'); }
-            } else if (formData.username === 'admin') {
-                const defaultAdmin = { id: 'mock-2', name: 'Admin User', email: 'admin@example.com', role: 'admin', points: 9999 };
-                const userToLogin = getPersistedUser(defaultAdmin);
-                const validPass = userToLogin.password || 'admin';
-                if (formData.password === validPass) {
-                    saveToMockDB(userToLogin);
-                    alert('⚠️ Backend Connection Failed. Using Mock Admin Session.');
-                    login('mock-admin-token', userToLogin, rememberMe);
-                    navigate('/');
-                } else { setError('Invalid password'); }
-            } else {
-                let localLoginSuccess = false;
-                try {
-                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                    const foundUser = Object.values(db).find((u: any) =>
-                        (u.email === formData.username || u.name === formData.username || u.username === formData.username) &&
-                        u.password === formData.password
-                    );
-
-                    if (foundUser) {
-                        if ((foundUser as any).isBlacklisted) {
-                            setShowBlacklistModal(true); setLoading(false); return;
-                        }
-                        if ((foundUser as any).deletedAt) {
-                            // alert('This account is pending deletion/recovery within 30 days.\nPlease restore your account to continue.');
-                            setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
-                            setShowDeletedWarningModal(true);
-                            setLoading(false);
-                            return;
-                        }
-                        saveToMockDB(foundUser);
-                        login('mock-override-token', foundUser as any, rememberMe);
-                        navigate('/');
-                        localLoginSuccess = true;
-                    }
-                } catch (e) { console.error("Local override check failed", e); }
-                if (!localLoginSuccess) { setError(err.message || 'Invalid email or username or password'); }
-            }
+            // Disable Mock Fallback for debugging
+            console.error("Real API Login Failed:", err);
+            setError(`Connection Error: ${err.message}. Ensure Backend is running.`);
         } finally { setLoading(false); }
     };
 

@@ -10,7 +10,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import SearchableSelect from '../components/SearchableSelect';
 
 import { useProducts } from '../contexts/ProductContext';
-import AdminDashboard from './AdminDashboard';
+import AdminDashboard from './admin/AdminDashboard';
 
 const Profile: React.FC = () => {
     const { t } = useLanguage();
@@ -772,7 +772,7 @@ const Profile: React.FC = () => {
 
                                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                                         <div style={{ textAlign: 'right' }}>
-                                            <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.total.toLocaleString()}</div>
+                                            <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.totalAmount.toLocaleString()}</div>
                                             <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
                                         </div>
                                         <div style={{

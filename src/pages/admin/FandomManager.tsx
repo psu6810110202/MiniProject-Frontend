@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const FandomManager: React.FC = () => {
     // Support both :name and :id params

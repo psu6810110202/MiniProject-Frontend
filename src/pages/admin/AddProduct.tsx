@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AddProduct: React.FC = () => {
     const navigate = useNavigate();

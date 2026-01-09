@@ -1,13 +1,11 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { orderAPI, type Shipment } from '../services/api';
+import { useProducts } from '../../contexts/ProductContext';
+import { type Shipment } from '../../services/api';
 
 const AdminDashboard: React.FC = () => {
     const { role } = useAuth();
-    const { theme } = useTheme();
     const navigate = useNavigate();
     const { items, preOrders } = useProducts();
 
@@ -46,10 +44,10 @@ const AdminDashboard: React.FC = () => {
                 label_url: 'https://track.thailandpost.co.th/',
                 created_at: new Date().toISOString()
             };
-            
+
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             setShippingResult(mockShipment);
             setShippingOrderId('');
         } catch (err: any) {

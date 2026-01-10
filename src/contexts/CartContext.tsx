@@ -25,8 +25,10 @@ interface CartContextType {
     totalItems: number;
     purchasedItems: (number | string)[];
     addToHistory: (items: CartItem[]) => void;
+    removePurchasedItems: (itemIds: (number | string)[]) => void;
     userOrders: Order[];
     addOrder: (order: Order) => void;
+    updateOrderStatus: (orderId: string, newStatus: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -60,13 +62,44 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Load data when user changes (handling login/logout)
     useEffect(() => {
         try {
-            const savedCart = localStorage.getItem(getStorageKey('cartItems'));
             const savedPurchased = localStorage.getItem(getStorageKey('purchasedItems'));
             const savedOrders = localStorage.getItem(getStorageKey('userOrders'));
 
-            setCartItems(savedCart ? JSON.parse(savedCart) : []);
             setPurchasedItems(savedPurchased ? JSON.parse(savedPurchased) : []);
             setUserOrders(savedOrders ? JSON.parse(savedOrders) : []);
+
+            // Cart Merge Logic
+            const currentUserCartKey = getStorageKey('cartItems');
+            const savedUserCartStr = localStorage.getItem(currentUserCartKey);
+            let finalCart: CartItem[] = savedUserCartStr ? JSON.parse(savedUserCartStr) : [];
+
+            if (userId !== 'guest') {
+                const guestCartKey = 'cartItems_guest';
+                const savedGuestCartStr = localStorage.getItem(guestCartKey);
+
+                if (savedGuestCartStr) {
+                    const guestCart: CartItem[] = JSON.parse(savedGuestCartStr);
+                    if (guestCart.length > 0) {
+                        const mergedCart = [...finalCart];
+                        guestCart.forEach(guestItem => {
+                            const existingIndex = mergedCart.findIndex(i => i.id === guestItem.id);
+                            if (existingIndex >= 0) {
+                                mergedCart[existingIndex].quantity += guestItem.quantity;
+                            } else {
+                                mergedCart.push(guestItem);
+                            }
+                        });
+
+                        finalCart = mergedCart;
+                        // Save merged result immediately
+                        localStorage.setItem(currentUserCartKey, JSON.stringify(finalCart));
+                        // Remove guest cart to avoid duplicate merges
+                        localStorage.removeItem(guestCartKey);
+                    }
+                }
+            }
+
+            setCartItems(finalCart);
         } catch (error) {
             console.error('Failed to load cart data', error);
         }
@@ -135,15 +168,33 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setPurchasedItems(prev => [...prev, ...ids]);
     };
 
+    const removePurchasedItems = (itemIds: (number | string)[]) => {
+        setPurchasedItems(prev => prev.filter(id => !itemIds.includes(id)));
+    };
+
     const addOrder = (order: Order) => {
-        setUserOrders(prev => [order, ...prev]);
+        setUserOrders(prev => {
+            const newOrders = [order, ...prev];
+            localStorage.setItem(getStorageKey('userOrders'), JSON.stringify(newOrders));
+            return newOrders;
+        });
+    };
+
+    const updateOrderStatus = (orderId: string, newStatus: string) => {
+        setUserOrders(prevOrders => {
+            const updated = prevOrders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+            localStorage.setItem(getStorageKey('userOrders'), JSON.stringify(updated));
+            return updated;
+        });
     };
 
     return (
         <CartContext.Provider value={{
             cartItems, addToCart, removeFromCart, clearCart, updateQuantity, totalAmount, totalItems,
-            purchasedItems, addToHistory,
-            userOrders, addOrder
+            purchasedItems, addToHistory, removePurchasedItems,
+            userOrders,
+            addOrder,
+            updateOrderStatus
         }}>
             {children}
         </CartContext.Provider>

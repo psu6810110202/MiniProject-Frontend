@@ -2,17 +2,11 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../contexts/ProductContext';
-import { type Shipment } from '../../services/api';
 
 const AdminDashboard: React.FC = () => {
     const { role } = useAuth();
     const navigate = useNavigate();
     const { items, preOrders } = useProducts();
-
-    const [shippingOrderId, setShippingOrderId] = React.useState('');
-    const [shippingLoading, setShippingLoading] = React.useState(false);
-    const [shippingError, setShippingError] = React.useState<string | null>(null);
-    const [shippingResult, setShippingResult] = React.useState<Shipment | null>(null);
 
     // Redirect if not admin
     React.useEffect(() => {
@@ -22,41 +16,6 @@ const AdminDashboard: React.FC = () => {
     }, [role, navigate]);
 
     if (role !== 'admin') return null;
-
-    const handleCreateShippingLabel = async () => {
-        setShippingError(null);
-        setShippingResult(null);
-
-        const orderId = shippingOrderId.trim();
-        if (!orderId) {
-            setShippingError('Please enter Order ID');
-            return;
-        }
-
-        setShippingLoading(true);
-        try {
-            // Mock API call for demonstration
-            const mockShipment = {
-                shipment_id: `SHIP${Date.now()}`,
-                order_id: orderId,
-                provider: 'Thailand Post',
-                tracking_number: `TH${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-                label_url: 'https://track.thailandpost.co.th/',
-                created_at: new Date().toISOString()
-            };
-
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            setShippingResult(mockShipment);
-            setShippingOrderId('');
-        } catch (err: any) {
-            const message = typeof err?.message === 'string' ? err.message : 'Failed to create shipping label';
-            setShippingError(message);
-        } finally {
-            setShippingLoading(false);
-        }
-    };
 
     return (
         <div style={{ color: 'var(--text-main)', marginTop: '40px' }}>
@@ -104,93 +63,6 @@ const AdminDashboard: React.FC = () => {
                 gap: '20px',
                 marginBottom: '40px'
             }}>
-                {/* Shipping Tools */}
-                <div style={{
-                    background: 'var(--card-bg)',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    border: '1px solid var(--border-color)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '12px'
-                }}>
-                    <div>
-                        <h3 style={{ color: 'var(--text-main)' }}>Create Shipping Label</h3>
-                        <p style={{ color: 'var(--text-muted)', marginTop: '6px' }}>
-                            Create shipping labels and tracking numbers (must be PAID orders)
-                        </p>
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '10px' }}>
-                        <input
-                            value={shippingOrderId}
-                            onChange={(e) => setShippingOrderId(e.target.value)}
-                            placeholder="Order ID (e.g. 7b8c...uuid)"
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid var(--border-color)',
-                                background: 'var(--input-bg)',
-                                color: 'var(--text-main)'
-                            }}
-                        />
-
-                        <button
-                            onClick={handleCreateShippingLabel}
-                            disabled={shippingLoading}
-                            style={{
-                                padding: '10px 20px',
-                                background: shippingLoading ? '#4CAF50' : 'var(--primary-color)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: shippingLoading ? 'not-allowed' : 'pointer',
-                                fontWeight: 'bold',
-                                width: '100%',
-                                opacity: shippingLoading ? 0.8 : 1
-                            }}>
-                            {shippingLoading ? 'Creating...' : 'Create Label'}
-                        </button>
-
-                        {shippingError && (
-                            <div style={{
-                                padding: '10px 12px',
-                                borderRadius: '8px',
-                                background: 'rgba(244,67,54,0.12)',
-                                border: '1px solid rgba(244,67,54,0.35)',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.95rem'
-                            }}>
-                                {shippingError}
-                            </div>
-                        )}
-
-                        {shippingResult && (
-                            <div style={{
-                                padding: '12px 12px',
-                                borderRadius: '8px',
-                                background: 'rgba(76,175,80,0.10)',
-                                border: '1px solid rgba(76,175,80,0.35)',
-                                color: 'var(--text-main)'
-                            }}>
-                                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Success</div>
-                                <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '6px' }}>
-                                    Tracking: <span style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>{shippingResult.tracking_number}</span>
-                                </div>
-                                <a
-                                    href={shippingResult.label_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    style={{ color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none' }}
-                                >
-                                    Open Label
-                                </a>
-                            </div>
-                        )}
-                    </div>
-                </div>
 
                 {/* Manage Fandoms */}
                 <div style={{

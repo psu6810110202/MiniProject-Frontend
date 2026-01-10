@@ -1,15 +1,13 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useTheme } from '../contexts/ThemeContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const FandomDetail: React.FC = () => {
     const { name } = useParams<{ name: string }>();
     const { items, fandomImages, likedProductIds, toggleLikeProduct } = useProducts();
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const { theme } = useTheme();
 
     const decodedName = decodeURIComponent(name || '');
 
@@ -31,7 +29,8 @@ const FandomDetail: React.FC = () => {
             color: 'var(--text-main)',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            position: 'relative' // Added for absolute positioning of Back button
         }}>
             {/* Header / Hero for Fandom */}
             <div style={{
@@ -131,12 +130,11 @@ const FandomDetail: React.FC = () => {
                                         transition: 'color 0.2s',
                                         display: 'inline-block',
                                         cursor: 'pointer',
-                                        textDecoration: 'underline'
                                     }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/fandoms/${encodeURIComponent(item.fandom)}`);
-                                    }}>{item.name}</h3>
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/fandoms/${encodeURIComponent(item.fandom)}`);
+                                        }}>{item.name}</h3>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                                     <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>

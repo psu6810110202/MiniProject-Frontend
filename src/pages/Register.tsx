@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../services/api';
 
 const Register: React.FC = () => {
     const { t } = useLanguage();
@@ -53,30 +54,17 @@ const Register: React.FC = () => {
         setLoading(true);
 
         try {
-            // Call Backend API
-            const response = await fetch('http://localhost:3000/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: '', // Leave Full Name empty as per request
-                    username: formData.username,
-                    email: formData.email,
-                    password: formData.password,
-                }),
+            // Call Backend API via centralized service
+            const data = await authAPI.register({
+                name: '', // Leave Full Name empty as per request
+                username: formData.username,
+                email: formData.email,
+                password: formData.password,
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Registration failed');
-            }
 
             // Auto Login if token is present
             if (data.access_token) {
                 // Assuming the backend returns { access_token, user: { role, ... } }
-                // The backend was modified to return login result which includes access_token and user object
                 login(data.access_token, data.user, true);
                 alert('Registration successful!');
                 navigate('/');

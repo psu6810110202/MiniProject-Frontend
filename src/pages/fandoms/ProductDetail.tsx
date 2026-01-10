@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { useProducts } from '../contexts/ProductContext';
-import { useLanguage } from '../contexts/LanguageContext';
-import { usePoints } from '../hooks/usePoints';
-import { preorderItems } from '../data/preorderData';
-import { regularProducts } from '../data/regularProducts';
+import { useParams, Link } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { preorderItems } from '../../data/preorderData';
+import { regularProducts } from '../../data/regularProducts';
 
 const ProductDetail: React.FC = () => {
   const { id, name } = useParams<{ id: string; name: string }>();
   const { addToCart } = useCart();
   const { items, likedProductIds, toggleLikeProduct } = useProducts();
-  const { t } = useLanguage();
-  const navigate = useNavigate();
-  const { points, addPoints, calculatePointsFromAmount } = usePoints();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +17,7 @@ const ProductDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
-  
+
   // Convert Item to Product format
   const convertItemToProduct = (item: any) => {
     const numericPrice = typeof item.price === 'string'
@@ -117,7 +112,7 @@ const ProductDetail: React.FC = () => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
+
       setProduct(fallbackProduct);
       setError(null);
       console.log('Created fallback product:', fallbackProduct);
@@ -202,7 +197,7 @@ const ProductDetail: React.FC = () => {
         <h2>{error || 'Product not found'}</h2>
         <p>Product ID: {id}</p>
         <p>Fandom: {name}</p>
-        <Link to="/catalog" style={{ color: '#FF5722' }}>Back to Catalog</Link>
+        <Link to="/" style={{ color: '#FF5722' }}>Back to Home</Link>
       </div>
     );
   }
@@ -217,17 +212,29 @@ const ProductDetail: React.FC = () => {
       height: 'auto',
       position: 'relative'
     }}>
-      {/* Breadcrumb */}
+      {/* Back Button */}
       <div style={{
-        marginBottom: '30px',
-        fontSize: '0.9rem',
-        color: 'var(--text-muted)'
+        position: 'absolute',
+        top: '20px',
+        left: '20px',
+        zIndex: 10
       }}>
-        <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
-        <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/catalog" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Catalog</Link>
-        <span style={{ margin: '0 8px' }}>›</span>
-        <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
+        <Link
+          to={`/fandoms/${name}`}
+          style={{
+            textDecoration: 'none',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '1rem',
+            transition: 'color 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+        >
+          ← Back
+        </Link>
       </div>
 
       {/* Error Message */}
@@ -339,50 +346,6 @@ const ProductDetail: React.FC = () => {
               >
                 {product.name}
               </h1>
-
-              {product.is_preorder ? (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{
-                    padding: '8px 16px',
-                    background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                    color: 'white',
-                    borderRadius: '25px',
-                    fontSize: '0.85rem',
-                    fontWeight: 'bold',
-                    verticalAlign: 'middle',
-                    alignSelf: 'center',
-                    boxShadow: '0 4px 12px rgba(255, 87, 34, 0.3)',
-                    animation: 'pulse 2s infinite'
-                  }}>
-                    PRE-ORDER EXCLUSIVE
-                  </span>
-                  <span style={{
-                    padding: '6px 12px',
-                    background: 'rgba(255, 87, 34, 0.1)',
-                    color: '#FF5722',
-                    borderRadius: '15px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    border: '1px solid #FF5722'
-                  }}>
-                    LIMITED EDITION
-                  </span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <span style={{
-                    padding: '6px 12px',
-                    background: 'rgba(76, 175, 80, 0.1)',
-                    color: '#4CAF50',
-                    borderRadius: '15px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    border: '1px solid #4CAF50'
-                  }}>
-                    IN STOCK
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -399,23 +362,6 @@ const ProductDetail: React.FC = () => {
             <div>
               ฿{product.price.toLocaleString()}
             </div>
-            <div style={{
-              fontSize: '0.9rem',
-              color: '#666',
-              fontWeight: 'normal'
-            }}>
-              <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                {product.is_preorder ? 'PRE-ORDER PRICE' : 'REGULAR PRICE'}
-              </div>
-              {product.is_preorder && (
-                <>
-                  <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                    (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
-                  </div>
-                </>
-              )}
-            </div>
           </div>
 
           {/* Description */}
@@ -428,36 +374,6 @@ const ProductDetail: React.FC = () => {
             }}>
               {product.description}
             </p>
-          </div>
-
-          {/* Points Information */}
-          <div style={{
-            background: 'rgba(76, 175, 80, 0.1)',
-            border: '1px solid rgba(76, 175, 80, 0.3)',
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '20px'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '10px'
-            }}>
-              <span style={{ fontWeight: 'bold', color: '#4CAF50' }}>Your Points:</span>
-              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4CAF50' }}>
-                {points.toLocaleString()} pts
-              </span>
-            </div>
-            <div style={{
-              fontSize: '0.85rem',
-              color: 'var(--text-muted)'
-            }}>
-              You'll earn <strong>{calculatePointsFromAmount(product.price * quantity)} points</strong> after completing payment
-              <div style={{ fontSize: '0.75rem', marginTop: '5px' }}>
-                (1 point per ฿100 spent • Points awarded after successful payment)
-              </div>
-            </div>
           </div>
 
           {/* Quantity Selector */}
@@ -589,7 +505,7 @@ const ProductDetail: React.FC = () => {
             </button>
           </div>
 
-          {/* Additional Information */}
+          {/* Material Information */}
           <div style={{
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
@@ -602,31 +518,7 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Stock:</strong> {product.stock} units</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
-              {product.is_preorder && (
-                <>
-                  <div><strong>Release Date:</strong> {product.release_date}</div>
-                  <div><strong>Deposit:</strong> ฿{product.deposit_amount?.toLocaleString()}</div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Material Information */}
-          <div style={{
-            borderTop: '1px solid var(--border-color)',
-            paddingTop: '20px',
-            marginTop: '20px'
-          }}>
-            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '10px',
-              fontSize: '0.9rem',
-              color: 'var(--text-muted)'
-            }}>
               <div><strong>Material:</strong> Premium PVC Vinyl</div>
               <div><strong>Height:</strong> 18 cm</div>
               <div><strong>Weight:</strong> 450g</div>

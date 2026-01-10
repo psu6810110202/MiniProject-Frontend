@@ -13,46 +13,46 @@ export interface PreOrderItem {
 export const preorderItems: PreOrderItem[] = [
     {
         id: 1,
-        name: "ฮัตสึเนะ มิคุ: 16th Birthday Ver.",
+        name: "Hatsune Miku: 16th Birthday Ver.",
         price: 8500,
         deposit: 1000,
         releaseDate: "2024-08-31",
         image: "http://localhost:3000/images/covers/Project_sekai.webp",
-        description: "การ์ดสะสมฉลองวันเกิดครบรอบ 16 ปีของมิคุ พร้อมดีไซน์สีสันสดใส",
+        description: "Hatsune Miku 16th Birthday Celebration Figure with vibrant colors.",
         fandom: "Project sekai",
-        category: "ฟิกเกอร์"
+        category: "Figure"
     },
     {
         id: 2,
-        name: "Genshin Impact: ไรเดน โชกุน สตัวต์",
+        name: "Genshin Impact: Raiden Shogun Statue",
         price: 14500,
         deposit: 2500,
         releaseDate: "2024-12-15",
         image: "http://localhost:3000/images/covers/Genshin.webp",
-        description: "สตัวต์พรีเมียมของอาร์คอนแห่งสายฟ้า พร้อมไฟ LED",
+        description: "Premium statue of the Electro Archon with LED effects.",
         fandom: "Genshin impact",
-        category: "ฟิกเกอร์"
+        category: "Figure"
     },
     {
         id: 3,
-        name: "Hazbin Hotel: อลาสเตอร์ วิทยุกระดับชั้น",
+        name: "Hazbin Hotel: Alastor The Radio Demon",
         price: 5200,
         deposit: 500,
         releaseDate: "2024-09-20",
         image: "http://localhost:3000/images/covers/Hazbin Hotal.jpg",
-        description: "ฟิกเกอร์รายละเอียดสูงของอลาสเตอร์พร้อมไมค์โฟน",
+        description: "High-detail figure of Alastor with microphone stand.",
         fandom: "Hazbin hotel",
-        category: "ฟิกเกอร์"
+        category: "Figure"
     },
     {
         id: 4,
-        name: "Identity V: กล่องสะสม Truce Limited",
+        name: "Identity V: Truth & Inference Limited Box",
         price: 28000,
         deposit: 5000,
         releaseDate: "2025-01-10",
         image: "http://localhost:3000/images/covers/Identity V.webp",
-        description: "กล่องสะสมขนาดใหญ่บรรจุสกินและไอเทมพิเศษ",
+        description: "Large collector's box containing skins and exclusive items.",
         fandom: "Identity V",
-        category: "อื่นๆ"
+        category: "Others"
     }
 ];

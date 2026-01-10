@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useProducts } from '../../contexts/ProductContext';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useProducts } from '../../../contexts/ProductContext';
 
 interface Product {
     product_id: string;

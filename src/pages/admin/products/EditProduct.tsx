@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useProducts } from '../../contexts/ProductContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useProducts } from '../../../contexts/ProductContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const EditProduct: React.FC = () => {
     const { id } = useParams<{ id: string }>(); // This will be the custom ID (e.g. 111) or UUID
@@ -29,40 +29,12 @@ const EditProduct: React.FC = () => {
     useEffect(() => {
         if (!id || items.length === 0) return;
 
-        // Note: The ID passed in URL might be the Custom ID (e.g. '111') generated in frontend,
-        // OR the actual ID.
-        // Since we don't store Custom ID in backend/context, we need to be clever.
-        // However, looking at ProductManager, we used the generated ID for navigation.
-
-        // Strategy: 
-        // 1. Try to find by direct ID match (in case it wasn't custom)
-        // 2. Or if we can recreate the logic... but that's hard.
-        // Let's rely on the fact that for now we might just be passing the ID that we have.
-
-        // Wait, in ProductManager we rendered `product.product_id`.
-        // If that was the Custom ID (111), looking it up directly in `items` won't work because `items` use internal ID (1).
-
-        // Let's scan all items and see which one 'generates' this Custom ID? 
-        // OR simpler: In ProductManager, let's Change the Edit button to pass the ORIGINAL ID?
-        // -> That would be safer, but the URL would look like /edit/1 instead of /edit/111.
-
-        // Let's try to search flexibly.
-
-        // Attempt 1: Direct Match
         let found = items.find(i => String(i.id) === id);
 
-        // Attempt 2: If finding by Custom ID Logic is needed...
-        // For now let's assume the ID passed is arguably findable or we iterate.
-        // Ideally we should have passed the Raw ID.
-
-        // Quick Fix for "Custom ID" issue:
-        // If we can't find it directly, let's try to guess from the last digits? (111 -> 1)
         if (!found && id && id.length >= 3) {
             const possibleId = parseInt(id.slice(2)); // Remove first 2 digits (Fandom+Cat)
             found = items.find(i => i.id === possibleId);
         }
-
-        // If still not found (maybe it was a raw UUID or something), then fail.
 
         if (found) {
             setInternalId(found.id);

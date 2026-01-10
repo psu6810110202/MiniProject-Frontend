@@ -310,7 +310,7 @@ function Navbar() {
                                         <span>Total:</span>
                                         <span style={{ color: '#FF5722' }}>฿{totalAmount.toLocaleString()}</span>
                                     </div>
-                                    <Link to="/checkout"
+                                    <Link to={isLoggedIn ? "/checkout-payment" : "/login"}
                                         onClick={() => setIsCartOpen(false)}
                                         style={{
                                             display: 'block',

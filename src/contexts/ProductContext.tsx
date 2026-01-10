@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type Item } from '../data/mockItem';
+import { type Item, mockItems } from '../data/mockItem';
 import { preorderItems, type PreOrderItem } from '../data/preorderData';
 import { useAuth } from './AuthContext';
+import { productAPI, fandomAPI } from '../services/api';
 
 interface ProductContextType {
     items: Item[];
@@ -27,14 +28,13 @@ interface ProductContextType {
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const API_URL = 'http://localhost:3000';
-
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const userId = user?.id || 'guest';
     const getStorageKey = (key: string) => `${key}_v4_${userId}`;
 
-    const [items, setItems] = useState<Item[]>([]);
+    // Initialize with mockItems so the site is never empty initially
+    const [items, setItems] = useState<Item[]>(mockItems);
     const [preOrders, setPreOrders] = useState<PreOrderItem[]>(preorderItems);
     const [fandoms, setFandoms] = useState<string[]>([]);
     const [fandomImages, setFandomImages] = useState<Record<string, string>>({});
@@ -44,9 +44,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         const fetchData = async () => {
             try {
                 // Fetch Products
-                const prodRes = await fetch(`${API_URL}/products`);
-                if (prodRes.ok) {
-                    const products = await prodRes.json();
+                const products = await productAPI.getAll();
+                if (products && products.length > 0) {
                     const mappedItems: Item[] = products.map((p: any) => ({
                         id: p.product_id,
                         name: p.name,
@@ -56,12 +55,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                         image: p.image || 'https://placehold.co/300x300?text=No+Image'
                     }));
                     setItems(mappedItems);
+                } else {
+                    console.log("API returned no products. Using local mock items.");
                 }
 
                 // Fetch Fandoms
-                const fanRes = await fetch(`${API_URL}/fandoms`);
-                if (fanRes.ok) {
-                    const fandomList = await fanRes.json();
+                const fandomList = await fandomAPI.getAll();
+                if (fandomList) {
                     setFandoms(fandomList.map((f: any) => f.name));
                     const images: Record<string, string> = {};
                     fandomList.forEach((f: any) => {
@@ -130,20 +130,15 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         setItems([...items, { ...item, id: tempId }]);
 
         try {
-            await fetch(`${API_URL}/products`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: item.name,
-                    price: parseFloat(item.price.replace(/[^\d.]/g, '')),
-                    stock_qty: 10, // Default stock
-                    category_id: item.category,
-                    supplier_id: 'default',
-                    image: item.image,
-                    fandom: item.fandom
-                })
+            await productAPI.create({
+                name: item.name,
+                price: parseFloat(item.price.replace(/[^\d.]/g, '')),
+                category: item.category,
+                image: item.image,
+                fandom: item.fandom,
+                stock: 10 // Default stock
             });
-            // Ideally we re-fetch here to get real ID
+            // Ideally we re-fetch or update ID with response
         } catch (e) {
             console.error("Add item failed", e);
         }
@@ -155,14 +150,24 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const updateItem = async (updatedItem: Item) => {
         setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item));
-        // API Call usually requires ID. Since we are moving to backend, specific implementation depends on endpoint.
-        // Assuming PATCH /products/:id exists is standard, but check valid endpoints.
+        try {
+            // Assuming we have the numeric/string ID that matches
+            await productAPI.update(String(updatedItem.id), {
+                name: updatedItem.name,
+                price: parseFloat(updatedItem.price.replace(/[^\d.]/g, '')),
+                category: updatedItem.category,
+                image: updatedItem.image,
+                fandom: updatedItem.fandom
+            });
+        } catch (e) {
+            console.error("Update item failed", e);
+        }
     };
 
     const deleteItem = async (id: number | string) => {
         setItems(items.filter(item => item.id !== id));
         try {
-            await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+            await productAPI.delete(String(id));
         } catch (error) {
             console.error("Failed to delete item", error);
         }
@@ -171,14 +176,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     const addFandom = async (name: string) => {
         if (!fandoms.includes(name)) {
             setFandoms([...fandoms, name]);
-            // API Call
-            try {
-                await fetch(`${API_URL}/fandoms`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, product_count: 0 })
-                });
-            } catch (e) { }
+            // Fandom creation API not yet implemented in service fully, 
+            // kept as local optimistic update for now.
         }
     };
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useProducts } from '../contexts/ProductContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AllFandom: React.FC = () => {
     const { t } = useLanguage();
@@ -31,18 +31,18 @@ const AllFandom: React.FC = () => {
             padding: '40px 20px',
             background: 'var(--bg-color)', // Use theme background or static dark like preorder
             minHeight: '100vh',
-            color: 'var(--text-main)'
+            color: 'var(--text-main)',
+            position: 'relative'
         }}>
             {/* Header Section */}
             <div style={{ textAlign: 'center', marginBottom: '40px', marginTop: '20px' }}>
                 <h1 style={{
                     fontSize: '3rem',
                     fontWeight: '900',
-                    marginBottom: '10px'
                 }}>
                     {t('all_fandoms')}
                 </h1>
-                <h2 style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '20px', color: 'var(--text-main)' }}>
+                <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '20px', color: 'var(--text-main)' }}>
                     {t('the_latest_drops')}
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto 30px' }}>

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
+import { userAPI } from '../services/api';
+
 const UserDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -18,36 +20,23 @@ const UserDetail: React.FC = () => {
         }
 
         const fetchUser = async () => {
-            const token = localStorage.getItem('access_token');
+            if (!id) return;
             try {
                 // Try fetching from API first
-                const response = await fetch(`http://localhost:3000/api/users/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const userData = await userAPI.getById(id);
 
-                if (response.ok) {
-                    const userData = await response.json();
-                    setUser(userData);
-                    // Mock orders for now/load from local if existing
-                    const orders = JSON.parse(localStorage.getItem(`userOrders_${userData.id}`) || '[]');
-                    setUserOrders(orders);
-                } else {
-                    throw new Error('API fetch failed');
-                }
+                // Fallback for ID mismatch or API structure
+                // Use a proper type or cast if necessary, ignoring type errors for quick migration if 'any' used in state
+                setUser(userData);
+
+                // Mock orders for now/load from local if existing
+                // In real implementation, we should use orderAPI.getByUser(id) if available
+                const orders = JSON.parse(localStorage.getItem(`userOrders_${userData.id}`) || '[]');
+                setUserOrders(orders);
             } catch (error) {
-                console.warn('Fetching user from API failed, trying local mock DB');
-                // Fallback to local
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                const foundUser = db[id as string];
-
-                if (foundUser) {
-                    setUser(foundUser);
-                    const orders = JSON.parse(localStorage.getItem(`userOrders_${foundUser.id}`) || '[]');
-                    setUserOrders(orders);
-                } else {
-                    alert('User not found');
-                    navigate('/profile/users');
-                }
+                console.error('Fetching user failed:', error);
+                alert('User not found or API error');
+                navigate('/profile/users');
             }
         };
 
@@ -58,47 +47,12 @@ const UserDetail: React.FC = () => {
         if (!user) return;
 
         try {
-            const token = localStorage.getItem('access_token');
             const newStatus = !user.isBlacklisted;
-
-            const response = await fetch(`http://localhost:3000/api/users/${user.id || user.user_id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ isBlacklisted: newStatus })
-            });
-
-            if (response.ok) {
-                const updatedUser = await response.json();
-                setUser(updatedUser);
-
-                // Keep local mock DB in sync just in case
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                if (db[user.id]) {
-                    db[user.id].isBlacklisted = newStatus;
-                    localStorage.setItem('mock_users_db', JSON.stringify(db));
-                }
-            } else {
-                console.warn('API update failed, falling back to local mock DB');
-                // Fallback to local
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                if (db[user.id]) {
-                    db[user.id].isBlacklisted = newStatus;
-                    localStorage.setItem('mock_users_db', JSON.stringify(db));
-                    setUser({ ...user, isBlacklisted: newStatus });
-                }
-            }
+            const updatedUser = await userAPI.update(user.id || user.user_id, { isBlacklisted: newStatus });
+            setUser(updatedUser);
         } catch (error) {
             console.error('Error updating blacklist status:', error);
-            // Fallback to local storage if API fails completely
-            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-            if (db[user.id]) {
-                db[user.id].isBlacklisted = !user.isBlacklisted;
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-                setUser({ ...user, isBlacklisted: !user.isBlacklisted });
-            }
+            alert("An error occurred while updating status.");
         }
     };
 

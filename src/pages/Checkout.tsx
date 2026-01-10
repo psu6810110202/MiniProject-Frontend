@@ -113,7 +113,8 @@ const Checkout: React.FC = () => {
                     id: item.id,
                     name: item.name,
                     quantity: item.quantity,
-                    price: Number(String(item.price).replace(/[^0-9.-]+/g, ""))
+                    price: Number(String(item.price).replace(/[^0-9.-]+/g, "")),
+                    type: (item as any).type
                 })),
                 totalAmount: totals.total,
                 carrier: 'Thailand Post',

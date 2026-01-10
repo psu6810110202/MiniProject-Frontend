@@ -339,6 +339,8 @@ const translations: Record<Language, Translations> = {
         delete_account: 'Delete Account',
         delete_account_confirm_message: 'Are you sure you want to delete your account? This action cannot be undone and you will lose all your data.',
         delete: 'Delete',
+        confirm_cancel_title: 'Cancel Order',
+        confirm_cancel_message: 'Are you sure you want to cancel this order? This action cannot be undone.',
         // Updates additional keys
         by: 'by',
         grand_opening_title: 'Grand Opening of DomPort Online Store!',
@@ -630,6 +632,8 @@ const translations: Record<Language, Translations> = {
         delete_account: 'ลบบัญชี',
         delete_account_confirm_message: 'คุณแน่ใจจะลบบัญชีหรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้และคุณจะสูญเสียข้อมูลทั้งหมด',
         delete: 'ลบ',
+        confirm_cancel_title: 'ยกเลิกคำสั่งซื้อ',
+        confirm_cancel_message: 'คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำสั่งซื้อนี้? การกระทำนี้ไม่สามารถย้อนกลับได้',
         // Updates additional keys
         by: 'โดย',
         grand_opening_title: 'เปิดตัวอย่างร้านค้าอออนไลน์ของ DomPort!',

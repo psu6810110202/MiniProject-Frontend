@@ -3,8 +3,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
 
+import { userAPI } from '../../services/api';
+
 const UserManager: React.FC = () => {
-    const { role, token } = useAuth(); // Get token from context (handles session/local storage abstraction)
+    const { role } = useAuth(); // Token is handled by api.ts now
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [users, setUsers] = useState<any[]>([]);
@@ -16,47 +18,21 @@ const UserManager: React.FC = () => {
         }
     }, [role, navigate]);
 
-    const [dataSource, setDataSource] = useState<'api' | 'mock'>('api');
-    const [isLoading, setIsLoading] = useState(false);
-    const [lastError, setLastError] = useState<string>('');
-
     const fetchUsers = async (manualRetry = false) => {
-        setIsLoading(true);
-        setLastError('');
-        // Token is already retrieved from useAuth
         try {
             // Attempt to fetch real users from backend
-            const response = await fetch('http://localhost:3000/api/users', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setUsers(data);
-                setDataSource('api');
-                if (manualRetry) alert('Connected to Server Successfully! Data updated.');
-            } else {
-                if (response.status === 401) {
-                    if (manualRetry) alert('Session expired. Please log out and log in again.');
-                    throw new Error('Unauthorized');
-                }
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
+            const data = await userAPI.getAll();
+            setUsers(data);
+            if (manualRetry) alert('Connected to Server Successfully! Data updated.');
         } catch (error: any) {
             console.warn('Backend unavailable:', error);
             const errMsg = error.message || 'Unknown Error';
-            setLastError(errMsg);
 
             if (manualRetry) {
-                alert(`Connection Failed: ${errMsg}\n\nSystem is using offline/mock data.`);
+                alert(`Connection Failed: ${errMsg}`);
             }
-            // Fallback to local mock DB
-            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-            setUsers(Object.values(db));
-            setDataSource('mock');
-        } finally {
-            setIsLoading(false);
-        }
+            setUsers([]); // Clear users on error
+        } finally { }
     };
 
     // Load users from API (Primary) with Mock DB Fallback
@@ -73,44 +49,23 @@ const UserManager: React.FC = () => {
 
 
     // --- User List View ---
-    const activeUsers = users.filter(u => !u.isBlacklisted && !u.deletedAt);
+    const activeUsers = users.filter(u => !u.isBlacklisted && !u.deletedAt && u.role !== 'admin');
     const blacklistedUsers = users.filter(u => u.isBlacklisted && !u.deletedAt);
     const deletedUsers = users.filter(u => u.deletedAt);
 
     const handleRestoreUser = async (userId: string) => {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`http://localhost:3000/api/users/${userId}/restore`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            await userAPI.restore(userId);
 
-            if (response.ok) {
-                // Update Local UI State
-                setUsers(prevUsers => prevUsers.map(u =>
-                    u.id === userId ? { ...u, deletedAt: null } : u
-                ));
+            // Update Local UI State
+            setUsers(prevUsers => prevUsers.map(u =>
+                u.id === userId ? { ...u, deletedAt: null } : u
+            ));
 
-                // Update Local Mock DB if needed
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                if (db[userId]) {
-                    delete db[userId].deletedAt;
-                    localStorage.setItem('mock_users_db', JSON.stringify(db));
-                }
-                alert('User restored successfully');
-            } else {
-                alert('Failed to restore user from server');
-            }
+            alert('User restored successfully');
         } catch (e) {
             console.error(e);
-            // Fallback to local
-            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-            if (db[userId]) {
-                delete db[userId].deletedAt;
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-                setUsers(Object.values(db));
-                alert('Restored locally (Server might be down)');
-            }
+            alert("Error restoring user");
         }
     };
 
@@ -174,52 +129,6 @@ const UserManager: React.FC = () => {
             >
                 ← {t('back_to_profile')}
             </button>
-
-            {dataSource === 'mock' && (
-                <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    background: 'rgba(255, 152, 0, 0.1)',
-                    border: '1px solid #FF9800',
-                    borderRadius: '8px',
-                    color: '#FF9800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '15px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-                        <div>
-                            <strong>Offline Mode / Mock Data Active</strong>
-                            <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-                                The backend server is unreachable. You are viewing cached data.
-                            </div>
-                            {lastError && (
-                                <div style={{ fontSize: '0.85rem', color: '#ff6b6b', marginTop: '4px', fontWeight: 'bold' }}>
-                                    Error: {lastError}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => fetchUsers(true)}
-                        disabled={isLoading}
-                        style={{
-                            background: '#FF9800',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            opacity: isLoading ? 0.7 : 1
-                        }}
-                    >
-                        {isLoading ? 'Connecting...' : 'Retry Connection'}
-                    </button>
-                </div>
-            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
                 <h1 style={{ margin: 0 }}>{t('user_management')}</h1>

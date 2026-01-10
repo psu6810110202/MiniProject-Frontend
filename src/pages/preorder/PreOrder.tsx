@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { preorderItems } from '../data/preorderData';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
+import { preorderItems } from '../../data/preorderData';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 
 interface PreOrderProps {
@@ -237,7 +237,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                 }}
                                 onClick={() => {
                                     console.log('Navigating to pre-order detail:', item.id, item.name);
-                                    navigate(`/product/P${item.id}`);
+                                    navigate(`/preorder/P${item.id}`);
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'translateY(-10px)';
@@ -287,38 +287,28 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                         {item.fandom}
                                     </div>
                                 </div>
-
                                 <div style={{ padding: '20px' }}>
-                                    <Link
-                                        to={`/product/P${item.id}`}
-                                        style={{ textDecoration: 'none', color: 'inherit' }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.color = 'var(--primary-color)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.color = 'inherit';
-                                        }}
-                                    >
-                                        <h2 style={{
-                                            fontSize: '1.4rem',
-                                            marginBottom: '10px',
-                                            lineHeight: '1.4',
-                                            cursor: 'pointer',
-                                            transition: 'color 0.2s'
-                                        }}>{item.name}</h2>
-                                    </Link>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '20px', height: '40px', overflow: 'hidden' }}>
-                                        {item.description}
-                                    </p>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '20px' }}>
-                                        <div>
-                                            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('total_price')}</div>
-                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--text-main)' }}>฿{item.price.toLocaleString()}</div>
+                                    <h3 style={{
+                                        margin: '0 0 10px 0',
+                                        fontSize: '1.2rem',
+                                        fontWeight: 'bold',
+                                        color: 'var(--text-main)',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 3,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        minHeight: '2.8rem',
+                                        height: 'auto'
+                                    }}>
+                                        {item.name}
+                                    </h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ color: 'var(--primary-color)', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                            ฿{item.price.toLocaleString()}
                                         </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontSize: '0.9rem', color: 'var(--primary-color)' }}>{t('deposit')}</div>
-                                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>฿{item.deposit.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                            Deposit: ฿{item.deposit.toLocaleString()}
                                         </div>
                                     </div>
                                 </div>

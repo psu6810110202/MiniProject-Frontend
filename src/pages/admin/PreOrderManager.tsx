@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../contexts/ProductContext';
 import { type PreOrderItem, preorderItems } from '../../data/preorderData';
+import { orderAPI } from '../../services/api';
 
 // Add Pre-Order Modal Component
 interface AddPreOrderModalProps {
@@ -274,31 +275,30 @@ const PreOrderManager: React.FC = () => {
     const [reservations, setReservations] = useState<any[]>([]);
 
     // Function to load reservations for a specific item
-    const loadReservations = (itemId: number) => {
-        const allReservations: any[] = [];
-        const userDb = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
+    const loadReservations = async (itemId: number) => {
+        setReservations([]);
+        console.log("Fetching reservations for item:", itemId);
+        try {
+            const allOrders = await orderAPI.getAll();
 
-        // Scan all user orders in localStorage
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('userOrders_')) {
-                const userId = key.split('_')[1];
-                const orders = JSON.parse(localStorage.getItem(key) || '[]');
-                const user = userDb[userId] || { name: 'Unknown User', email: '-' };
+            // Filter orders containing this pre-order item
+            // Note: We match numeric itemId with product_id in order items
+            const relevantOrders = allOrders.filter((order: any) =>
+                order.items && order.items.some((i: any) => Number(i.product_id) === Number(itemId))
+            ).map((order: any) => ({
+                id: order.order_id, // Ensure this matches backend Order entity ID
+                userId: order.user_id,
+                userName: order.user?.name || `User ${order.user_id}`,
+                userEmail: order.user?.email || '-',
+                date: order.created_at || new Date().toISOString(),
+                total: Number(order.total_amount),
+                status: order.payment_status === 'PAID' ? 'Confirmed' : order.payment_status
+            }));
 
-                orders.forEach((order: any) => {
-                    const hasItem = order.items?.some((item: any) => item.id === itemId);
-                    if (hasItem) {
-                        allReservations.push({
-                            ...order,
-                            userName: user.name || user.username,
-                            userEmail: user.email,
-                            userId: userId
-                        });
-                    }
-                });
-            }
-        });
-        setReservations(allReservations);
+            setReservations(relevantOrders);
+        } catch (e) {
+            console.error("Failed to load reservations", e);
+        }
     };
 
     const handleViewReservations = (item: PreOrderItem) => {
@@ -306,19 +306,22 @@ const PreOrderManager: React.FC = () => {
         loadReservations(item.id);
     };
 
-    const handleConfirmOrder = (orderId: string, userId: string) => {
-        const key = `userOrders_${userId}`;
-        const orders = JSON.parse(localStorage.getItem(key) || '[]');
-        const updatedOrders = orders.map((order: any) => {
-            if (order.id === orderId) {
-                return { ...order, status: 'Confirmed' };
-            }
-            return order;
-        });
-        localStorage.setItem(key, JSON.stringify(updatedOrders));
-        // Refresh local state
-        if (viewItem) loadReservations(viewItem.id);
-        alert('Order Confirmed!');
+    const handleConfirmOrder = async (orderId: string, userId: string) => {
+        if (!confirm('Mark this pre-order as CONFIRMED (PAID)?')) return;
+
+        try {
+            // Using updated orderAPI
+            await orderAPI.updateStatus(orderId, 'PAID');
+
+            alert('Order status updated successfully!');
+            // Update local state to reflect change immediately
+            setReservations(prev => prev.map(r =>
+                r.id === orderId ? { ...r, status: 'Confirmed' } : r
+            ));
+        } catch (e) {
+            console.error(e);
+            alert('Error connecting to server');
+        }
     };
 
     // Redirect if not admin
@@ -518,7 +521,7 @@ const PreOrderManager: React.FC = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '12px' }}>
-                                                {res.status !== 'Confirmed' && (
+                                                {res.status !== 'Confirmed' && res.status !== 'PAID' && (
                                                     <button
                                                         onClick={() => handleConfirmOrder(res.id, res.userId)}
                                                         style={{

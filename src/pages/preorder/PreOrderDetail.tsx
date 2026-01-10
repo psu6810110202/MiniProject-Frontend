@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { useProducts } from '../contexts/ProductContext';
-import { preorderItems, type PreOrderItem } from '../data/preorderData';
-import { productAPI, type Product } from '../services/api';
+import { useCart } from '../../contexts/CartContext';
+import { useProducts } from '../../contexts/ProductContext';
+import { preorderItems, type PreOrderItem } from '../../data/preorderData';
+import { productAPI, type Product } from '../../services/api';
 
 
 const PreOrderDetail: React.FC = () => {
@@ -19,6 +19,7 @@ const PreOrderDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
 
+
   // Convert PreOrderItem to Product format
   const convertPreOrderToProduct = (item: PreOrderItem): Product => {
     return {
@@ -29,7 +30,7 @@ const PreOrderDetail: React.FC = () => {
       category: 'Pre-Order',
       fandom: 'Exclusive',
       image: item.image,
-      stock: 999999, // Unlimited stock
+      stock: 999999,
       is_preorder: true,
       release_date: item.releaseDate,
       deposit_amount: item.deposit,
@@ -83,18 +84,12 @@ const PreOrderDetail: React.FC = () => {
   const handleAddToCart = async () => {
     if (!product) return;
 
-    // Strip 'P' prefix for logic that requires numeric ID
-    const rawId = product.product_id.toString().replace(/^P/i, '');
-    const safeId = isNaN(Number(rawId)) ? Date.now() : Number(rawId);
+    // Use full product ID (including 'P' prefix) to differentiate from regular products
+    const targetId = product.product_id;
 
     // 1. Check if already purchased (in history or past orders)
-    const alreadyPurchased = purchasedItems.includes(safeId) ||
-      userOrders.some(order => order.items.some(item => {
-        // Handle both string and number ID comparisons safely
-        const itemId = typeof item.id === 'string' ? parseInt(item.id) : item.id;
-        const targetId = typeof safeId === 'string' ? parseInt(safeId) : safeId;
-        return itemId === targetId;
-      }));
+    const alreadyPurchased = purchasedItems.includes(targetId as any) ||
+      userOrders.some(order => order.status !== 'cancelled' && order.items.some(item => item.id === targetId));
 
     if (alreadyPurchased) {
       setLimitMessage('คุณได้สั่งจองสินค้าชิ้นนี้ไปแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
@@ -103,7 +98,7 @@ const PreOrderDetail: React.FC = () => {
     }
 
     // 2. Check if currently in cart
-    if (cartItems.some(item => item.id === safeId)) {
+    if (cartItems.some(item => item.id === targetId)) {
       setLimitMessage('สินค้านี้อยู่ในตะกร้าแล้ว (จำกัด 1 ชิ้นต่อบัญชี)');
       setShowLimitModal(true);
       return;
@@ -112,13 +107,14 @@ const PreOrderDetail: React.FC = () => {
     setAddingToCart(true);
     try {
       addToCart({
-        id: safeId,
+        id: targetId,
         name: product.name,
         price: `฿${product.price.toLocaleString()}`,
         category: product.category,
         fandom: product.fandom,
-        image: product.image
-      });
+        image: product.image,
+        type: 'preorder'
+      } as any);
 
       setTimeout(() => {
         setAddingToCart(false);
@@ -184,18 +180,6 @@ const PreOrderDetail: React.FC = () => {
       color: 'var(--text-main)',
       position: 'relative'
     }}>
-      {/* Breadcrumb */}
-      <div style={{
-        marginBottom: '30px',
-        fontSize: '0.9rem',
-        color: 'var(--text-muted)'
-      }}>
-        <Link to="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</Link>
-        <span style={{ margin: '0 8px' }}>›</span>
-        <Link to="/preorder" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Pre-Orders</Link>
-        <span style={{ margin: '0 8px' }}>›</span>
-        <span style={{ color: 'var(--text-main)' }}>{product.name}</span>
-      </div>
 
       {/* Error Message */}
       {error && (
@@ -219,7 +203,6 @@ const PreOrderDetail: React.FC = () => {
       }}>
         {/* Product Images */}
         <div>
-          {/* Main Image */}
           <div style={{
             background: 'var(--card-bg)',
             borderRadius: '16px',
@@ -286,18 +269,7 @@ const PreOrderDetail: React.FC = () => {
                   fontWeight: 'bold',
                   margin: '0',
                   color: 'var(--text-main)',
-                  lineHeight: '1.2',
-                  cursor: 'pointer',
-                  transition: 'color 0.2s',
-                  display: 'inline-block'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#FF5722';
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-main)';
-                  e.currentTarget.style.textDecoration = 'none';
+                  lineHeight: '1.2'
                 }}
               >
                 {product.name}
@@ -424,7 +396,7 @@ const PreOrderDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock > 900000 ? 'Unlimited' : `${product.stock} units`}
+              Max: {product.stock > 900000 ? 'Unknown' : `${product.stock} units`}
             </span>
           </div>
 
@@ -503,7 +475,7 @@ const PreOrderDetail: React.FC = () => {
             </button>
           </div>
 
-          {/* Additional Information */}
+          {/* Material Information */}
           <div style={{
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
@@ -516,25 +488,7 @@ const PreOrderDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Stock:</strong> {product.stock > 900000 ? 'Unlimited' : `${product.stock} units`}</div>
               <div><strong>Product ID:</strong> {product.product_id}</div>
-            </div>
-          </div>
-
-          {/* Material Information */}
-          <div style={{
-            borderTop: '1px solid var(--border-color)',
-            paddingTop: '20px',
-            marginTop: '20px'
-          }}>
-            <h4 style={{ marginBottom: '15px' }}>Material & Specifications</h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '10px',
-              fontSize: '0.9rem',
-              color: 'var(--text-muted)'
-            }}>
               <div><strong>Material:</strong> Premium PVC Vinyl</div>
               <div><strong>Height:</strong> 18 cm</div>
               <div><strong>Weight:</strong> 450g</div>
@@ -542,7 +496,6 @@ const PreOrderDetail: React.FC = () => {
               <div><strong>Paint:</strong> Hand-painted details</div>
               <div><strong>Packaging:</strong> Collector's box</div>
               <div><strong>Authenticity:</strong> Certificate included</div>
-              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
             </div>
           </div>
         </div>

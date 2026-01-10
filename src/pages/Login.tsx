@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { BlacklistModal, DeletedWarningModal, RestoreModal } from '../components/LoginModals';
 import ThemeNotification from '../components/ThemeNotification';
-import './Login.css'; // Import the CSS file
+import { authAPI, userAPI, api } from '../services/api';
+import './Login.css';
 
 const Login: React.FC = () => {
     const { t } = useLanguage();
@@ -17,15 +18,8 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [showBlacklistModal, setShowBlacklistModal] = useState(false);
-    const [showForgotModal, setShowForgotModal] = useState(false);
-    const [showRestoreModal, setShowRestoreModal] = useState(false);
-    const [forgotEmail, setForgotEmail] = useState('');
-    const [forgotStep, setForgotStep] = useState<'email' | 'newpass'>('email');
-    const [forgotUserId, setForgotUserId] = useState<string | null>(null);
-    const [newResetPass, setNewResetPass] = useState('');
-    const [confirmResetPass, setConfirmResetPass] = useState('');
-    const [showResetPass, setShowResetPass] = useState(false);
 
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
     const [restoreData, setRestoreData] = useState({ username: '', password: '' });
     const [showDeletedWarningModal, setShowDeletedWarningModal] = useState(false);
 
@@ -36,65 +30,10 @@ const Login: React.FC = () => {
         type: 'success'
     });
 
-    const showNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
-        setNotification({ show: true, message, type });
-    };
-
-    useEffect(() => {
-        const currentDB = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        const adminExists = Object.values(currentDB).some((u: any) => u.email === 'admin@example.com' || u.username === 'admin');
-
-        if (!adminExists) {
-            currentDB['mock-2'] = {
-                id: 'mock-2',
-                username: 'admin',
-                name: 'Admin User',
-                email: 'admin@example.com',
-                role: 'admin',
-                points: 9999,
-                password: 'admin',
-                isBlacklisted: false
-            };
-            localStorage.setItem('mock_users_db', JSON.stringify(currentDB));
-        }
-
-    }, []);
-
     const isDark = theme === 'dark';
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleForgotSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-
-        if (forgotStep === 'email') {
-            const user = Object.values(db).find((u: any) => u.email === forgotEmail || u.username === forgotEmail);
-            if (user) {
-                setForgotUserId((user as any).id);
-                setForgotStep('newpass');
-            } else {
-                showNotification('Account not found', 'error');
-            }
-        } else {
-            if (newResetPass !== confirmResetPass) {
-                showNotification('Passwords do not match!', 'error');
-                return;
-            }
-            if (forgotUserId && db[forgotUserId]) {
-                db[forgotUserId].password = newResetPass;
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-                showNotification('Password reset successfully. Please login.', 'success');
-                setShowForgotModal(false);
-                setForgotStep('email');
-                setForgotEmail('');
-                setNewResetPass('');
-                setConfirmResetPass('');
-            }
-        }
     };
 
     const handleRestoreSubmit = async (e: React.FormEvent) => {
@@ -103,67 +42,31 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: restoreData.username, password: restoreData.password }),
-            });
-            const loginData = await loginResponse.json();
+            const loginData = await authAPI.login({ email: restoreData.username, password: restoreData.password });
 
-            if (loginResponse.ok && loginData.access_token) {
+            if (loginData.access_token) {
                 const userId = loginData.user.id || loginData.user.user_id;
-                const restoreResponse = await fetch(`http://localhost:3000/api/users/${userId}/restore`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${loginData.access_token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
 
-                if (restoreResponse.ok) {
+                // Manually set token for this operation since we haven't fully logged in via Context yet
+                api.setToken(loginData.access_token);
+
+                try {
+                    await userAPI.restore(userId);
                     alert('Account restored successfully! Logging you in...');
-                    try {
-                        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                        if (db[userId]) {
-                            delete db[userId].deletedAt;
-                            localStorage.setItem('mock_users_db', JSON.stringify(db));
-                        }
-                    } catch (e) { console.error(e); }
                     login(loginData.access_token, { ...loginData.user, deletedAt: null }, true);
                     navigate('/');
-                    return;
-                } else {
-                    const errorJson = await restoreResponse.json();
-                    alert(`Restore failed (Server): ${errorJson.message || restoreResponse.statusText}`);
-                    setLoading(false);
-                    return;
+                } catch (restoreErr: any) {
+                    // If restore fails, we shouldn't leave the token in the api instance if login wasn't fully intended
+                    // api.clearToken(); // Assuming we might want to clear. But technically user authenticated.
+                    // But restore failed, so maybe we shouldn't login?
+                    // Let's keep it safe.
+                    const msg = restoreErr.message || 'Restore failed';
+                    alert(msg);
                 }
-            } else {
-                await loginResponse.json().catch(() => ({}));
             }
         } catch (apiErr: any) {
-            console.error("API Restore flow failed", apiErr);
-        }
-
-        const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-        const user = Object.values(db).find((u: any) =>
-            (u.username === restoreData.username || u.email === restoreData.username)
-        );
-
-        if (user && (user as any).password === restoreData.password) {
-            if ((user as any).deletedAt) {
-                delete (user as any).deletedAt;
-                db[(user as any).id] = user;
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-                alert('Account restored successfully! Logging you in...');
-                login('restored-token', user as any, true);
-                navigate('/');
-            } else {
-                alert('This account is active. You can log in normally.');
-                setShowRestoreModal(false);
-            }
-        } else {
-            alert('Invalid credentials or account not found.');
+            console.error("API Restore flow failed", apiErr.message);
+            alert("Failed to restore account via API. " + (apiErr.message || ''));
         }
         setLoading(false);
     };
@@ -174,24 +77,7 @@ const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: formData.username, password: formData.password }),
-            });
-            if (response.status === 401) {
-                const errData = await response.json();
-                if (errData.message === 'User is blacklisted') {
-                    setShowBlacklistModal(true);
-                    setLoading(false);
-                    return;
-                }
-                throw new Error(errData.message || 'Login failed');
-            }
-
-            const data = await response.json();
-
-            if (!response.ok) throw new Error(data.message || 'Login failed');
+            const data = await authAPI.login({ email: formData.username, password: formData.password });
 
             if (data.access_token) {
                 if (data.user.isBlacklisted) {
@@ -207,47 +93,22 @@ const Login: React.FC = () => {
                     return;
                 }
 
-                let userToUse = data.user;
-                try {
-                    const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                    const localUser = db[userToUse.id] || Object.values(db).find((u: any) => u.email === userToUse.email);
-
-                    if (localUser) {
-                        if (localUser.isBlacklisted) {
-                            setShowBlacklistModal(true);
-                            setLoading(false);
-                            return;
-                        }
-
-                        if (localUser.deletedAt && !userToUse.deletedAt) {
-                            setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
-                            setShowDeletedWarningModal(true);
-                            setLoading(false);
-                            return;
-                        }
-                        userToUse = { ...userToUse, points: localUser.points };
-                    }
-                } catch (e) {
-                    console.error("Failed to merge local state", e);
-                }
-                login(data.access_token, userToUse, rememberMe);
+                login(data.access_token, data.user, rememberMe);
                 navigate('/');
             } else {
                 throw new Error('No access token received');
             }
         } catch (err: any) {
             console.error('Login Error:', err);
+            const msg = err.message || 'Login failed';
 
-            if (err.message === 'Login failed' || err.message === 'User is blacklisted' || err.message === 'Unauthorized') {
-                setError(err.message);
-                setLoading(false);
-                return;
+            if (msg === 'User is blacklisted') {
+                setShowBlacklistModal(true);
+            } else {
+                setError(msg);
             }
-
-            // Disable Mock Fallback for debugging
-            console.error("Real API Login Failed:", err);
-            setError(`Connection Error: ${err.message}. Ensure Backend is running.`);
-        } finally { setLoading(false); }
+            setLoading(false);
+        }
     };
 
     return (
@@ -293,13 +154,7 @@ const Login: React.FC = () => {
                         </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', marginBottom: '20px' }}>
-                        <button type="button" onClick={() => setShowForgotModal(true)} className="forgot-btn">
-                            Forgot Password?
-                        </button>
-                    </div>
-
-                    <div className="checkbox-wrapper">
+                    <div className="checkbox-wrapper" style={{ marginTop: '20px' }}>
                         <input type="checkbox" id="rememberMe" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="custom-checkbox" />
                         <label htmlFor="rememberMe" style={{ cursor: 'pointer' }}>{t('remember_me')}</label>
                     </div>
@@ -319,64 +174,6 @@ const Login: React.FC = () => {
                 onClose={() => setShowBlacklistModal(false)}
                 isDark={isDark}
             />
-
-            {showForgotModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '400px' }}>
-                        <h3 className="login-title" style={{ fontSize: '1.5rem' }}>Reset Password</h3>
-                        <form onSubmit={handleForgotSubmit}>
-                            {forgotStep === 'email' ? (
-                                <>
-                                    <label className="login-label">Enter your Username or Email</label>
-                                    <input type="text" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className="login-input" required />
-                                </>
-                            ) : (
-                                <>
-                                    <label className="login-label">Enter New Password</label>
-                                    <div className="password-wrapper" style={{ marginBottom: '15px' }}>
-                                        <input
-                                            type={showResetPass ? 'text' : 'password'}
-                                            value={newResetPass}
-                                            onChange={e => setNewResetPass(e.target.value)}
-                                            className="login-input" style={{ paddingRight: '40px' }}
-                                            required
-                                        />
-                                        <button type="button" onClick={() => setShowResetPass(!showResetPass)}
-                                            className="password-toggle-btn">
-                                            {showResetPass ? (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                            ) : (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                            )}
-                                        </button>
-                                    </div>
-
-                                    <label className="login-label">Confirm New Password</label>
-                                    <div className="password-wrapper">
-                                        <input
-                                            type={showResetPass ? 'text' : 'password'}
-                                            value={confirmResetPass}
-                                            onChange={e => setConfirmResetPass(e.target.value)}
-                                            className="login-input" style={{ paddingRight: '40px' }}
-                                            required
-                                        />
-                                        <button type="button" onClick={() => setShowResetPass(!showResetPass)}
-                                            className="password-toggle-btn">
-                                            {showResetPass ? (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                            ) : (
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                            <button type="submit" className="login-btn">{forgotStep === 'email' ? 'Find Account' : 'Reset Password'}</button>
-                            <button type="button" onClick={() => setShowForgotModal(false)} className="login-btn cancel-btn" style={{ background: '#555', marginTop: '10px' }}>Cancel</button>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             <RestoreModal
                 isOpen={showRestoreModal}

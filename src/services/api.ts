@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 
 // Types for API responses
 export interface Product {
-  product_id: string;
+  product_id: string; // Internal ID
   name: string;
   description: string;
   price: number;
@@ -24,10 +24,14 @@ export interface Order {
   order_id: string;
   user_id: string;
   total_amount: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered';
-  shipping_address: string;
+  status: string; // 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'PAID' etc.
+  shipping_fee: number;
+  payment_status: string;
+  shipping_address: any; // Can be object or string depending on backend
   created_at: string;
   items: OrderItem[];
+  stock_deducted: boolean;
+  user?: User; // Optional user details
 }
 
 export interface OrderItem {
@@ -35,13 +39,38 @@ export interface OrderItem {
   order_id: string;
   product_id: string;
   quantity: number;
-  price: number;
+  unit_price: number;
+}
+
+export interface User {
+  id: string; // user_id
+  user_id: string;
+  username: string;
+  email: string;
+  role: 'user' | 'admin';
+  isBlacklisted: boolean;
+  deletedAt?: string | null;
+  name: string;
+  phone?: string;
+  points?: number;
+  house_number?: string;
+  sub_district?: string;
+  district?: string;
+  province?: string;
+  postal_code?: string;
+  password?: string;
+}
+
+export interface Fandom {
+  id: number;
+  name: string;
+  image?: string; // Optional image URL
 }
 
 export interface Payment {
   payment_id: string;
   order_id: string;
-  payment_method: 'promptpay';
+  payment_method: 'bank' | 'truemoney';
   amount: number;
   status: 'pending' | 'completed';
   transaction_id?: string;
@@ -57,12 +86,11 @@ export interface Shipment {
   created_at: string;
 }
 
-// Interface for Timeline Events: ใช้แสดงความคืบหน้าของสินค้าหรือออเดอร์
+// Interface for Timeline Events
 export interface TimelineEvent {
   event_id: string;
   product_id?: string;
   order_id?: string;
-  // ประเภทของเหตุการณ์: ผลิต, ขนส่ง, ตรวจสอบคุณภาพ, จ่ายเงิน, ทั่วไป
   event_type: 'production' | 'shipping' | 'quality_check' | 'payment' | 'general';
   title: string;
   description: string;
@@ -74,11 +102,27 @@ export interface TimelineEvent {
 // API Service Class
 class APIService {
   private baseURL: string;
-  private token: string | null = null;
+  // We no longer cache token strictly in a class property to ensure freshness from storage
+  // private token: string | null = null;
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
-    this.token = localStorage.getItem('auth_token');
+  }
+
+  // Retrieve token dynamically from storage (priority: session -> local)
+  private getToken(): string | null {
+    return sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
+  }
+
+  // Set token to storage (default to localStorage)
+  setToken(token: string): void {
+    localStorage.setItem('access_token', token);
+  }
+
+  // Clear token from storage
+  clearToken(): void {
+    localStorage.removeItem('access_token');
+    sessionStorage.removeItem('access_token');
   }
 
   private async request<T>(
@@ -86,13 +130,14 @@ class APIService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    const token = this.getToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...options.headers as Record<string, string>,
     };
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     try {
@@ -102,28 +147,29 @@ class APIService {
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        // Handle 401 Unauthorized globally if needed (e.g., redirect to login)
+        if (response.status === 401) {
+          console.warn('Unauthorized access. Token might be invalid.');
+        }
+        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) errorMessage = errorData.message;
+        } catch (e) { /* ignore json parse error */ }
+        throw new Error(errorMessage);
       }
+
+      // Some endpoints might return empty body (e.g. DELETE)
+      if (response.status === 204) return {} as T;
 
       return await response.json();
     } catch (error) {
-      console.error('API Request failed:', error);
+      console.error(`API Request failed [${endpoint}]:`, error);
       throw error;
     }
   }
 
-  // Auth methods
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('auth_token', token);
-  }
-
-  clearToken() {
-    this.token = null;
-    localStorage.removeItem('auth_token');
-  }
-
-  // Products API
+  // --- Products API ---
   async getProducts(): Promise<Product[]> {
     return this.request<Product[]>('/products');
   }
@@ -139,19 +185,26 @@ class APIService {
     });
   }
 
-  // Orders API
+  async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+    return this.request<Product>(`/products/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(product),
+    });
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    return this.request<void>(`/products/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // --- Orders API ---
   async getOrders(): Promise<Order[]> {
     return this.request<Order[]>('/orders');
   }
 
   async getOrderById(id: string): Promise<Order> {
     return this.request<Order>(`/orders/${id}`);
-  }
-
-  async createShippingLabel(orderId: string): Promise<Shipment> {
-    return this.request<Shipment>(`/orders/${orderId}/shipping-label`, {
-      method: 'POST',
-    });
   }
 
   async createOrder(order: Partial<Order>): Promise<Order> {
@@ -161,7 +214,51 @@ class APIService {
     });
   }
 
-  // Payments API
+  async createShippingLabel(orderId: string): Promise<Shipment> {
+    return this.request<Shipment>(`/orders/${orderId}/shipping-label`, {
+      method: 'POST',
+    });
+  }
+
+  async updateOrderStatus(orderId: string, status: string): Promise<Order> {
+    return this.request<Order>(`/orders/${orderId}/status`, {
+      method: 'POST', // or PATCH
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // --- Users API ---
+  async getUsers(): Promise<User[]> {
+    return this.request<User[]>('/users');
+  }
+
+  async geUserById(id: string): Promise<User> {
+    return this.request<User>(`/users/${id}`);
+  }
+
+  async restoreUser(id: string): Promise<void> {
+    return this.request<void>(`/users/${id}/restore`, {
+      method: 'PATCH'
+    });
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    return this.request<User>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    return this.request<void>(`/users/${id}`, { method: 'DELETE' });
+  }
+
+  // --- Fandoms API ---
+  async getFandoms(): Promise<Fandom[]> {
+    return this.request<Fandom[]>('/fandoms');
+  }
+
+  // --- Payments API ---
   async processPayment(paymentData: {
     order_id: string;
     payment_method: string;
@@ -177,7 +274,7 @@ class APIService {
     return this.request<Payment[]>(`/payments/order/${orderId}`);
   }
 
-  // Timeline API
+  // --- Timeline API ---
   async getTimelineEvents(): Promise<TimelineEvent[]> {
     return this.request<TimelineEvent[]>('/timeline');
   }
@@ -196,16 +293,38 @@ class APIService {
       body: JSON.stringify(event),
     });
   }
+
+  // --- Auth API ---
+  async login(credentials: any): Promise<any> {
+    return this.request<any>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(data: any): Promise<any> {
+    return this.request<any>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 // Create and export API service instance
 export const api = new APIService();
 
 // Export individual API services for easier usage
+export const authAPI = {
+  login: (credentials: any) => api.login(credentials),
+  register: (data: any) => api.register(data),
+};
+
 export const productAPI = {
   getAll: () => api.getProducts(),
   getById: (id: string) => api.getProductById(id),
   create: (product: Partial<Product>) => api.createProduct(product),
+  update: (id: string, product: Partial<Product>) => api.updateProduct(id, product),
+  delete: (id: string) => api.deleteProduct(id),
 };
 
 export const orderAPI = {
@@ -213,6 +332,19 @@ export const orderAPI = {
   getById: (id: string) => api.getOrderById(id),
   create: (order: Partial<Order>) => api.createOrder(order),
   createShippingLabel: (orderId: string) => api.createShippingLabel(orderId),
+  updateStatus: (orderId: string, status: string) => api.updateOrderStatus(orderId, status),
+};
+
+export const userAPI = {
+  getAll: () => api.getUsers(),
+  getById: (id: string) => api.geUserById(id),
+  restore: (id: string) => api.restoreUser(id),
+  update: (id: string, data: Partial<User>) => api.updateUser(id, data),
+  delete: (id: string) => api.deleteUser(id),
+};
+
+export const fandomAPI = {
+  getAll: () => api.getFandoms(),
 };
 
 export const paymentAPI = {

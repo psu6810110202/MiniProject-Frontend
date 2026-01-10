@@ -85,17 +85,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setRole(newUser.role);
         setIsLoggedIn(true);
 
-        // Sync ALL users to local DB on login to ensure persistence (Frontend-First State)
-        if (newUser) {
-            try {
-                const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-                db[newUser.id] = newUser;
-                localStorage.setItem('mock_users_db', JSON.stringify(db));
-            } catch (e) {
-                console.error('Failed to sync login to mock DB', e);
-            }
-        }
-
         if (rememberMe) {
             localStorage.setItem('access_token', newToken);
             localStorage.setItem('user', JSON.stringify(newUser));
@@ -116,14 +105,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             sessionStorage.setItem('user', JSON.stringify(updatedUser));
         }
 
-        // Update Mock Database (Persistent across Logouts)
-        try {
-            const db = JSON.parse(localStorage.getItem('mock_users_db') || '{}');
-            db[updatedUser.id] = updatedUser;
-            localStorage.setItem('mock_users_db', JSON.stringify(db));
-        } catch (e) {
-            console.error('Failed to update mock DB', e);
-        }
     };
 
     const logout = () => {

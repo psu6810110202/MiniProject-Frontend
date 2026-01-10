@@ -16,6 +16,14 @@ export const usePoints = () => {
         }
     };
 
+    const deductPoints = (amount: number) => {
+        if (user) {
+            const currentPoints = user.points || 0;
+            const newPoints = Math.max(0, currentPoints - amount); // Ensure points don't go negative
+            updateUser({ ...user, points: newPoints });
+        }
+    };
+
     const calculatePointsFromAmount = (amount: number) => {
         return Math.floor(amount / 100); // 1 point per 100 baht
     };
@@ -23,6 +31,7 @@ export const usePoints = () => {
     return {
         points,
         addPoints,
+        deductPoints,
         calculatePointsFromAmount
     };
 };

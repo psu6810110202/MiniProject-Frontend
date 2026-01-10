@@ -302,8 +302,8 @@ const ProductForm: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Fandom, Category & Box Count */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                {/* Fandom & Category */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                     <div>
                         <label style={labelStyle}>Fandom *</label>
                         <select
@@ -327,16 +327,6 @@ const ProductForm: React.FC = () => {
                             <option value="">Select Category</option>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
-                    </div>
-                    <div>
-                        <label style={labelStyle}>Boxes per Set</label>
-                        <input
-                            type="number"
-                            value={formData.boxCount}
-                            onChange={(e) => handleInput('boxCount', e.target.value)}
-                            style={inputStyle}
-                            placeholder="e.g. 6 or 12"
-                        />
                     </div>
                 </div>
 
@@ -406,6 +396,7 @@ const ProductForm: React.FC = () => {
                 {/* Sales Options (New Feature) */}
                 <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px solid #4CAF50' }}>
                     <h4 style={{ margin: '0 0 15px 0', color: '#4CAF50' }}>Sales Options</h4>
+                    {/* Box Count Input (Always Visible) */}
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
                         <input
                             type="checkbox"
@@ -418,17 +409,30 @@ const ProductForm: React.FC = () => {
 
                     {formData.hasSetOption && (
                         <div>
-                            <label style={labelStyle}>Full Set Price (THB)</label>
-                            <input
-                                type="number"
-                                value={formData.setPrice}
-                                onChange={(e) => handleInput('setPrice', e.target.value)}
-                                style={inputStyle}
-                                placeholder="e.g. 3000"
-                            />
-                            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>
-                                (Will use "Boxes per Set" value of {formData.boxCount || '?'} items)
-                            </p>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={labelStyle}>Boxes per Set (pcs)</label>
+                                <input
+                                    type="number"
+                                    value={formData.boxCount}
+                                    onChange={(e) => handleInput('boxCount', e.target.value)}
+                                    style={inputStyle}
+                                    placeholder="e.g. 6, 8, 12"
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>
+                                    Specify how many individual boxes make up a full set.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label style={labelStyle}>Full Set Price (THB)</label>
+                                <input
+                                    type="number"
+                                    value={formData.setPrice}
+                                    onChange={(e) => handleInput('setPrice', e.target.value)}
+                                    style={inputStyle}
+                                    placeholder="e.g. 3000"
+                                />
+                            </div>
                         </div>
                     )}
                 </div>

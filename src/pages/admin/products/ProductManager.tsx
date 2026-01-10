@@ -51,16 +51,16 @@ const ProductManager: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/admin')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
             >
-                ← Back to Profile
+                ← Back to Admin
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '15px' }}>
                 <h1 style={{ margin: 0 }}>Product Management</h1>
                 <button
-                    onClick={() => navigate('/profile/products/new')}
+                    onClick={() => navigate('/admin/products/new')}
                     style={{
                         background: 'linear-gradient(135deg, #FF5722, #E64A19)',
                         color: 'white',
@@ -125,7 +125,7 @@ const ProductManager: React.FC = () => {
                                 </td>
                                 <td style={{ padding: '15px', display: 'flex', gap: '10px' }}>
                                     <button
-                                        onClick={() => navigate(`/profile/products/edit/${product.product_id}`)}
+                                        onClick={() => navigate(`/admin/products/edit/${product.product_id}`)}
                                         style={{ background: '#444', color: 'white', border: '1px solid #666', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}
                                     >
                                         Edit

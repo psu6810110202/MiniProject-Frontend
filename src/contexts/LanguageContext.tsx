@@ -190,6 +190,7 @@ const translations: Record<Language, Translations> = {
         categories: 'Categories',
         view_all_categories: 'View All Categories →',
         pre_order: 'Pre Order',
+        pre_order_close_date: 'Pre Order Close Date',
         preorder_items_custom_requests: 'Pre-Order Items & Custom Requests',
         cant_find_it: "Can't find it?",
         request_custom_order_provided: 'Request a custom order provided by us.',
@@ -251,6 +252,7 @@ const translations: Record<Language, Translations> = {
         faq_contact_support_answer: 'You can reach our customer support through the live chat feature or by creating a support ticket.',
         // FandomList keys
         back_to_profile: 'Back to Profile',
+        back_to_admin: 'Back to Admin',
         manage_fandoms: 'Manage Fandoms',
         add_new_fandom: 'Add New Fandom',
         enter_fandom_name: 'Enter fandom name...',
@@ -477,6 +479,7 @@ const translations: Record<Language, Translations> = {
         categories: 'หมวดหมู่',
         view_all_categories: 'ดูหมวดหมู่ทั้งหมด →',
         pre_order: 'สั่งจองล่วงหน้า',
+        pre_order_close_date: 'ปิดรับพรีออเดอร์',
         preorder_items_custom_requests: 'สินค้าสั่งจองล่วงหน้าและคำขอแบบกำหนดเอง',
         cant_find_it: 'หาไม่เจอ?',
         request_custom_order_provided: 'ขอสินค้าแบบกำหนดเองจากเรา',
@@ -544,6 +547,7 @@ const translations: Record<Language, Translations> = {
         faq_contact_support_answer: 'คุณสามารถติดต่อฝ่ายสนับสนุนลูกค้าของเราผ่านฟีเจอร์แชทสดหรือสร้างตั๋วสนับสนุน',
         // FandomList keys
         back_to_profile: 'กลับไปที่โปรไฟล์',
+        back_to_admin: 'กลับไปที่ Admin',
         manage_fandoms: 'จัดการแฟนดอม',
         add_new_fandom: 'เพิ่มแฟนดอมใหม่',
         enter_fandom_name: 'กรอกชื่อแฟนดอม...',

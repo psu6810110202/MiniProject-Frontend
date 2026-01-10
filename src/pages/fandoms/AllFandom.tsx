@@ -10,21 +10,24 @@ const AllFandom: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     // Get fandoms from items and custom images
-    const { items, fandomImages, likedFandoms, toggleLikeFandom } = useProducts();
+    // Get fandoms from context (source of truth) instead of deriving from items
+    const { items, fandoms: contextFandoms, fandomImages, likedFandoms, toggleLikeFandom } = useProducts();
     const fandoms = React.useMemo(() => {
-        const unique = Array.from(new Set(items.map(item => item.fandom)));
-        return unique.map(f => {
+        // Use contextFandoms which contains all fandoms including manually added ones
+        return contextFandoms.map(f => {
+            // Try to find an item in this fandom to use its image as fallback
             const item = items.find(i => i.fandom === f);
-            // Use custom image if available, else fallback to first item
-            const image = (fandomImages && fandomImages[f]) ? fandomImages[f] : item?.image;
+            // Use custom image if available, else fallback to first item image, else default placeholder
+            const image = (fandomImages && fandomImages[f])
+                ? fandomImages[f]
+                : (item?.image || 'https://placehold.co/600x400?text=No+Image');
+
             return {
                 name: f,
-                image: image,
-                // Mock campaign end time for "The Latest Drops" feel
-                timeLeft: Math.floor(Math.random() * 24) + 1 + 'h left'
+                image: image
             };
         }).filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [items, fandomImages, searchTerm]);
+    }, [contextFandoms, items, fandomImages, searchTerm]);
 
     return (
         <div style={{
@@ -126,25 +129,7 @@ const AllFandom: React.FC = () => {
                                             transform: hoveredId === f.name ? 'scale(1.05)' : 'scale(1)'
                                         }}
                                     />
-                                    {/* Status Badge */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        bottom: '10px', right: '10px',
-                                        background: 'rgba(0,0,0,0.8)',
-                                        padding: '5px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '0.85rem',
-                                        color: '#FF5722',
-                                        fontWeight: 'bold',
-                                        display: 'flex', alignItems: 'center', gap: '5px',
-                                        backdropFilter: 'blur(4px)'
-                                    }}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                        </svg>
-                                        {f.timeLeft}
-                                    </div>
+
                                 </div>
 
                                 {/* Card Info */}
@@ -188,11 +173,7 @@ const AllFandom: React.FC = () => {
                                             </svg>
                                         </button>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                                        <span>{t('funded')}</span>
-                                        <div style={{ height: '4px', width: '4px', borderRadius: '50%', background: '#666' }}></div>
-                                        <span style={{ color: '#4CAF50' }}>{t('success')} 100%</span>
-                                    </div>
+
                                 </div>
                             </div>
                         </Link>

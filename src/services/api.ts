@@ -9,10 +9,14 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  category: string;
+  category?: string; // Legacy field for display name
+  category_id?: string; // Backend ID
+  supplier_id?: string;
   fandom: string;
   image: string;
-  stock: number;
+  stock?: number; // Legacy field
+  stock_qty?: number; // Backend field
+  gallery?: string; // JSON string for multiple images
   is_preorder?: boolean;
   release_date?: string;
   deposit_amount?: number;
@@ -99,6 +103,21 @@ export interface TimelineEvent {
   created_at: string;
 }
 
+export interface Ticket {
+  id: string;
+  subject: string;
+  category: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  message: string;
+  userName: string;
+  userEmail: string;
+  userId: string;
+  created_at: string;
+  updated_at: string;
+  admin_response?: string;
+}
+
 // API Service Class
 class APIService {
   private baseURL: string;
@@ -169,6 +188,23 @@ class APIService {
     }
   }
 
+  // --- Tickets API ---
+  async getTickets(): Promise<Ticket[]> {
+    return this.request<Ticket[]>('/tickets');
+  }
+
+  async updateTicket(id: string, data: Partial<Ticket>): Promise<Ticket> {
+    return this.request<Ticket>(`/tickets/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async replyTicket(id: string, response: string): Promise<Ticket> {
+    // Specialized endpoint or just PATCH
+    return this.updateTicket(id, { admin_response: response, status: 'in_progress' });
+  }
+
   // --- Products API ---
   async getProducts(): Promise<Product[]> {
     return this.request<Product[]>('/products');
@@ -232,7 +268,7 @@ class APIService {
     return this.request<User[]>('/users');
   }
 
-  async geUserById(id: string): Promise<User> {
+  async getUserById(id: string): Promise<User> {
     return this.request<User>(`/users/${id}`);
   }
 
@@ -256,6 +292,26 @@ class APIService {
   // --- Fandoms API ---
   async getFandoms(): Promise<Fandom[]> {
     return this.request<Fandom[]>('/fandoms');
+  }
+
+  async createFandom(fandom: Partial<Fandom>): Promise<Fandom> {
+    return this.request<Fandom>('/fandoms', {
+      method: 'POST',
+      body: JSON.stringify(fandom),
+    });
+  }
+
+  async updateFandom(id: string | number, fandom: Partial<Fandom>): Promise<Fandom> {
+    return this.request<Fandom>(`/fandoms/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(fandom),
+    });
+  }
+
+  async deleteFandom(id: string | number): Promise<void> {
+    return this.request<void>(`/fandoms/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // --- Payments API ---
@@ -295,6 +351,11 @@ class APIService {
   }
 
   // --- Auth API ---
+  // --- Categories API ---
+  async getCategories(): Promise<any[]> {
+    return this.request<any[]>('/categories');
+  }
+
   async login(credentials: any): Promise<any> {
     return this.request<any>('/auth/login', {
       method: 'POST',
@@ -337,7 +398,7 @@ export const orderAPI = {
 
 export const userAPI = {
   getAll: () => api.getUsers(),
-  getById: (id: string) => api.geUserById(id),
+  getById: (id: string) => api.getUserById(id),
   restore: (id: string) => api.restoreUser(id),
   update: (id: string, data: Partial<User>) => api.updateUser(id, data),
   delete: (id: string) => api.deleteUser(id),
@@ -345,6 +406,13 @@ export const userAPI = {
 
 export const fandomAPI = {
   getAll: () => api.getFandoms(),
+  create: (fandom: Partial<Fandom>) => api.createFandom(fandom),
+  update: (id: string | number, fandom: Partial<Fandom>) => api.updateFandom(id, fandom),
+  delete: (id: string | number) => api.deleteFandom(id),
+};
+
+export const categoryAPI = {
+  getAll: () => api.getCategories(),
 };
 
 export const paymentAPI = {
@@ -361,6 +429,12 @@ export const timelineAPI = {
   getByProduct: (productId: string) => api.getTimelineEventsByProduct(productId),
   getByOrder: (orderId: string) => api.getTimelineEventsByOrder(orderId),
   create: (event: Partial<TimelineEvent>) => api.createTimelineEvent(event),
+};
+
+export const ticketAPI = {
+  getAll: () => api.getTickets(),
+  update: (id: string, data: Partial<Ticket>) => api.updateTicket(id, data),
+  reply: (id: string, response: string) => api.replyTicket(id, response),
 };
 
 export default api;

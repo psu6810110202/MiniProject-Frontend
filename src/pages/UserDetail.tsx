@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
-import { userAPI } from '../services/api';
+import { userAPI, orderAPI } from '../services/api';
 
 const UserDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -12,6 +12,7 @@ const UserDetail: React.FC = () => {
     const { t } = useLanguage();
     const [user, setUser] = useState<any | null>(null);
     const [userOrders, setUserOrders] = useState<any[]>([]);
+    const [fetchStatus, setFetchStatus] = useState<string>('');
 
     useEffect(() => {
         if (role !== 'admin') {
@@ -30,12 +31,32 @@ const UserDetail: React.FC = () => {
                 setUser(userData);
 
                 // Mock orders for now/load from local if existing
-                // In real implementation, we should use orderAPI.getByUser(id) if available
-                const orders = JSON.parse(localStorage.getItem(`userOrders_${userData.id}`) || '[]');
-                setUserOrders(orders);
-            } catch (error) {
+                // Load Orders from API
+                try {
+                    const allOrders = await orderAPI.getAll();
+                    // Filter orders belonging to this user
+                    // Handle ID variations from backend
+                    const activeUserId = userData.id || userData.user_id;
+
+                    const filteredApiOrders = allOrders.filter((o: any) =>
+                        String(o.user_id) === String(activeUserId) ||
+                        String(o.userId) === String(activeUserId) ||
+                        String(o.user?.id) === String(activeUserId)
+                    );
+                    setUserOrders(filteredApiOrders);
+                    setFetchStatus(`Loaded ${filteredApiOrders.length} orders from Database (Total: ${allOrders.length}).`);
+                } catch (orderErr) {
+                    console.error("Failed to load user orders:", orderErr);
+                    // Fallback or just empty
+                    setUserOrders([]);
+                    setFetchStatus('Order Fetch Failed');
+                }
+            } catch (error: any) {
                 console.error('Fetching user failed:', error);
-                alert('User not found or API error');
+                const msg = error?.message || 'Unknown API Error';
+                alert(`Failed to load user: ${msg}`);
+                // navigate('/profile/users'); // Comment out to allow seeing the error state if needed, or keep it.
+                // Keeping navigate for now but maybe better to show error UI?
                 navigate('/profile/users');
             }
         };
@@ -113,7 +134,10 @@ const UserDetail: React.FC = () => {
                 </div>
             </div>
 
-            <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>{t('order_history')}</h3>
+            <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>
+                {t('order_history')}
+                <span style={{ fontSize: '0.8rem', color: '#666', marginLeft: '10px', fontWeight: 'normal' }}>({fetchStatus})</span>
+            </h3>
             <div style={{ overflowX: 'auto', background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
                 {userOrders.length > 0 ? (
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>

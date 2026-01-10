@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useProducts } from '../../contexts/ProductContext';
-import { preorderItems } from '../../data/preorderData';
-import { regularProducts } from '../../data/regularProducts';
+import { productAPI } from '../../services/api';
 
 const ProductDetail: React.FC = () => {
   const { id, name } = useParams<{ id: string; name: string }>();
   const { addToCart } = useCart();
-  const { items, likedProductIds, toggleLikeProduct } = useProducts();
+  const { items, preOrders, likedProductIds, toggleLikeProduct } = useProducts();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,8 +32,8 @@ const ProductDetail: React.FC = () => {
       fandom: item.fandom || 'Exclusive',
       image: item.image,
       stock: item.stock || 10,
-      is_preorder: item.deposit !== undefined,
-      release_date: item.releaseDate || new Date().toISOString().split('T')[0],
+      is_preorder: item?.preOrderCloseDate !== undefined || item?.releaseDate !== undefined || item?.deposit !== undefined, // Improved checks
+      release_date: item?.preOrderCloseDate || item.releaseDate || new Date().toISOString().split('T')[0],
       deposit_amount: item.deposit || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -49,77 +48,45 @@ const ProductDetail: React.FC = () => {
       setError('No product ID provided');
       setLoading(false);
     }
-  }, [id, items]);
+  }, [id, items, preOrders]);
 
   const loadProduct = async (productId: string) => {
     console.log('Loading product with ID:', productId);
-    console.log('Available items in context:', items);
 
     try {
       setLoading(true);
 
-      // First, try to find product in ProductContext items
-      const contextItem = items.find(item =>
-        item.id?.toString() === productId
-      );
-
-      console.log('Found context item:', contextItem);
-
-      if (contextItem) {
-        const convertedProduct = convertItemToProduct(contextItem);
-        console.log('Converted product:', convertedProduct);
-        setProduct(convertedProduct);
+      // 1. Try to find in Regular Items
+      const regularItem = items.find(item => item.id?.toString() === productId);
+      if (regularItem) {
+        setProduct(convertItemToProduct(regularItem));
         setError(null);
         return;
       }
 
-      // Check pre-order items
-      const preOrderItem = preorderItems.find(item => item.id.toString() === productId);
-      console.log('Found preorder item:', preOrderItem);
-
+      // 2. Try to find in PreOrders
+      // Handle "P" prefix for pre-orders if present (though this page usually handles regular products)
+      const cleanId = productId.replace(/^P/i, '');
+      const preOrderItem = preOrders.find(item => item.id.toString() === cleanId);
       if (preOrderItem) {
-        const convertedProduct = convertItemToProduct(preOrderItem);
-        setProduct(convertedProduct);
+        setProduct(convertItemToProduct(preOrderItem));
         setError(null);
         return;
       }
 
-      // Check regular products
-      const regularProduct = regularProducts.find(item => item.id.toString() === productId);
-      console.log('Found regular product:', regularProduct);
-
-      if (regularProduct) {
-        const convertedProduct = convertItemToProduct(regularProduct);
-        setProduct(convertedProduct);
+      // 3. API Fallback
+      console.log('Not found in context, trying API for ID:', cleanId);
+      const apiData = await productAPI.getById(cleanId);
+      if (apiData) {
+        setProduct(apiData);
         setError(null);
         return;
       }
-
-      // If no product found, create a fallback product
-      console.log('Creating fallback product for ID:', productId);
-      const fallbackProduct = {
-        product_id: productId,
-        name: `Product ${productId}`,
-        description: `This is a test product for ID ${productId}. The actual product data might not be available.`,
-        price: 999,
-        category: 'Regular',
-        fandom: name || 'Test Fandom',
-        image: `https://via.placeholder.com/300?text=Product+${productId}`,
-        stock: 10,
-        is_preorder: false,
-        release_date: new Date().toISOString().split('T')[0],
-        deposit_amount: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setProduct(fallbackProduct);
-      setError(null);
-      console.log('Created fallback product:', fallbackProduct);
 
     } catch (err) {
       console.error('Error loading product:', err);
-      setError('Failed to load product');
+      // Don't just error, try fallback logic only if really needed, but usually API error means 404
+      setError('Product not found');
     } finally {
       setLoading(false);
     }

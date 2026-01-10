@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
+import { ticketAPI } from '../../services/api';
 
 interface Ticket {
     id: string;
@@ -35,89 +36,70 @@ const TicketManager: React.FC = () => {
         loadTickets();
     }, [role, navigate]);
 
-    const loadTickets = () => {
-        const mockTickets: Ticket[] = [
-            {
-                id: 'TKT001',
-                subject: 'สินค้าที่สั่งซื้อไม่ถูกต้อง',
-                category: 'product',
-                priority: 'high',
-                status: 'open',
-                message: 'ผมได้สั่งซื้อสินค้า Hazbin Hotel Figure แต่ได้รับสินค้าที่เป็น Undertale Figure แทน ขอความช่วยเหลือด้วยครับ',
-                userName: 'สมชาย ใจดี',
-                userEmail: 'somchai@email.com',
-                userId: 'user123',
-                createdAt: '2025-01-05T10:30:00Z',
-                updatedAt: '2025-01-05T10:30:00Z'
-            },
-            {
-                id: 'TKT002',
-                subject: 'การจัดส่งล่าช้า',
-                category: 'shipping',
-                priority: 'medium',
-                status: 'in_progress',
-                message: 'สั่งซื้อสินค้าไปแล้ว 5 วันแต่ยังไม่ได้รับสินค้า ต้องการทราบสถานะการจัดส่ง',
-                userName: 'มานี รักดี',
-                userEmail: 'manee@email.com',
-                userId: 'user456',
-                createdAt: '2025-01-04T14:20:00Z',
-                updatedAt: '2025-01-05T09:15:00Z',
-                adminResponse: 'เราได้ตรวจสอบสถานะการจัดส่งแล้ว สินค้าอยู่ระหว่างการจัดส่งครับ'
-            },
-            {
-                id: 'TKT003',
-                subject: 'ปัญหาการชำระเงิน',
-                category: 'payment',
-                priority: 'urgent',
-                status: 'resolved',
-                message: 'ชำระเงินแล้วแต่ระบบแสดงสถานะว่ายังไม่ชำระเงิน',
-                userName: 'วิชัย มั่นคง',
-                userEmail: 'wichai@email.com',
-                userId: 'user789',
-                createdAt: '2025-01-03T16:45:00Z',
-                updatedAt: '2025-01-04T11:30:00Z',
-                adminResponse: 'ได้ตรวจสอบและอัพเดทสถานะการชำระเงินเรียบร้อยแล้วครับ'
-            }
-        ];
-
-        const storedTickets = localStorage.getItem('admin_tickets');
-        if (storedTickets) {
-            setTickets(JSON.parse(storedTickets));
-        } else {
-            setTickets(mockTickets);
-            localStorage.setItem('admin_tickets', JSON.stringify(mockTickets));
+    const loadTickets = async () => {
+        try {
+            const data = await ticketAPI.getAll();
+            // Map API data (snake_case) to Component state (camelCase)
+            const mappedTickets: Ticket[] = data.map((t: any) => ({
+                id: t.id,
+                subject: t.subject,
+                category: t.category,
+                priority: t.priority,
+                status: t.status,
+                message: t.message,
+                userName: t.userName || t.user_name || 'Unknown', // Fallback if API field differs
+                userEmail: t.userEmail || t.user_email || '',
+                userId: t.userId || t.user_id || '',
+                createdAt: t.created_at,
+                updatedAt: t.updated_at,
+                adminResponse: t.admin_response
+            }));
+            setTickets(mappedTickets);
+        } catch (error) {
+            console.error('Failed to load tickets:', error);
+            // Optional: fallback to empty or show error
         }
     };
 
-    const updateTicketStatus = (ticketId: string, newStatus: Ticket['status']) => {
-        const updatedTickets = tickets.map(ticket =>
-            ticket.id === ticketId
-                ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
-                : ticket
-        );
-        setTickets(updatedTickets);
-        localStorage.setItem('admin_tickets', JSON.stringify(updatedTickets));
+    const updateTicketStatus = async (ticketId: string, newStatus: Ticket['status']) => {
+        try {
+            await ticketAPI.update(ticketId, { status: newStatus });
+            // Optimistic update or reload
+            setTickets(prev => prev.map(t =>
+                t.id === ticketId ? { ...t, status: newStatus, updatedAt: new Date().toISOString() } : t
+            ));
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            alert('Failed to update status.');
+        }
     };
 
-    const addAdminResponse = () => {
+    const addAdminResponse = async () => {
         if (!selectedTicket || !responseText.trim()) return;
 
-        const updatedTickets = tickets.map(ticket =>
-            ticket.id === selectedTicket.id
-                ? {
-                    ...ticket,
-                    adminResponse: responseText,
-                    status: 'in_progress' as Ticket['status'],
-                    updatedAt: new Date().toISOString()
-                }
-                : ticket
-        );
+        try {
+            await ticketAPI.reply(selectedTicket.id, responseText);
 
-        setTickets(updatedTickets);
-        localStorage.setItem('admin_tickets', JSON.stringify(updatedTickets));
-        setSelectedTicket({ ...selectedTicket, adminResponse: responseText, status: 'in_progress' });
-        setResponseText('');
-        alert('Ticket replied successfully!');
+            // UI Update
+            const updatedTickets = tickets.map(ticket =>
+                ticket.id === selectedTicket.id
+                    ? {
+                        ...ticket,
+                        adminResponse: responseText,
+                        status: 'in_progress' as Ticket['status'],
+                        updatedAt: new Date().toISOString()
+                    }
+                    : ticket
+            );
+
+            setTickets(updatedTickets);
+            setSelectedTicket({ ...selectedTicket, adminResponse: responseText, status: 'in_progress' });
+            setResponseText('');
+            alert('Ticket replied successfully!');
+        } catch (error) {
+            console.error('Failed to reply:', error);
+            alert('Failed to send reply.');
+        }
     };
 
     const getFilteredTickets = () => {
@@ -184,10 +166,10 @@ const TicketManager: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/admin')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '5px' }}
             >
-                ← {t('back_to_profile')}
+                ← {t('back_to_admin')}
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { preorderItems } from '../../data/preorderData';
+import { useProducts } from '../../contexts/ProductContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 
@@ -11,6 +11,7 @@ interface PreOrderProps {
 const PreOrder: React.FC<PreOrderProps> = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const { preOrders } = useProducts();
     const [hoveredId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -18,17 +19,17 @@ const PreOrder: React.FC<PreOrderProps> = () => {
     const [selectedFandoms, setSelectedFandoms] = useState<string[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-    // Mock data for filters
-    const allFandoms = Array.from(new Set(preorderItems.map(item => item.fandom)));
-    const allCategories = Array.from(new Set(preorderItems.map(item => item.category)));
+    // Data from Context (API Reference)
+    const allFandoms = Array.from(new Set(preOrders.map(item => item.fandom)));
+    const allCategories = Array.from(new Set(preOrders.map(item => item.category)));
 
     // Calculate counts
-    const fandomCounts = preorderItems.reduce((acc, item) => {
+    const fandomCounts = preOrders.reduce((acc, item) => {
         acc[item.fandom] = (acc[item.fandom] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
 
-    const categoryCounts = preorderItems.reduce((acc, item) => {
+    const categoryCounts = preOrders.reduce((acc, item) => {
         acc[item.category] = (acc[item.category] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
@@ -41,7 +42,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
         }
     };
 
-    const filteredItems = preorderItems.filter(item => {
+    const filteredItems = preOrders.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFandom = selectedFandoms.length === 0 || selectedFandoms.includes(item.fandom);
         const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(item.category);
@@ -271,7 +272,7 @@ const PreOrder: React.FC<PreOrderProps> = () => {
                                         fontWeight: 'bold',
                                         border: '1px solid #FFC107'
                                     }}>
-                                        {t('release_date')}: {item.releaseDate}
+                                        {t('pre_order_close_date')}: {item.preOrderCloseDate}
                                     </div>
                                     <div style={{
                                         position: 'absolute',

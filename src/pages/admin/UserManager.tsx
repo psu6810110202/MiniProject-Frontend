@@ -42,34 +42,11 @@ const UserManager: React.FC = () => {
         }
     }, [role]);
 
-
-
     if (role !== 'admin') return null;
 
-
-
     // --- User List View ---
-    const activeUsers = users.filter(u => !u.isBlacklisted && !u.deletedAt && u.role !== 'admin');
-    const blacklistedUsers = users.filter(u => u.isBlacklisted && !u.deletedAt);
-    const deletedUsers = users.filter(u => u.deletedAt);
-
-    const handleRestoreUser = async (userId: string) => {
-        try {
-            await userAPI.restore(userId);
-
-            // Update Local UI State
-            setUsers(prevUsers => prevUsers.map(u =>
-                u.id === userId ? { ...u, deletedAt: null } : u
-            ));
-
-            alert('User restored successfully');
-        } catch (e) {
-            console.error(e);
-            alert("Error restoring user");
-        }
-    };
-
-
+    const activeUsers = users.filter(u => !u.isBlacklisted && u.role !== 'admin');
+    const blacklistedUsers = users.filter(u => u.isBlacklisted);
 
     const UserTable = ({ list, emptyMsg, type }: { list: any[], emptyMsg: string, type: 'active' | 'blacklist' | 'deleted' }) => (
         <div style={{
@@ -93,25 +70,17 @@ const UserManager: React.FC = () => {
                 </thead>
                 <tbody>
                     {list.map(user => (
-                        <tr key={user.id} style={{ borderBottom: '1px solid #333', opacity: type === 'deleted' ? 0.7 : 1 }}>
+                        <tr key={user.id || user.user_id} style={{ borderBottom: '1px solid #333' }}>
                             <td style={{ padding: '15px', color: '#fff' }}>
                                 <div style={{ fontWeight: 'bold' }}>{user.username || '-'}</div>
                             </td>
                             <td style={{ padding: '15px' }}>{user.name || '-'}</td>
                             <td style={{ padding: '15px', color: '#aaa' }}>{user.email}</td>
                             <td style={{ padding: '15px' }}>
-                                {type === 'deleted'
-                                    ? (user.deletedAt ? new Date(user.deletedAt).toLocaleDateString() : '-')
-                                    : (user.phone || '-')}
+                                {user.phone || '-'}
                             </td>
                             <td style={{ padding: '15px', display: 'flex', gap: '10px' }}>
-                                {type === 'deleted' ? (
-                                    <>
-                                        <button onClick={() => handleRestoreUser(user.id)} style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>Restore</button>
-                                    </>
-                                ) : (
-                                    <button onClick={() => navigate('/profile/users/' + user.id)} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
-                                )}
+                                <button onClick={() => navigate('/profile/users/' + (user.id || user.user_id))} style={{ background: '#FF5722', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>Edit / View</button>
                             </td>
                         </tr>
                     ))}
@@ -124,15 +93,14 @@ const UserManager: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/admin')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
             >
-                ← {t('back_to_profile')}
+                ← {t('back_to_admin')}
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
                 <h1 style={{ margin: 0 }}>{t('user_management')}</h1>
-
             </div>
 
             <h3 style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -145,13 +113,6 @@ const UserManager: React.FC = () => {
                     🚫 {t('blacklisted_users')} <span style={{ fontSize: '0.8rem', background: '#F44336', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{blacklistedUsers.length}</span>
                 </h3>
                 <UserTable list={blacklistedUsers} emptyMsg={t('no_blacklisted_users')} type="blacklist" />
-            </div>
-
-            <div style={{ marginTop: '40px', borderTop: '1px solid #444', paddingTop: '30px' }}>
-                <h3 style={{ marginBottom: '15px', color: '#888', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    🗑️ {t('recent_deletions')} <span style={{ fontSize: '0.8rem', background: '#666', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>{deletedUsers.length}</span>
-                </h3>
-                <UserTable list={deletedUsers} emptyMsg={t('recycle_bin_empty')} type="deleted" />
             </div>
         </div>
     );

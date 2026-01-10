@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 function Navbar() {
     const { t, language, setLanguage } = useLanguage();
     const { theme, toggleTheme } = useTheme();
-    const { isLoggedIn, logout } = useAuth();
+    const { isLoggedIn, logout, role } = useAuth();
     const { cartItems, removeFromCart, updateQuantity, totalAmount, totalItems } = useCart();
     const navigate = useNavigate(); // สำหรับเปลี่ยนหน้าเว็ํบ
 
@@ -74,6 +74,11 @@ function Navbar() {
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <Link to="/preorder" style={linkStyle}>{t('pre_order')}</Link>
                     <Link to="/fandoms" style={linkStyle}>{t('all_fandoms')}</Link>
+                    {role === 'admin' && (
+                        <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>
+                            Admin Dashboard
+                        </Link>
+                    )}
                 </div>
             </div>
 

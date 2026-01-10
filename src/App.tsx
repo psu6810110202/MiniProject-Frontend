@@ -29,10 +29,10 @@ import FandomManager from './pages/admin/FandomManager';
 import UserManager from './pages/admin/UserManager';
 import PreOrderManager from './pages/admin/PreOrderManager';
 import ProductManager from './pages/admin/products/ProductManager';
-import AddProduct from './pages/admin/products/AddProduct';
-import EditProduct from './pages/admin/products/EditProduct';
+import ProductForm from './pages/admin/products/ProductForm';
 import TicketManager from './pages/admin/TicketManager';
 import CustomRequestManager from './pages/admin/CustomRequestManager';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 import { useAuth } from './contexts/AuthContext';
 import ScrollToTop from './components/ScrollToTop';
@@ -122,16 +122,16 @@ function MainLayout() {
             <Route path="/profile/edit" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
             <Route path="/profile/users/:id" element={<UserDetail />} />
-            <Route path="/profile/products/new" element={<AddProduct />} />
-            <Route path="/profile/products/edit/:id" element={<EditProduct />} />
-
             {/* Profile Admin Routes */}
-            <Route path="/profile/users" element={<UserManager />} />
-            <Route path="/profile/tickets" element={<TicketManager />} />
-            <Route path="/profile/preorders" element={<PreOrderManager />} />
-            <Route path="/profile/products" element={<ProductManager />} />
-            <Route path="/profile/fandoms" element={<FandomManager />} />
-            <Route path="/profile/custom-requests" element={<CustomRequestManager />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManager />} />
+            <Route path="/admin/tickets" element={<TicketManager />} />
+            <Route path="/admin/preorders" element={<PreOrderManager />} />
+            <Route path="/admin/products" element={<ProductManager />} />
+            <Route path="/admin/products/new" element={<ProductForm />} />
+            <Route path="/admin/products/edit/:id" element={<ProductForm />} />
+            <Route path="/admin/fandoms" element={<FandomManager />} />
+            <Route path="/admin/custom-requests" element={<CustomRequestManager />} />
 
             {/* Support Routes */}
             <Route path="/call-center" element={<CallCenter />} />

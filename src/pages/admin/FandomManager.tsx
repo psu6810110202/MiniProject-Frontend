@@ -12,6 +12,7 @@ const FandomManager: React.FC = () => {
 
     // State for creating new fandom
     const [newFandomName, setNewFandomName] = useState('');
+    const [newFandomImage, setNewFandomImage] = useState('');
 
     // State for editing mode
     const [editingFandom, setEditingFandom] = useState<string | null>(null); // Name of fandom being edited
@@ -53,9 +54,22 @@ const FandomManager: React.FC = () => {
     const handleAddFandom = (e: React.FormEvent) => {
         e.preventDefault();
         if (newFandomName.trim()) {
-            addFandom(newFandomName.trim());
+            addFandom(newFandomName.trim(), newFandomImage);
+
             setNewFandomName('');
+            setNewFandomImage('');
             alert(t('fandom_added_success') || 'Fandom added successfully');
+        }
+    };
+
+    const handleNewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewFandomImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -96,10 +110,10 @@ const FandomManager: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', color: 'var(--text-main)', minHeight: '80vh' }}>
             <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/admin')}
                 style={{ marginBottom: '20px', background: 'transparent', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1rem' }}
             >
-                ← {t('back_to_profile')}
+                ← {t('back_to_admin')}
             </button>
 
             <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '10px' }}>
@@ -168,7 +182,36 @@ const FandomManager: React.FC = () => {
                     // CREATE MODE
                     <div style={{ animation: 'fadeIn 0.3s' }}>
                         <h3 style={{ marginBottom: '15px' }}>{t('add_new_fandom')}</h3>
-                        <form onSubmit={handleAddFandom} style={{ display: 'flex', gap: '10px' }}>
+                        <form onSubmit={handleAddFandom} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="file"
+                                    id="new-fandom-image"
+                                    accept="image/*"
+                                    onChange={handleNewImageUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                <label
+                                    htmlFor="new-fandom-image"
+                                    style={{
+                                        width: '45px',
+                                        height: '45px',
+                                        background: newFandomImage ? `url(${newFandomImage}) center/cover` : '#333',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        cursor: 'pointer',
+                                        border: '1px dashed #555',
+                                        color: '#888',
+                                        fontSize: '1.2rem',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    title="Upload Cover Image"
+                                >
+                                    {!newFandomImage && '+'}
+                                </label>
+                            </div>
                             <input
                                 type="text"
                                 placeholder={t('enter_fandom_name')}

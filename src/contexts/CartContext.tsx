@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { type Item } from '../data/mockItem';
+import { type Item } from '../types';
 import { useAuth } from './AuthContext';
 
 export interface CartItem extends Item {

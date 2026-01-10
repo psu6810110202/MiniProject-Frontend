@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useProducts } from '../../contexts/ProductContext';
-import { preorderItems, type PreOrderItem } from '../../data/preorderData';
+import type { PreOrderItem } from '../../types';
 import { productAPI, type Product } from '../../services/api';
 
 
 const PreOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, cartItems, purchasedItems, userOrders } = useCart();
-  const { likedProductIds, toggleLikeProduct } = useProducts();
+  const { likedProductIds, toggleLikeProduct, preOrders } = useProducts(); // Added preOrders
 
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -32,7 +32,7 @@ const PreOrderDetail: React.FC = () => {
       image: item.image,
       stock: 999999,
       is_preorder: true,
-      release_date: item.releaseDate,
+      release_date: item.preOrderCloseDate,
       deposit_amount: item.deposit,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -43,7 +43,7 @@ const PreOrderDetail: React.FC = () => {
     if (id) {
       loadPreOrderProduct(id);
     }
-  }, [id]);
+  }, [id, preOrders]); // Added preOrders dependency
 
   const loadPreOrderProduct = async (productId: string) => {
     try {
@@ -51,19 +51,24 @@ const PreOrderDetail: React.FC = () => {
 
       // Find product in pre-order items only
       const cleanId = productId.replace(/^P/i, '');
-      const preOrderItem = preorderItems.find(item => item.id.toString() === cleanId);
+      console.log('DEBUG: PreOrderDetail', { productId, cleanId, preOrdersCount: preOrders.length });
+
+      const preOrderItem = preOrders.find(item => item.id.toString() === cleanId); // Use local preOrders context
 
       if (preOrderItem) {
+        console.log('DEBUG: Found in Context', preOrderItem);
         const convertedProduct = convertPreOrderToProduct(preOrderItem);
         setProduct(convertedProduct);
         setError(null);
       } else {
-        // Try API as fallback
+        // Try API as fallback (using cleanId)
+        console.log('DEBUG: Not found in Context, trying API with', cleanId);
         try {
-          const data = await productAPI.getById(productId);
+          const data = await productAPI.getById(cleanId);
           setProduct(data);
           setError(null);
         } catch (apiError) {
+          console.error('DEBUG: API Error', apiError);
           setError('Pre-order item not found.');
         }
       }
@@ -328,7 +333,19 @@ const PreOrderDetail: React.FC = () => {
               <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
               <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
               <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                (฿{Math.round(product.price * 0.2).toLocaleString()} now + ฿{Math.round(product.price * 0.8).toLocaleString()} on release)
+                {(() => {
+                  const deposit = product.deposit_amount || Math.round(product.price * 0.2);
+                  // const balance = product.price - deposit; // Removed as mostly irrelevant for display now
+                  let shipping = 0;
+                  const specPart = product.description?.split('--- Specifications ---')[1];
+                  if (specPart) {
+                    const shippingLine = specPart.trim().split('\n').find(l => l.includes('Domestic Shipping'));
+                    if (shippingLine) {
+                      shipping = Number(shippingLine.split(':')[1]?.trim()) || 0;
+                    }
+                  }
+                  return `(฿${deposit.toLocaleString()} now + ฿${shipping.toLocaleString()} shipping on release)`;
+                })()}
               </div>
             </div>
           </div>
@@ -341,7 +358,7 @@ const PreOrderDetail: React.FC = () => {
               margin: 0,
               fontSize: '0.95rem'
             }}>
-              {product.description}
+              {product.description ? product.description.split('--- Specifications ---')[0].trim() : ''}
             </p>
           </div>
 
@@ -382,7 +399,7 @@ const PreOrderDetail: React.FC = () => {
                 {quantity}
               </div>
               <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                onClick={() => setQuantity(Math.min((product.stock ?? 0), quantity + 1))}
                 style={{
                   padding: '10px 15px',
                   border: 'none',
@@ -396,7 +413,7 @@ const PreOrderDetail: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock > 900000 ? 'Unknown' : `${product.stock} units`}
+              Max: {(product.stock ?? 0) > 900000 ? 'Unknown' : `${product.stock ?? 0} units`}
             </span>
           </div>
 
@@ -408,7 +425,7 @@ const PreOrderDetail: React.FC = () => {
           }}>
             <button
               onClick={handleAddToCart}
-              disabled={addingToCart || product.stock === 0}
+              disabled={addingToCart || (product.stock ?? 0) === 0}
               style={{
                 flex: 1,
                 padding: '15px 30px',
@@ -418,13 +435,13 @@ const PreOrderDetail: React.FC = () => {
                 borderRadius: '8px',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
+                cursor: addingToCart || (product.stock ?? 0) === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
-                opacity: product.stock === 0 ? 0.5 : 1,
+                opacity: (product.stock ?? 0) === 0 ? 0.5 : 1,
                 boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
               }}
               onMouseEnter={(e) => {
-                if (!addingToCart && product.stock > 0) {
+                if (!addingToCart && (product.stock ?? 0) > 0) {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #E64A19, #D84315)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
@@ -436,7 +453,7 @@ const PreOrderDetail: React.FC = () => {
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : ' Pre-Order Now'}
+              {addingToCart ? '✓ Added to Cart' : (product.stock ?? 0) === 0 ? 'Out of Stock' : ' Pre-Order Now'}
             </button>
 
             <button
@@ -488,14 +505,21 @@ const PreOrderDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Product ID:</strong> {product.product_id}</div>
-              <div><strong>Material:</strong> Premium PVC Vinyl</div>
-              <div><strong>Height:</strong> 18 cm</div>
-              <div><strong>Weight:</strong> 450g</div>
-              <div><strong>Base:</strong> 7cm x 5cm</div>
-              <div><strong>Paint:</strong> Hand-painted details</div>
-              <div><strong>Packaging:</strong> Collector's box</div>
-              <div><strong>Authenticity:</strong> Certificate included</div>
+              <div><strong>Product ID:</strong> {product.product_id?.toString().replace(/^P/i, '') || 'N/A'}</div>
+              {(() => {
+                const specPart = product.description?.split('--- Specifications ---')[1];
+                if (specPart) {
+                  return specPart.trim().split('\n')
+                    .filter(line => line.includes(':'))
+                    .map((line, idx) => {
+                      const [key, ...val] = line.split(':');
+                      return (
+                        <div key={idx}><strong>{key.trim()}:</strong> {val.join(':').trim()}</div>
+                      );
+                    });
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>

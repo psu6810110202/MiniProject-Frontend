@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useProducts } from '../../../contexts/ProductContext';
 import { useAuth } from '../../../contexts/AuthContext';
 
-const AddProduct: React.FC = () => {
+const ProductForm: React.FC = () => {
+    const { id } = useParams<{ id: string }>(); // If id exists, we are in EDIT mode
     const navigate = useNavigate();
-    const { addItem, fandoms, categories } = useProducts();
+    const { items, addItem, updateItem, fandoms, categories } = useProducts();
     const { role } = useAuth();
+
+    const isEditMode = !!id;
 
     // Form State
     const [name, setName] = useState('');
@@ -15,36 +18,73 @@ const AddProduct: React.FC = () => {
     const [fandom, setFandom] = useState('');
     const [image, setImage] = useState('');
     const [stock, setStock] = useState(0);
+    const [internalId, setInternalId] = useState<number | string | null>(null);
 
     // Redirect if not admin
-    React.useEffect(() => {
+    useEffect(() => {
         if (role !== 'admin') {
             navigate('/');
         }
     }, [role, navigate]);
 
+    // Load Product Data if Edit Mode
+    useEffect(() => {
+        if (!isEditMode) return;
+
+        if (items.length === 0) return;
+
+        let found = items.find(i => String(i.id) === id);
+
+        // Fallback for custom IDs (e.g. Fandom+Cat prefix logic if needed)
+        if (!found && id && id.length >= 3) {
+            const possibleId = parseInt(id.slice(2));
+            found = items.find(i => i.id === possibleId);
+        }
+
+        if (found) {
+            setInternalId(found.id);
+            setName(found.name);
+            const priceVal = String(found.price).replace(/[^0-9.]/g, ''); // Extract numeric value
+            setPrice(priceVal);
+            setCategory(found.category);
+            setFandom(found.fandom);
+            setImage(found.image);
+            setStock((found as any).stock || 0);
+        }
+    }, [id, items, isEditMode]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Basic Validation
+        if (isEditMode && !internalId) {
+            alert('Error: Could not identify original product.');
+            return;
+        }
+
         if (!name || !price || !category || !fandom) {
             alert('Please fill in all required fields.');
             return;
         }
 
-        const newItem = {
-            id: Date.now(), // Generate a temp ID
+        const productData = {
+            id: isEditMode ? Number(internalId) : Date.now(),
             name,
-            price: `฿${Number(price).toLocaleString()}`, // Format as expected by Item interface
+            price: `฿${Number(price).toLocaleString()}`,
             category,
             fandom,
-            image: image || 'https://via.placeholder.com/300', // Default placeholder
-            stock: Number(stock) // Note: Item interface in mock might not consistenly show stock, but we pass it for now
+            image: image || 'https://via.placeholder.com/300',
+            stock: Number(stock)
         };
 
-        addItem(newItem);
-        alert('Product added successfully!');
-        navigate('/profile/products');
+        if (isEditMode) {
+            updateItem(productData);
+            alert('Product updated successfully!');
+        } else {
+            addItem(productData);
+            alert('Product added successfully!');
+        }
+
+        navigate('/admin/products');
     };
 
     const inputStyle: React.CSSProperties = {
@@ -69,14 +109,14 @@ const AddProduct: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/profile/products')}
+                onClick={() => navigate('/admin/products')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem' }}
             >
                 ← Back to Product List
             </button>
 
             <h1 style={{ marginBottom: '30px', borderBottom: '2px solid #FF5722', paddingBottom: '15px' }}>
-                Add New Product
+                {isEditMode ? 'Edit Product' : 'Add New Product'}
             </h1>
 
             <form onSubmit={handleSubmit} style={{ background: '#222', padding: '30px', borderRadius: '15px', border: '1px solid #444' }}>
@@ -94,7 +134,6 @@ const AddProduct: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-
                     {/* Price */}
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>Price (THB) *</label>
@@ -123,7 +162,6 @@ const AddProduct: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-
                     {/* Category */}
                     <div style={{ marginBottom: '20px' }}>
                         <label style={labelStyle}>Category *</label>
@@ -136,7 +174,6 @@ const AddProduct: React.FC = () => {
                             {categories.map(c => (
                                 <option key={c} value={c}>{c}</option>
                             ))}
-                            <option value="Other">Other</option>
                         </select>
                     </div>
 
@@ -152,12 +189,9 @@ const AddProduct: React.FC = () => {
                             {fandoms.map(f => (
                                 <option key={f} value={f}>{f}</option>
                             ))}
-                            <option value="New Fandom">Is a New Fandom?</option>
                         </select>
                     </div>
                 </div>
-
-                {/* Handling New Fandom Manual Input if needed could be added here, keeping it simple for now */}
 
                 {/* Image URL */}
                 <div style={{ marginBottom: '30px' }}>
@@ -193,11 +227,11 @@ const AddProduct: React.FC = () => {
                             cursor: 'pointer'
                         }}
                     >
-                        Save Product
+                        {isEditMode ? 'Update Product' : 'Save Product'}
                     </button>
                     <button
                         type="button"
-                        onClick={() => navigate('/profile/products')}
+                        onClick={() => navigate('/admin/products')}
                         style={{
                             flex: 1,
                             padding: '15px',
@@ -219,4 +253,4 @@ const AddProduct: React.FC = () => {
     );
 };
 
-export default AddProduct;
+export default ProductForm;

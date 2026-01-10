@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProducts } from '../../contexts/ProductContext';
 import { useNavigate } from 'react-router-dom';
-import { preorderItems, type PreOrderItem } from '../../data/preorderData';
+import type { PreOrderItem } from '../../types';
 
 interface CustomRequest {
     id: string;
@@ -25,6 +26,7 @@ interface CustomRequest {
 const CustomRequestManager: React.FC = () => {
     const { role } = useAuth();
     const navigate = useNavigate();
+    const { preOrders, addPreOrder } = useProducts();
     const [requests, setRequests] = useState<CustomRequest[]>([]);
     const [selectedRequest, setSelectedRequest] = useState<CustomRequest | null>(null);
     const [adminNotes, setAdminNotes] = useState('');
@@ -33,7 +35,7 @@ const CustomRequestManager: React.FC = () => {
 
     useEffect(() => {
         if (role !== 'admin') {
-            navigate('/profile');
+            navigate('/admin');
         }
         loadRequests();
     }, [role, navigate]);
@@ -80,7 +82,8 @@ const CustomRequestManager: React.FC = () => {
 
     const createPreorderFromRequest = (request: CustomRequest) => {
         // Generate new PreOrder ID
-        const newPreorderId = Math.max(...preorderItems.map(item => item.id), 0) + 1;
+        const currentMaxId = preOrders.length > 0 ? Math.max(...preOrders.map(item => item.id)) : 0;
+        const newPreorderId = currentMaxId + 1;
 
         // Calculate deposit (20% of total price)
         const depositAmount = Math.round(request.estimatedTotal * 0.2);
@@ -91,21 +94,15 @@ const CustomRequestManager: React.FC = () => {
             name: request.productName,
             price: request.estimatedTotal,
             deposit: depositAmount,
-            releaseDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+            preOrderCloseDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
             image: 'http://localhost:3000/images/covers/custom-request.webp',
             description: `Custom request from ${request.userName}. Details: ${request.details}. Original link: ${request.link}`,
             fandom: 'Custom Request',
             category: 'Other'
         };
 
-        // Get existing preorders from localStorage
-        const existingPreorders = JSON.parse(localStorage.getItem('preorderItems') || '[]');
-
-        // Add new preorder
-        existingPreorders.push(newPreorderItem);
-
-        // Save to localStorage
-        localStorage.setItem('preorderItems', JSON.stringify(existingPreorders));
+        // Add to Context (API + State)
+        addPreOrder(newPreorderItem);
 
         // Update request status to "ordered" with preorder ID
         updateRequestStatus(request.id, 'ordered', `สร้าง PreOrder ID: ${newPreorderId}`);
@@ -113,7 +110,7 @@ const CustomRequestManager: React.FC = () => {
         alert(`สร้าง PreOrder สำเร็จแล้ว! PreOrder ID: ${newPreorderId}`);
 
         // Navigate to PreOrder Manager to see the new preorder
-        navigate('/profile/preorders');
+        navigate('/admin/preorders');
     };
 
     const getFilteredRequests = () => {
@@ -161,10 +158,10 @@ const CustomRequestManager: React.FC = () => {
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
             <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/admin')}
                 style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#FF5722', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '5px' }}
             >
-                ← Back to Profile
+                ← Back to Admin
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>

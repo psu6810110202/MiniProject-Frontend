@@ -10,7 +10,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import SearchableSelect from '../components/SearchableSelect';
 
 import { useProducts } from '../contexts/ProductContext';
-import AdminDashboard from './admin/AdminDashboard';
 import { userAPI } from '../services/api';
 
 const Profile: React.FC = () => {
@@ -295,8 +294,8 @@ const Profile: React.FC = () => {
 
                                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: '0 0 20px 0' }}>{user?.email}</p>
 
-                                    {/* Address Display (Moved inside card) */}
-                                    {(user?.house_number || user?.province) && (
+                                    {/* Address Display (Moved inside card) - HIDDEN FOR ADMIN */}
+                                    {user?.role !== 'admin' && (user?.house_number || user?.province) && (
                                         <div style={{
                                             paddingTop: '15px',
                                             borderTop: '1px solid var(--border-color)',
@@ -313,53 +312,56 @@ const Profile: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <div style={{ position: 'absolute', top: '40px', right: '40px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', width: '180px' }}>
-                                        <button
-                                            onClick={() => navigate('/profile/edit')}
-                                            style={{
-                                                background: '#FF5722',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                padding: '10px 0',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                fontSize: '0.9rem',
-                                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                                                width: '100%',
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            {t('edit_profile')}
-                                        </button>
+                                    {/* Action Buttons - HIDDEN FOR ADMIN */}
+                                    {user?.role !== 'admin' && (
+                                        <div style={{ position: 'absolute', top: '40px', right: '40px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', width: '180px' }}>
+                                            <button
+                                                onClick={() => navigate('/profile/edit')}
+                                                style={{
+                                                    background: '#FF5722',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    padding: '10px 0',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.9rem',
+                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                                    width: '100%',
+                                                    textAlign: 'center'
+                                                }}
+                                            >
+                                                {t('edit_profile')}
+                                            </button>
 
-                                        <button
-                                            onClick={() => setIsChangingPassword(true)}
-                                            style={{
-                                                background: 'transparent',
-                                                color: 'var(--text-muted)',
-                                                border: '1px solid var(--border-color)',
-                                                borderRadius: '8px',
-                                                padding: '10px 0',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                fontSize: '0.9rem',
-                                                width: '100%',
-                                                textAlign: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.color = 'var(--text-main)';
-                                                e.currentTarget.style.borderColor = 'var(--text-muted)';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.color = 'var(--text-muted)';
-                                                e.currentTarget.style.borderColor = 'var(--border-color)';
-                                            }}
-                                        >
-                                            {t('change_password')}
-                                        </button>
-                                    </div>
+                                            <button
+                                                onClick={() => setIsChangingPassword(true)}
+                                                style={{
+                                                    background: 'transparent',
+                                                    color: 'var(--text-muted)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '8px',
+                                                    padding: '10px 0',
+                                                    cursor: 'pointer',
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.9rem',
+                                                    width: '100%',
+                                                    textAlign: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.color = 'var(--text-main)';
+                                                    e.currentTarget.style.borderColor = 'var(--text-muted)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.color = 'var(--text-muted)';
+                                                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                                                }}
+                                            >
+                                                {t('change_password')}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -628,8 +630,6 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
             )}
-
-            {user?.role === 'admin' && <AdminDashboard />}
 
             {/* Orders & Tracking Section */}
             {

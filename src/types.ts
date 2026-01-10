@@ -23,6 +23,9 @@ export interface Item {
   category: string;
   fandom: string;
   image: string;
+  description?: string; // Added for detailed view
+  gallery?: string[];   // Added for multiple images
+  stock?: number;       // Added for inventory tracking
 }
 
 export interface PreOrderItem {

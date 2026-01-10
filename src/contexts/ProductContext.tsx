@@ -68,7 +68,10 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                                 price: `฿${p.price}`,
                                 category: p.category_id || p.category,
                                 fandom: p.fandom || 'Other',
-                                image: p.image || 'https://placehold.co/300x300?text=No+Image'
+                                image: p.image || 'https://placehold.co/300x300?text=No+Image',
+                                description: p.description,
+                                stock: p.stock_qty || 0,
+                                gallery: p.gallery ? (typeof p.gallery === 'string' ? JSON.parse(p.gallery) : p.gallery) : []
                             });
                         }
                     });
@@ -171,7 +174,9 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 category: item.category,
                 image: item.image,
                 fandom: item.fandom,
-                stock: 10 // Default stock
+                stock_qty: item.stock || 0,
+                description: item.description,
+                gallery: JSON.stringify(item.gallery || [])
             });
             // Ideally we re-fetch or update ID with response
         } catch (e) {
@@ -192,7 +197,10 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 price: parseFloat(updatedItem.price.replace(/[^\d.]/g, '')),
                 category: updatedItem.category,
                 image: updatedItem.image,
-                fandom: updatedItem.fandom
+                fandom: updatedItem.fandom,
+                stock_qty: updatedItem.stock,
+                description: updatedItem.description,
+                gallery: JSON.stringify(updatedItem.gallery || [])
             });
         } catch (e) {
             console.error("Update item failed", e);

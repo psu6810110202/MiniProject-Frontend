@@ -2,22 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProducts } from '../../../contexts/ProductContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { type Item } from '../../../types';
 
 const ProductForm: React.FC = () => {
-    const { id } = useParams<{ id: string }>(); // If id exists, we are in EDIT mode
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { items, addItem, updateItem, fandoms, categories } = useProducts();
     const { role } = useAuth();
 
     const isEditMode = !!id;
 
-    // Form State
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
-    const [fandom, setFandom] = useState('');
-    const [image, setImage] = useState('');
-    const [stock, setStock] = useState(0);
+    // Helper to separate Description and Specs
+    const parseInitialData = (item: Item | undefined) => {
+        if (!item) return { desc: '', specs: {} };
+        const desc = item.description || '';
+        const marker = '--- Specifications ---';
+        const [mainDesc, specStr] = desc.includes(marker) ? desc.split(marker) : [desc, ''];
+
+        const parsedSpecs: Record<string, string> = {};
+        if (specStr) {
+            specStr.trim().split('\n').forEach(l => {
+                if (l.includes(':')) {
+                    const [k, ...v] = l.split(':');
+                    parsedSpecs[k.trim()] = v.join(':').trim();
+                }
+            });
+        }
+        return { desc: mainDesc.trim(), specs: parsedSpecs };
+    };
+
+    const [formData, setFormData] = useState({
+        name: '',
+        price: '',
+        stock: '',
+        category: '',
+        fandom: '',
+        image: '',
+        description: '',
+        gallery: [] as string[]
+    });
+
+    const [specs, setSpecs] = useState<Record<string, string>>({});
     const [internalId, setInternalId] = useState<number | string | null>(null);
 
     // Redirect if not admin
@@ -27,15 +52,13 @@ const ProductForm: React.FC = () => {
         }
     }, [role, navigate]);
 
-    // Load Product Data if Edit Mode
+    // Load Data
     useEffect(() => {
         if (!isEditMode) return;
-
         if (items.length === 0) return;
 
         let found = items.find(i => String(i.id) === id);
-
-        // Fallback for custom IDs (e.g. Fandom+Cat prefix logic if needed)
+        // Fallback search
         if (!found && id && id.length >= 3) {
             const possibleId = parseInt(id.slice(2));
             found = items.find(i => i.id === possibleId);
@@ -43,15 +66,74 @@ const ProductForm: React.FC = () => {
 
         if (found) {
             setInternalId(found.id);
-            setName(found.name);
-            const priceVal = String(found.price).replace(/[^0-9.]/g, ''); // Extract numeric value
-            setPrice(priceVal);
-            setCategory(found.category);
-            setFandom(found.fandom);
-            setImage(found.image);
-            setStock((found as any).stock || 0);
+            const { desc, specs: parsedSpecs } = parseInitialData(found);
+
+            // Extract numeric price from string like "฿2,500"
+            const priceVal = String(found.price).replace(/[^0-9.]/g, '');
+
+            setFormData({
+                name: found.name,
+                price: priceVal,
+                stock: (found.stock || 0).toString(),
+                category: found.category,
+                fandom: found.fandom,
+                image: found.image,
+                description: desc,
+                gallery: found.gallery || []
+            });
+            setSpecs(parsedSpecs);
         }
     }, [id, items, isEditMode]);
+
+    const handleInput = (key: string, value: string) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleSpecChange = (key: string, value: string) => {
+        setSpecs(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, image: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const remainingSlots = 5 - formData.gallery.length;
+        const filesToProcess = files.slice(0, remainingSlots);
+
+        if (filesToProcess.length < files.length) {
+            alert(`You can only upload up to 5 images. Processing first ${remainingSlots} files.`);
+        }
+
+        const readPromises = filesToProcess.map(file => {
+            return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(file);
+            });
+        });
+
+        const newImages = await Promise.all(readPromises);
+        setFormData(prev => ({
+            ...prev,
+            gallery: [...prev.gallery, ...newImages]
+        }));
+        e.target.value = '';
+    };
+
+    const handleRemoveGalleryImage = (index: number) => {
+        setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,19 +143,24 @@ const ProductForm: React.FC = () => {
             return;
         }
 
-        if (!name || !price || !category || !fandom) {
-            alert('Please fill in all required fields.');
-            return;
-        }
+        // Format Specifications
+        const specString = Object.entries(specs)
+            .filter(([_, val]) => val.trim() !== '')
+            .map(([key, val]) => `${key}: ${val}`)
+            .join('\n');
 
-        const productData = {
+        const fullDescription = formData.description + (specString ? '\n\n--- Specifications ---\n' + specString : '');
+
+        const productData: Item = {
             id: isEditMode ? Number(internalId) : Date.now(),
-            name,
-            price: `฿${Number(price).toLocaleString()}`,
-            category,
-            fandom,
-            image: image || 'https://via.placeholder.com/300',
-            stock: Number(stock)
+            name: formData.name,
+            price: `฿${Number(formData.price).toLocaleString()}`,
+            category: formData.category,
+            fandom: formData.fandom,
+            image: formData.image || 'https://via.placeholder.com/300',
+            description: fullDescription,
+            gallery: formData.gallery,
+            stock: Number(formData.stock)
         };
 
         if (isEditMode) {
@@ -87,6 +174,7 @@ const ProductForm: React.FC = () => {
         navigate('/admin/products');
     };
 
+    // Styles
     const inputStyle: React.CSSProperties = {
         width: '100%',
         padding: '12px',
@@ -94,16 +182,16 @@ const ProductForm: React.FC = () => {
         border: '1px solid #444',
         background: '#333',
         color: 'white',
-        marginBottom: '15px',
         fontSize: '1rem',
         boxSizing: 'border-box'
     };
 
-    const labelStyle = {
+    const labelStyle: React.CSSProperties = {
         display: 'block',
         marginBottom: '8px',
         fontWeight: 'bold',
-        color: '#bbb'
+        color: '#bbb',
+        fontSize: '0.9rem'
     };
 
     return (
@@ -119,116 +207,170 @@ const ProductForm: React.FC = () => {
                 {isEditMode ? 'Edit Product' : 'Add New Product'}
             </h1>
 
-            <form onSubmit={handleSubmit} style={{ background: '#222', padding: '30px', borderRadius: '15px', border: '1px solid #444' }}>
+            <form onSubmit={handleSubmit} style={{ background: '#1a1a1a', padding: '40px', borderRadius: '20px', border: '1px solid #444', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
 
-                {/* Product Name */}
+                {/* Name */}
                 <div style={{ marginBottom: '20px' }}>
                     <label style={labelStyle}>Product Name *</label>
                     <input
                         type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
+                        required
+                        value={formData.name}
+                        onChange={(e) => handleInput('name', e.target.value)}
                         style={inputStyle}
-                        placeholder="e.g., Alastor Figure"
+                        placeholder="e.g. Alastor Standard Figure"
                     />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                    {/* Price */}
-                    <div style={{ marginBottom: '20px' }}>
+                {/* Price & Stock */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    <div>
                         <label style={labelStyle}>Price (THB) *</label>
                         <input
                             type="number"
-                            value={price}
-                            onChange={e => setPrice(e.target.value)}
+                            required
+                            value={formData.price}
+                            onChange={(e) => handleInput('price', e.target.value)}
                             style={inputStyle}
-                            placeholder="e.g., 2500"
-                            min="0"
+                            placeholder="2500"
                         />
                     </div>
-
-                    {/* Stock */}
-                    <div style={{ marginBottom: '20px' }}>
+                    <div>
                         <label style={labelStyle}>Stock Quantity</label>
                         <input
                             type="number"
-                            value={stock}
-                            onChange={e => setStock(Number(e.target.value))}
+                            value={formData.stock}
+                            onChange={(e) => handleInput('stock', e.target.value)}
                             style={inputStyle}
-                            placeholder="e.g., 50"
-                            min="0"
+                            placeholder="50"
                         />
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                    {/* Category */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Category *</label>
-                        <select
-                            value={category}
-                            onChange={e => setCategory(e.target.value)}
-                            style={inputStyle}
-                        >
-                            <option value="">-- Select Category --</option>
-                            {categories.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Fandom */}
-                    <div style={{ marginBottom: '20px' }}>
+                {/* Fandom & Category */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    <div>
                         <label style={labelStyle}>Fandom *</label>
                         <select
-                            value={fandom}
-                            onChange={e => setFandom(e.target.value)}
+                            required
+                            value={formData.fandom}
+                            onChange={(e) => handleInput('fandom', e.target.value)}
                             style={inputStyle}
                         >
-                            <option value="">-- Select Fandom --</option>
-                            {fandoms.map(f => (
-                                <option key={f} value={f}>{f}</option>
-                            ))}
+                            <option value="">Select Fandom</option>
+                            {fandoms.map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label style={labelStyle}>Category *</label>
+                        <select
+                            required
+                            value={formData.category}
+                            onChange={(e) => handleInput('category', e.target.value)}
+                            style={inputStyle}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
                 </div>
 
-                {/* Image URL */}
-                <div style={{ marginBottom: '30px' }}>
-                    <label style={labelStyle}>Image URL</label>
-                    <input
-                        type="text"
-                        value={image}
-                        onChange={e => setImage(e.target.value)}
-                        style={inputStyle}
-                        placeholder="http://..."
-                    />
-                    {image && (
-                        <div style={{ marginTop: '10px' }}>
-                            <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '5px' }}>Preview:</p>
-                            <img src={image} alt="Preview" style={{ height: '100px', borderRadius: '5px', border: '1px solid #555' }} />
+                {/* Image Upload Section */}
+                <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px dashed #555' }}>
+                    {/* Thumbnail */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={labelStyle}>Thumbnail Image (Cover) *</label>
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                            <div style={{
+                                width: '100px', height: '100px', background: '#333', borderRadius: '10px', overflow: 'hidden',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #444', flexShrink: 0
+                            }}>
+                                {formData.image ? (
+                                    <img src={formData.image} alt="Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <span style={{ fontSize: '2rem', color: '#555' }}>📷</span>
+                                )}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleThumbnailUpload}
+                                    style={{ ...inputStyle, padding: '8px', marginBottom: '5px' }}
+                                />
+                                <p style={{ margin: 0, color: '#666', fontSize: '0.8rem' }}>Upload the main cover image.</p>
+                            </div>
                         </div>
-                    )}
+                    </div>
+
+                    {/* Gallery */}
+                    <div>
+                        <label style={labelStyle}>Gallery Images (Max 5) - {formData.gallery.length}/5</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleGalleryUpload}
+                            disabled={formData.gallery.length >= 5}
+                            style={{ ...inputStyle, padding: '8px', marginBottom: '15px' }}
+                        />
+
+                        {formData.gallery.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '10px' }}>
+                                {formData.gallery.map((img, idx) => (
+                                    <div key={idx} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '8px', overflow: 'hidden', border: '1px solid #555' }}>
+                                        <img src={img} alt={`Gallery ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveGalleryImage(idx)}
+                                            style={{
+                                                position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,0.7)',
+                                                color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '12px'
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Specs Section */}
+                <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px solid #444' }}>
+                    <h4 style={{ margin: '0 0 15px 0', color: '#FF5722' }}>Product Specifications</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        {['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'].map(spec => (
+                            <div key={spec}>
+                                <label style={labelStyle}>{spec}</label>
+                                <input
+                                    type="text"
+                                    placeholder={`e.g. ${spec === 'Material' ? 'PVC' : spec === 'Height' ? '20cm' : '...'}`}
+                                    style={inputStyle}
+                                    value={specs[spec] || ''}
+                                    onChange={(e) => handleSpecChange(spec, e.target.value)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div style={{ marginBottom: '30px' }}>
+                    <label style={labelStyle}>Description (Main Text)</label>
+                    <textarea
+                        value={formData.description}
+                        onChange={(e) => handleInput('description', e.target.value)}
+                        rows={6}
+                        style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+                        placeholder="Enter detailed product description..."
+                    />
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-                    <button
-                        type="submit"
-                        style={{
-                            flex: 1,
-                            padding: '15px',
-                            background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {isEditMode ? 'Update Product' : 'Save Product'}
-                    </button>
+                <div style={{ display: 'flex', gap: '15px' }}>
                     <button
                         type="button"
                         onClick={() => navigate('/admin/products')}
@@ -245,6 +387,23 @@ const ProductForm: React.FC = () => {
                         }}
                     >
                         Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        style={{
+                            flex: 1,
+                            padding: '15px',
+                            background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(255, 87, 34, 0.4)'
+                        }}
+                    >
+                        {isEditMode ? 'Save Changes' : 'Add Product'}
                     </button>
                 </div>
 

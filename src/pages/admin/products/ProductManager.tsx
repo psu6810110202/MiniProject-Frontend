@@ -34,7 +34,7 @@ const ProductManager: React.FC = () => {
         setProducts(items.map(item => ({
             ...item,
             product_id: String(item.id),
-            stock_qty: (item as any).stock_qty || 10, // Default or fetch from backend
+            stock_qty: item.stock || 0,
             category_id: item.category
         })));
         setLoading(false);

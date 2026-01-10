@@ -12,10 +12,35 @@ const ProductForm: React.FC = () => {
 
     const isEditMode = !!id;
 
-    // Helper to separate Description and Specs
+    // Helper to separate Description, Specs, and Variants
     const parseInitialData = (item: Item | undefined) => {
-        if (!item) return { desc: '', specs: {} };
-        const desc = item.description || '';
+        if (!item) return { desc: '', specs: {}, variants: { hasSet: false, setPrice: '', setQty: '' } };
+
+        let desc = item.description || '';
+
+        // Extract Variants
+        const variantMarker = '--- Sales Options ---';
+        let variants = { hasSet: false, setPrice: '', setQty: '' };
+
+        if (desc.includes(variantMarker)) {
+            const [mainD, varStr] = desc.split(variantMarker);
+            desc = mainD.trim();
+            const setPrice = varStr.match(/Set Price: (\d+)/)?.[1] || '';
+            const setQty = varStr.match(/Set Quantity: (\d+)/)?.[1] || ''; // Legacy support
+            const boxCount = varStr.match(/Box Count: (\d+)/)?.[1] || setQty || '';
+
+            return {
+                desc: mainD.trim(),
+                specs: {},
+                variants: {
+                    hasSet: !!setPrice,
+                    setPrice,
+                    boxCount
+                }
+            };
+        }
+
+        // Extract Specs
         const marker = '--- Specifications ---';
         const [mainDesc, specStr] = desc.includes(marker) ? desc.split(marker) : [desc, ''];
 
@@ -28,7 +53,7 @@ const ProductForm: React.FC = () => {
                 }
             });
         }
-        return { desc: mainDesc.trim(), specs: parsedSpecs };
+        return { desc: mainDesc.trim(), specs: parsedSpecs, variants };
     };
 
     const [formData, setFormData] = useState({
@@ -39,7 +64,10 @@ const ProductForm: React.FC = () => {
         fandom: '',
         image: '',
         description: '',
-        gallery: [] as string[]
+        gallery: [] as string[],
+        hasSetOption: false,
+        setPrice: '',
+        boxCount: ''
     });
 
     const [specs, setSpecs] = useState<Record<string, string>>({});
@@ -66,7 +94,7 @@ const ProductForm: React.FC = () => {
 
         if (found) {
             setInternalId(found.id);
-            const { desc, specs: parsedSpecs } = parseInitialData(found);
+            const { desc, specs: parsedSpecs, variants } = parseInitialData(found);
 
             // Extract numeric price from string like "฿2,500"
             const priceVal = String(found.price).replace(/[^0-9.]/g, '');
@@ -79,13 +107,17 @@ const ProductForm: React.FC = () => {
                 fandom: found.fandom,
                 image: found.image,
                 description: desc,
-                gallery: found.gallery || []
+                gallery: found.gallery || [],
+                hasSetOption: variants.hasSet,
+                setPrice: variants.setPrice,
+                // @ts-ignore
+                boxCount: variants.boxCount || variants.setQty
             });
             setSpecs(parsedSpecs);
         }
     }, [id, items, isEditMode]);
 
-    const handleInput = (key: string, value: string) => {
+    const handleInput = (key: string, value: string | boolean) => {
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
@@ -149,7 +181,18 @@ const ProductForm: React.FC = () => {
             .map(([key, val]) => `${key}: ${val}`)
             .join('\n');
 
-        const fullDescription = formData.description + (specString ? '\n\n--- Specifications ---\n' + specString : '');
+        // Format Variants
+        let variantString = '';
+        if (formData.hasSetOption || formData.boxCount) {
+            variantString = `\n\n--- Sales Options ---\nBox Count: ${formData.boxCount}`;
+            if (formData.hasSetOption) {
+                variantString += `\nSet Price: ${formData.setPrice}`;
+            }
+        }
+
+        const fullDescription = formData.description +
+            (specString ? '\n\n--- Specifications ---\n' + specString : '') +
+            variantString;
 
         const productData: Item = {
             id: isEditMode ? Number(internalId) : Date.now(),
@@ -247,8 +290,8 @@ const ProductForm: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Fandom & Category */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                {/* Fandom, Category & Box Count */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                     <div>
                         <label style={labelStyle}>Fandom *</label>
                         <select
@@ -272,6 +315,16 @@ const ProductForm: React.FC = () => {
                             <option value="">Select Category</option>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
+                    </div>
+                    <div>
+                        <label style={labelStyle}>Boxes per Set</label>
+                        <input
+                            type="number"
+                            value={formData.boxCount}
+                            onChange={(e) => handleInput('boxCount', e.target.value)}
+                            style={inputStyle}
+                            placeholder="e.g. 6 or 12"
+                        />
                     </div>
                 </div>
 
@@ -336,6 +389,36 @@ const ProductForm: React.FC = () => {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Sales Options (New Feature) */}
+                <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px solid #4CAF50' }}>
+                    <h4 style={{ margin: '0 0 15px 0', color: '#4CAF50' }}>Sales Options</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+                        <input
+                            type="checkbox"
+                            checked={formData.hasSetOption}
+                            onChange={(e) => handleInput('hasSetOption', e.target.checked)}
+                            style={{ width: '20px', height: '20px', marginRight: '10px' }}
+                        />
+                        <label style={{ color: 'white', fontWeight: 'bold' }}>Sell as a Set / Full Box?</label>
+                    </div>
+
+                    {formData.hasSetOption && (
+                        <div>
+                            <label style={labelStyle}>Full Set Price (THB)</label>
+                            <input
+                                type="number"
+                                value={formData.setPrice}
+                                onChange={(e) => handleInput('setPrice', e.target.value)}
+                                style={inputStyle}
+                                placeholder="e.g. 3000"
+                            />
+                            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>
+                                (Will use "Boxes per Set" value of {formData.boxCount || '?'} items)
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Specs Section */}

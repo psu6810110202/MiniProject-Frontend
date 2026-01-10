@@ -15,6 +15,7 @@ const ProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [purchaseOption, setPurchaseOption] = useState<'single' | 'set'>('single');
 
 
   // Convert Item to Product format
@@ -37,8 +38,38 @@ const ProductDetail: React.FC = () => {
       deposit_amount: item.deposit || 0,
       gallery: item.gallery || [],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      variants: {
+        hasSet: false,
+        setPrice: 0,
+        setQty: 0
+      }
     };
+
+    // Parse Variants from Description
+    if (item.description && item.description.includes('--- Sales Options ---')) {
+      const [_, varStr] = item.description.split('--- Sales Options ---');
+      const setPrice = parseInt(varStr.match(/Set Price: (\d+)/)?.[1] || '0');
+      const setQty = parseInt(varStr.match(/Set Quantity: (\d+)/)?.[1] || varStr.match(/Box Count: (\d+)/)?.[1] || '0');
+      if (setPrice) {
+        // @ts-ignore
+        return {
+          ...item,
+          product_id: item.id?.toString() || 'unknown',
+          name: item.name,
+          description: item.description.split('--- Sales Options ---')[0].trim(),
+          price: numericPrice,
+          category: item.category || 'Regular',
+          fandom: item.fandom || 'Exclusive',
+          image: item.image,
+          stock: item.stock || 0,
+          is_preorder: item?.preOrderCloseDate !== undefined || item?.releaseDate !== undefined,
+          release_date: item?.preOrderCloseDate || item.releaseDate || new Date().toISOString().split('T')[0],
+          gallery: item.gallery || [],
+          variants: { hasSet: true, setPrice, setQty }
+        };
+      }
+    }
   };
 
   useEffect(() => {
@@ -99,8 +130,8 @@ const ProductDetail: React.FC = () => {
       const safeId = isNaN(Number(product.product_id)) ? Date.now() : Number(product.product_id);
       addToCart({
         id: safeId,
-        name: product.name,
-        price: `฿${product.price.toLocaleString()}`,
+        name: purchaseOption === 'set' ? `${product.name} (Full Set)` : product.name,
+        price: purchaseOption === 'set' ? `฿${product.variants.setPrice.toLocaleString()}` : `฿${product.price.toLocaleString()}`,
         category: product.category,
         fandom: product.fandom,
         image: product.image
@@ -346,7 +377,44 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Price */}
+          {/* Purchase Options Selector */}
+          {product.variants?.hasSet && (
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
+              <div
+                onClick={() => setPurchaseOption('single')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  borderRadius: '10px',
+                  border: purchaseOption === 'single' ? '2px solid #FF5722' : '1px solid #444',
+                  background: purchaseOption === 'single' ? 'rgba(255, 87, 34, 0.1)' : '#252525',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Single Box</div>
+                <div style={{ color: '#FF5722', fontSize: '1.2rem' }}>฿{product.price.toLocaleString()}</div>
+              </div>
+              <div
+                onClick={() => setPurchaseOption('set')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  borderRadius: '10px',
+                  border: purchaseOption === 'set' ? '2px solid #FF5722' : '1px solid #444',
+                  background: purchaseOption === 'set' ? 'rgba(255, 87, 34, 0.1)' : '#252525',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Full Set ({product.variants.setQty} pcs)</div>
+                <div style={{ color: '#FF5722', fontSize: '1.2rem' }}>฿{product.variants.setPrice.toLocaleString()}</div>
+                <div style={{ fontSize: '0.8rem', color: '#888' }}>
+                  (Guaranteed Unique)
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Price Display (Dynamic) */}
           <div style={{
             fontSize: '2rem',
             fontWeight: 'bold',
@@ -357,8 +425,13 @@ const ProductDetail: React.FC = () => {
             gap: '15px'
           }}>
             <div>
-              ฿{product.price.toLocaleString()}
+              ฿{purchaseOption === 'set' ? product.variants.setPrice.toLocaleString() : product.price.toLocaleString()}
             </div>
+            {purchaseOption === 'set' && (
+              <div style={{ fontSize: '1rem', color: '#888', fontWeight: 'normal' }}>
+                for {product.variants.setQty} items
+              </div>
+            )}
           </div>
 
           {/* Description Main Text */}

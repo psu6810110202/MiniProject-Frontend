@@ -14,6 +14,12 @@ interface Product {
     category?: string;
     fandom?: string; // Add Fandom
     image?: string;
+    description?: string;
+    variants?: {
+        hasSet: boolean;
+        setPrice: number;
+        boxCount: number;
+    };
 }
 
 const ProductManager: React.FC = () => {
@@ -31,12 +37,26 @@ const ProductManager: React.FC = () => {
             return;
         }
 
-        setProducts(items.map(item => ({
-            ...item,
-            product_id: String(item.id),
-            stock_qty: item.stock || 0,
-            category_id: item.category
-        })));
+        setProducts(items.map(item => {
+            // Parse Variants
+            let variants = { hasSet: false, setPrice: 0, boxCount: 0 };
+            if (item.description && item.description.includes('--- Sales Options ---')) {
+                const [_, varStr] = item.description.split('--- Sales Options ---');
+                const setPrice = parseInt(varStr.match(/Set Price: (\d+)/)?.[1] || '0');
+                const boxCount = parseInt(varStr.match(/Box Count: (\d+)/)?.[1] || '0');
+                if (setPrice || boxCount) {
+                    variants = { hasSet: !!setPrice, setPrice, boxCount };
+                }
+            }
+
+            return {
+                ...item,
+                product_id: String(item.id),
+                stock_qty: item.stock || 0,
+                category_id: item.category,
+                variants
+            };
+        }));
         setLoading(false);
     }, [role, navigate, items]);
 
@@ -93,6 +113,7 @@ const ProductManager: React.FC = () => {
                             <th style={{ padding: '15px' }}>Category</th>
                             <th style={{ padding: '15px' }}>Price</th>
                             <th style={{ padding: '15px' }}>Stock</th>
+                            <th style={{ padding: '15px' }}>Variants (Set/Box)</th>
                             <th style={{ padding: '15px' }}>Actions</th>
                         </tr>
                     </thead>
@@ -123,6 +144,24 @@ const ProductManager: React.FC = () => {
                                         {product.stock_qty}
                                     </span>
                                 </td>
+                                <td style={{ padding: '15px' }}>
+                                    {product.variants?.hasSet || product.variants?.boxCount ? (
+                                        <div style={{ fontSize: '0.85rem' }}>
+                                            {product.variants.boxCount > 0 && (
+                                                <div style={{ color: '#aaa', marginBottom: '2px' }}>
+                                                    Box Count: <span style={{ color: 'white' }}>{product.variants.boxCount}</span>
+                                                </div>
+                                            )}
+                                            {product.variants.hasSet && (
+                                                <div style={{ color: '#FF5722' }}>
+                                                    Set: ฿{product.variants.setPrice.toLocaleString()}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span style={{ color: '#666' }}>-</span>
+                                    )}
+                                </td>
                                 <td style={{ padding: '15px', display: 'flex', gap: '10px' }}>
                                     <button
                                         onClick={() => navigate(`/admin/products/edit/${product.product_id}`)}
@@ -141,7 +180,7 @@ const ProductManager: React.FC = () => {
                         ))}
                         {products.length === 0 && (
                             <tr>
-                                <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                                <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                                     No products found.
                                 </td>
                             </tr>

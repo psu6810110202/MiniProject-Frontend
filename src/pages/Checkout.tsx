@@ -3,22 +3,26 @@ import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePoints } from '../hooks/usePoints';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type PaymentMethodId = 'bank' | 'truemoney';
 
 const Checkout: React.FC = () => {
 
     const { cartItems, totalAmount, clearCart, addOrder } = useCart();
-    const { user } = useAuth();
+    const { user, isLoggedIn } = useAuth();
     const { addPoints, calculatePointsFromAmount } = usePoints();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Derive step from URL
+    const step = location.pathname.includes('confirm') ? 2 : 1;
 
     const [form, setForm] = useState({
         name: '',
         phone: '',
         address: '',
-        paymentMethod: 'bank' as PaymentMethodId,
+        paymentMethod: (location.state?.paymentMethod || 'bank') as PaymentMethodId,
         transferDate: '',
         transferTime: '',
         slipImage: null as File | null
@@ -44,17 +48,31 @@ const Checkout: React.FC = () => {
         }
     }, [user]);
 
-    const [step, setStep] = useState(1); // 1: Info, 2: Payment Method, 3: Pay
+    // Recover payment method from state if navigating back/forth
+    React.useEffect(() => {
+        if (location.state?.paymentMethod) {
+            setForm(prev => ({ ...prev, paymentMethod: location.state.paymentMethod }));
+        }
+    }, [location.state]);
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [touched, setTouched] = useState({ name: false, phone: false, address: false });
 
     const totals = React.useMemo(() => {
-        const shipping = totalAmount > 1000 ? 0 : 50;
+        // Shipping Calculation based on Territory (Postal Rates Logic)
+        let shippingCost = 60; // Default Rate (Upcountry/Standard)
+
+        if (user?.province) {
+            const userProvince = user.province;
+            const bkkVicinity = ['กรุงเทพมหานคร', 'Bangkok', 'นนทบุรี', 'Nonthaburi', 'ปทุมธานี', 'Pathum Thani', 'สมุทรปราการ', 'Samut Prakan'];
+            if (bkkVicinity.some(p => userProvince.includes(p))) {
+                shippingCost = 45; // Metropolitan Rate
+            }
+        }
+
         const truemoneyFee = form.paymentMethod === 'truemoney' ? 10 : 0;
-        return { subtotal: totalAmount, shipping, total: totalAmount + shipping + truemoneyFee, truemoneyFee };
-    }, [totalAmount, form.paymentMethod]);
+        return { subtotal: totalAmount, shipping: shippingCost, total: totalAmount + shippingCost + truemoneyFee, truemoneyFee };
+    }, [totalAmount, form.paymentMethod, user]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,34 +84,17 @@ const Checkout: React.FC = () => {
         }
     };
 
-    const isStep1Valid = () => {
-        return !!form.name.trim() && !!form.phone.trim() && !!form.address.trim();
-    };
-
-    const handleNext = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        setTouched({ name: true, phone: true, address: true });
-        if (!isStep1Valid()) {
-            setError('กรุณากรอกข้อมูลให้ครบถ้วน');
-            return;
-        }
-
-        setError(null);
-        setStep(2);
-        window.scrollTo(0, 0);
-    };
-
     const handlePay = async () => {
         setError(null);
 
-        if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
-            setError('กรุณากรอกข้อมูลให้ครบถ้วน');
-            setStep(1);
+        // ตรวจสอบข้อมูลการชำระเงิน (Step 3 validation)
+        if (!form.transferDate || !form.transferTime || !form.slipImage) {
+            setError('กรุณากรอก วันที่/เวลา และแนบสลิปการโอนเงิน ให้ครบถ้วน');
             window.scrollTo(0, 0);
             return;
         }
 
+        // ตรวจสอบตะกร้าสินค้า
         if (cartItems.length === 0) {
             setError('ตะกร้าสินค้าว่าง');
             return;
@@ -114,9 +115,14 @@ const Checkout: React.FC = () => {
                     quantity: item.quantity,
                     price: Number(String(item.price).replace(/[^0-9.-]+/g, ""))
                 })),
-                total: totals.total,
+                totalAmount: totals.total,
                 carrier: 'Thailand Post',
-                trackingNumber: `TH${Date.now().toString().slice(-10)}`
+                trackingNumber: `TH${Date.now().toString().slice(-10)}`,
+                payment: {
+                    date: form.transferDate,
+                    time: form.transferTime,
+                    slip: form.slipImage ? form.slipImage.name : 'slip.jpg' // In real app, upload file first
+                }
             };
 
             addOrder(newOrder);
@@ -137,18 +143,19 @@ const Checkout: React.FC = () => {
         }
     };
 
+    // Redirect logic: Auth & Empty Cart Protection
+    const isNotLoggedIn = !isLoggedIn;
+    const isCartEmpty = cartItems.length === 0 && step !== 2;
 
+    React.useEffect(() => {
+        if (isNotLoggedIn) {
+            navigate('/login');
+        } else if (isCartEmpty) {
+            navigate('/fandoms');
+        }
+    }, [isNotLoggedIn, isCartEmpty, navigate]);
 
-    if (cartItems.length === 0 && step !== 3) {
-        return (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-main)', minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <h2>Your cart is empty</h2>
-                <button onClick={() => navigate('/catalog')} style={{ marginTop: '20px', padding: '10px 20px', background: '#FF5722', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                    Go to Catalog
-                </button>
-            </div>
-        );
-    }
+    if (isNotLoggedIn || isCartEmpty) return null;
 
     return (
         <>
@@ -165,16 +172,11 @@ const Checkout: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '50px', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: step >= 1 ? '#FF5722' : 'var(--text-muted)' }}>
                         <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: step >= 1 ? '#FF5722' : '#333', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</div>
-                        <span>Shipping</span>
+                        <span>Payment</span>
                     </div>
                     <div style={{ width: '50px', height: '2px', background: '#333', alignSelf: 'center' }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: step >= 2 ? '#FF5722' : 'var(--text-muted)' }}>
                         <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: step >= 2 ? '#FF5722' : '#333', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</div>
-                        <span>Payment</span>
-                    </div>
-                    <div style={{ width: '50px', height: '2px', background: '#333', alignSelf: 'center' }}></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: step >= 3 ? '#FF5722' : 'var(--text-muted)' }}>
-                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: step >= 3 ? '#FF5722' : '#333', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</div>
                         <span>Confirm</span>
                     </div>
                 </div>
@@ -185,56 +187,6 @@ const Checkout: React.FC = () => {
                     <div style={{ flex: '1 1 600px' }}>
 
                         {step === 1 && (
-                            <form onSubmit={handleNext} style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '15px', border: '1px solid var(--border-color)' }}>
-                                <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Shipping Information</h2>
-
-                                {error && (
-                                    <div style={{ marginBottom: '15px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(244,67,54,0.12)', border: '1px solid rgba(244,67,54,0.35)', color: '#ffb3ad' }}>
-                                        {error}
-                                    </div>
-                                )}
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Full Name</label>
-                                    <input
-                                        name="name"
-                                        value={form.name}
-                                        onChange={handleChange}
-                                        onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
-                                        required
-                                        style={{ width: '100%', padding: '12px', borderRadius: '5px', border: `1px solid ${touched.name && !form.name.trim() ? 'rgba(244,67,54,0.7)' : '#555'}`, background: 'rgba(0,0,0,0.1)', color: 'var(--text-main)' }}
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Phone Number</label>
-                                    <input
-                                        name="phone"
-                                        type="tel"
-                                        value={form.phone}
-                                        onChange={handleChange}
-                                        onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
-                                        required
-                                        style={{ width: '100%', padding: '12px', borderRadius: '5px', border: `1px solid ${touched.phone && !form.phone.trim() ? 'rgba(244,67,54,0.7)' : '#555'}`, background: 'rgba(0,0,0,0.1)', color: 'var(--text-main)' }}
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Address</label>
-                                    <textarea
-                                        name="address"
-                                        value={form.address}
-                                        onChange={handleChange}
-                                        onBlur={() => setTouched(prev => ({ ...prev, address: true }))}
-                                        required
-                                        rows={4}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '5px', border: `1px solid ${touched.address && !form.address.trim() ? 'rgba(244,67,54,0.7)' : '#555'}`, background: 'rgba(0,0,0,0.1)', color: 'var(--text-main)', resize: 'vertical' }}
-                                    />
-                                </div>
-                                <button type="submit" style={{ width: '100%', padding: '15px', background: '#FF5722', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', opacity: isStep1Valid() ? 1 : 0.9 }}>
-                                    Continue to Payment
-                                </button>
-                            </form>
-                        )}
-
-                        {step === 2 && (
                             <div style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '15px', border: '1px solid var(--border-color)' }}>
                                 <h2 style={{ marginTop: 0, marginBottom: '20px' }}>Payment Method</h2>
 
@@ -255,31 +207,36 @@ const Checkout: React.FC = () => {
                                 {form.paymentMethod === 'bank' && (
                                     <div style={{ marginBottom: '20px', padding: '20px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px', border: '1px solid #444' }}>
                                         <h3 style={{ marginTop: 0, marginBottom: '15px', fontSize: '1rem' }}>Bank Transfer Details</h3>
-                                        <div style={{ display: 'grid', gap: '15px' }}>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Bank Name</label>
-                                                <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
-                                                    Kasikornbank (K-Bank)
+                                        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                <div>
+                                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Bank Name</label>
+                                                    <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
+                                                        Kasikornbank (K-Bank)
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Number</label>
+                                                    <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                                        125-8-04638-9
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Name</label>
+                                                    <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
+                                                        ด.ญ.พันน์ชิตา ทองคำ
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Number</label>
-                                                <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                                    125-8-04638-9
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.9rem', color: '#ccc' }}>Account Name</label>
-                                                <div style={{ padding: '10px', background: 'rgba(255,87,34,0.1)', borderRadius: '5px', border: '1px solid #FF5722', color: '#FF5722', fontWeight: 'bold' }}>
-                                                    ด.ญ.พันน์ชิตา ทองคำ
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>QR Code</label>
+
+                                            <div style={{ width: '180px', flexShrink: 0, textAlign: 'center' }}>
+                                                <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>Scan to Pay</label>
                                                 <div style={{
-                                                    marginTop: '10px',
                                                     borderRadius: '10px',
-                                                    overflow: 'hidden'
+                                                    overflow: 'hidden',
+                                                    border: '1px solid #555',
+                                                    background: 'white',
+                                                    padding: '5px'
                                                 }}>
                                                     <img
                                                         src="http://localhost:3000/images/payment/Qr.jpeg"
@@ -324,15 +281,14 @@ const Checkout: React.FC = () => {
                                 )}
 
                                 <div style={{ display: 'flex', gap: '20px' }}>
-                                    <button onClick={() => setStep(1)} disabled={isProcessing} style={{ flex: 1, padding: '15px', background: 'transparent', border: '1px solid #555', color: 'var(--text-main)', borderRadius: '8px', cursor: isProcessing ? 'not-allowed' : 'pointer', opacity: isProcessing ? 0.7 : 1 }}>Back</button>
                                     <button
                                         onClick={() => {
                                             setError(null);
-                                            setStep(3);
+                                            navigate('/checkout-confirm', { state: { paymentMethod: form.paymentMethod } });
                                             window.scrollTo(0, 0);
                                         }}
                                         disabled={isProcessing}
-                                        style={{ flex: 2, padding: '15px', background: '#FF5722', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', opacity: isProcessing ? 0.7 : 1 }}
+                                        style={{ width: '100%', padding: '15px', background: '#FF5722', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 'bold', cursor: isProcessing ? 'not-allowed' : 'pointer', opacity: isProcessing ? 0.7 : 1 }}
                                     >
                                         Continue to Confirm
                                     </button>
@@ -340,7 +296,7 @@ const Checkout: React.FC = () => {
                             </div>
                         )}
 
-                        {step === 3 && (
+                        {step === 2 && (
                             <div style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '15px', border: '1px solid var(--border-color)' }}>
                                 <h2 style={{ marginTop: 0, marginBottom: '10px' }}>Confirm Payment</h2>
                                 <p style={{ color: 'var(--text-muted)', marginTop: 0, marginBottom: '20px' }}>
@@ -356,8 +312,7 @@ const Checkout: React.FC = () => {
                                 <div style={{ display: 'grid', gap: '15px', marginBottom: '20px' }}>
 
                                     {/* Transfer Date/Time */}
-                                    {/* Transfer Date/Time */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div>
                                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>วันที่โอน (Transfer Date)</label>
                                             <input
@@ -367,7 +322,7 @@ const Checkout: React.FC = () => {
                                                 onChange={handleChange}
                                                 required
                                                 style={{
-                                                    width: '100%',
+                                                    width: '90%',
                                                     padding: '12px',
                                                     borderRadius: '8px',
                                                     border: '1px solid #555',
@@ -387,7 +342,7 @@ const Checkout: React.FC = () => {
                                                 onChange={handleChange}
                                                 required
                                                 style={{
-                                                    width: '100%',
+                                                    width: '90%',
                                                     padding: '12px',
                                                     borderRadius: '8px',
                                                     border: '1px solid #555',
@@ -403,7 +358,11 @@ const Checkout: React.FC = () => {
                                     {/* Slip Upload */}
                                     <div>
                                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>สลิปการโอนเงิน (Upload Slip)</label>
-                                        <div style={{ border: '2px dashed #555', borderRadius: '10px', padding: '20px', textAlign: 'center', cursor: 'pointer', background: 'rgba(0,0,0,0.1)' }} onClick={() => document.getElementById('slip-upload')?.click()}>
+                                        <div style={{ border: '2px dashed #555', borderRadius: '10px', padding: '25px', textAlign: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', transition: 'all 0.2s' }}
+                                            onClick={() => document.getElementById('slip-upload')?.click()}
+                                            onMouseOver={(e) => e.currentTarget.style.borderColor = '#FF5722'}
+                                            onMouseOut={(e) => e.currentTarget.style.borderColor = '#555'}
+                                        >
                                             <input
                                                 type="file"
                                                 id="slip-upload"
@@ -412,38 +371,59 @@ const Checkout: React.FC = () => {
                                                 style={{ display: 'none' }}
                                             />
                                             {form.slipImage ? (
-                                                <div style={{ color: '#4CAF50' }}>✓ {form.slipImage.name} selected</div>
+                                                <div style={{ color: '#4CAF50', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                                    <span style={{ fontSize: '1.2rem' }}>✓</span> {form.slipImage.name}
+                                                </div>
                                             ) : (
-                                                <div style={{ color: '#aaa' }}>Click to upload slip image</div>
+                                                <div style={{ color: '#aaa', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                                                    <span style={{ fontSize: '1.5rem', opacity: 0.7 }}>☁️</span>
+                                                    <span>Click to upload slip image</span>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Shipping Information */}
-                                    <div style={{ padding: '15px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
-                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>Shipping Information</div>
-                                        <div style={{ color: 'var(--text-muted)' }}>
-                                            <div style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--text-main)' }}>Name:</strong> {form.name}</div>
-                                            <div style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--text-main)' }}>Phone:</strong> {form.phone}</div>
-                                            <div><strong style={{ color: 'var(--text-main)' }}>Address:</strong> {form.address}</div>
+                                    <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)', marginBottom: '20px', position: 'relative' }}>
+                                        <div style={{ fontWeight: 'bold', marginBottom: '10px', fontSize: '1.1rem' }}>Shipping Address</div>
+                                        <div style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                                            <div style={{ marginBottom: '4px', color: 'var(--text-main)' }}>{form.name}
+                                                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '10px' }}>{form.phone}</span>
+                                            </div>
+                                            <div>{form.address}</div>
                                         </div>
-                                    </div>
-
-                                    <div style={{ padding: '15px', borderRadius: '12px', border: '1px solid #444', background: 'rgba(0,0,0,0.10)' }}>
-                                        <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>Order Details</div>
-                                        <div style={{ color: 'var(--text-muted)' }}>
-                                            {form.paymentMethod === 'bank' ? '🏦 Bank Transfer' : '💰 TrueMoney Wallet'}
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontWeight: 'bold' }}>
-                                            <span>Total Amount to Pay</span>
-                                            <span style={{ color: '#FF5722' }}>฿{totals.total.toLocaleString()}</span>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate('/profile/edit')}
+                                            style={{
+                                                position: 'absolute',
+                                                top: '15px',
+                                                right: '15px',
+                                                width: '36px',
+                                                height: '36px',
+                                                background: '#333',
+                                                border: '1px solid #555',
+                                                color: '#fff',
+                                                borderRadius: '50%',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                zIndex: 1
+                                            }}
+                                            title="Edit Address"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M12 20h9"></path>
+                                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <button
-                                        onClick={() => setStep(2)}
+                                        onClick={() => navigate('/checkout-payment', { state: { paymentMethod: form.paymentMethod } })}
                                         disabled={isProcessing}
                                         style={{ flex: 1, padding: '15px', background: 'transparent', border: '1px solid #555', color: 'var(--text-main)', borderRadius: '8px', cursor: 'pointer' }}
                                     >
@@ -463,7 +443,7 @@ const Checkout: React.FC = () => {
                     </div>
 
                     {/* Right Column: Order Summary */}
-                    {step !== 0 && (
+                    {true && (
                         <div style={{ flex: '1 1 300px' }}>
                             <div style={{ background: 'var(--card-bg)', padding: '30px', borderRadius: '15px', border: '1px solid var(--border-color)', position: 'sticky', top: '100px' }}>
                                 <h3 style={{ marginTop: 0, marginBottom: '20px', borderBottom: '1px solid #555', paddingBottom: '15px' }}>Order Summary</h3>

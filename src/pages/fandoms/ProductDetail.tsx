@@ -24,7 +24,7 @@ const ProductDetail: React.FC = () => {
       ? parseInt(item.price.replace('฿', '').replace(',', '')) || 0
       : (item.price || 0);
 
-    return {
+    let baseProduct = {
       product_id: item.id?.toString() || 'unknown',
       name: item.name,
       description: item.description || `${item.name} - High quality ${item.category || 'collectible'} from ${item.fandom || 'Exclusive'} collection.`,
@@ -48,28 +48,20 @@ const ProductDetail: React.FC = () => {
 
     // Parse Variants from Description
     if (item.description && item.description.includes('--- Sales Options ---')) {
-      const [_, varStr] = item.description.split('--- Sales Options ---');
+      const [descBody, varStr] = item.description.split('--- Sales Options ---');
       const setPrice = parseInt(varStr.match(/Set Price: (\d+)/)?.[1] || '0');
       const setQty = parseInt(varStr.match(/Set Quantity: (\d+)/)?.[1] || varStr.match(/Box Count: (\d+)/)?.[1] || '0');
+
       if (setPrice) {
-        // @ts-ignore
         return {
-          ...item,
-          product_id: item.id?.toString() || 'unknown',
-          name: item.name,
-          description: item.description.split('--- Sales Options ---')[0].trim(),
-          price: numericPrice,
-          category: item.category || 'Regular',
-          fandom: item.fandom || 'Exclusive',
-          image: item.image,
-          stock: item.stock || 0,
-          is_preorder: item?.preOrderCloseDate !== undefined || item?.releaseDate !== undefined,
-          release_date: item?.preOrderCloseDate || item.releaseDate || new Date().toISOString().split('T')[0],
-          gallery: item.gallery || [],
+          ...baseProduct,
+          description: descBody.trim(),
           variants: { hasSet: true, setPrice, setQty }
         };
       }
     }
+
+    return baseProduct;
   };
 
   useEffect(() => {
@@ -109,7 +101,7 @@ const ProductDetail: React.FC = () => {
       console.log('Not found in context, trying API for ID:', cleanId);
       const apiData = await productAPI.getById(cleanId);
       if (apiData) {
-        setProduct(apiData);
+        setProduct(convertItemToProduct(apiData));
         setError(null);
         return;
       }
@@ -405,7 +397,7 @@ const ProductDetail: React.FC = () => {
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Full Set ({product.variants.setQty} pcs)</div>
+                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Full Set ({product.variants.setQty || '?'} pcs)</div>
                 <div style={{ color: '#FF5722', fontSize: '1.2rem' }}>฿{product.variants.setPrice.toLocaleString()}</div>
                 <div style={{ fontSize: '0.8rem', color: '#888' }}>
                   (Guaranteed Unique)

@@ -31,10 +31,11 @@ const ProductDetail: React.FC = () => {
       category: item.category || 'Regular',
       fandom: item.fandom || 'Exclusive',
       image: item.image,
-      stock: item.stock || 10,
-      is_preorder: item?.preOrderCloseDate !== undefined || item?.releaseDate !== undefined || item?.deposit !== undefined, // Improved checks
+      stock: item.stock || 0,
+      is_preorder: item?.preOrderCloseDate !== undefined || item?.releaseDate !== undefined || item?.deposit !== undefined,
       release_date: item?.preOrderCloseDate || item.releaseDate || new Date().toISOString().split('T')[0],
       deposit_amount: item.deposit || 0,
+      gallery: item.gallery || [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -65,7 +66,6 @@ const ProductDetail: React.FC = () => {
       }
 
       // 2. Try to find in PreOrders
-      // Handle "P" prefix for pre-orders if present (though this page usually handles regular products)
       const cleanId = productId.replace(/^P/i, '');
       const preOrderItem = preOrders.find(item => item.id.toString() === cleanId);
       if (preOrderItem) {
@@ -85,7 +85,6 @@ const ProductDetail: React.FC = () => {
 
     } catch (err) {
       console.error('Error loading product:', err);
-      // Don't just error, try fallback logic only if really needed, but usually API error means 404
       setError('Product not found');
     } finally {
       setLoading(false);
@@ -107,8 +106,7 @@ const ProductDetail: React.FC = () => {
         image: product.image
       });
 
-      // Note: Points will be awarded after payment completion
-      console.log(`Item added to cart. Points will be awarded after payment completion.`);
+      console.log(`Item added to cart.`);
 
       setTimeout(() => {
         setAddingToCart(false);
@@ -162,12 +160,17 @@ const ProductDetail: React.FC = () => {
         background: 'var(--bg-color)'
       }}>
         <h2>{error || 'Product not found'}</h2>
-        <p>Product ID: {id}</p>
-        <p>Fandom: {name}</p>
         <Link to="/" style={{ color: '#FF5722' }}>Back to Home</Link>
       </div>
     );
   }
+
+  // Gallery Logic: Use product.gallery if available, otherwise just main image repeated or single
+  const galleryImages = (product.gallery && product.gallery.length > 0)
+    ? [product.image, ...product.gallery].slice(0, 5) // Max 5 images including main
+    : [product.image];
+
+  const currentImage = galleryImages[selectedImage] || product.image;
 
   return (
     <div style={{
@@ -176,7 +179,7 @@ const ProductDetail: React.FC = () => {
       margin: '0 auto',
       color: 'var(--text-main)',
       background: 'var(--bg-color)',
-      height: 'auto',
+      minHeight: '80vh',
       position: 'relative'
     }}>
       {/* Back Button */}
@@ -187,7 +190,7 @@ const ProductDetail: React.FC = () => {
         zIndex: 10
       }}>
         <Link
-          to={`/fandoms/${name}`}
+          to={`/fandoms/${name || 'all'}`}
           style={{
             textDecoration: 'none',
             color: 'var(--text-muted)',
@@ -223,6 +226,7 @@ const ProductDetail: React.FC = () => {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: '60px',
+        marginTop: '40px',
         alignItems: 'start'
       }}>
         {/* Product Images */}
@@ -236,14 +240,14 @@ const ProductDetail: React.FC = () => {
             marginBottom: '20px'
           }}>
             <img
-              src={product.image}
+              src={currentImage}
               alt={product.name}
               style={{
                 width: '100%',
                 height: '400px',
-                objectFit: 'cover',
+                objectFit: 'contain',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(255,87,34,0.05)'
+                backgroundColor: 'rgba(255,87,34,0.02)'
               }}
               onError={(e) => {
                 e.currentTarget.src = 'https://via.placeholder.com/400?text=No+Image';
@@ -252,38 +256,38 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Thumbnail Gallery */}
-          <div style={{
-            display: 'flex',
-            gap: '10px'
-          }}>
-            {[0, 1, 2, 3].map((index) => (
-              <div
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '8px',
-                  border: selectedImage === index ? '2px solid #FF5722' : '1px solid var(--border-color)',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                <img
-                  src={product.image}
-                  alt={`View ${index + 1}`}
+          {galleryImages.length > 1 && (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {galleryImages.map((img: string, index: number) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '8px',
+                    border: selectedImage === index ? '2px solid #FF5722' : '1px solid var(--border-color)',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    background: 'var(--card-bg)'
                   }}
-                />
-              </div>
-            ))}
-          </div>
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <img
+                    src={img}
+                    alt={`View ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Information */}
@@ -297,22 +301,48 @@ const ProductDetail: React.FC = () => {
                   fontWeight: 'bold',
                   margin: '0',
                   color: 'var(--text-main)',
-                  lineHeight: '1.2',
-                  cursor: 'pointer',
-                  transition: 'color 0.2s',
-                  display: 'inline-block'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#FF5722';
-                  e.currentTarget.style.textDecoration = 'underline';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-main)';
-                  e.currentTarget.style.textDecoration = 'none';
+                  lineHeight: '1.2'
                 }}
               >
                 {product.name}
               </h1>
+              {product.is_preorder && (
+                <span style={{
+                  padding: '6px 12px',
+                  background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                  color: 'white',
+                  borderRadius: '15px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold'
+                }}>
+                  PRE-ORDER
+                </span>
+              )}
+              {product.stock > 0 ? (
+                <span style={{
+                  padding: '6px 12px',
+                  background: 'rgba(76, 175, 80, 0.1)',
+                  color: '#4CAF50',
+                  borderRadius: '15px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  border: '1px solid #4CAF50'
+                }}>
+                  IN STOCK
+                </span>
+              ) : (
+                <span style={{
+                  padding: '6px 12px',
+                  background: 'rgba(244, 67, 54, 0.1)',
+                  color: '#F44336',
+                  borderRadius: '15px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  border: '1px solid #F44336'
+                }}>
+                  OUT OF STOCK
+                </span>
+              )}
             </div>
           </div>
 
@@ -320,7 +350,7 @@ const ProductDetail: React.FC = () => {
           <div style={{
             fontSize: '2rem',
             fontWeight: 'bold',
-            color: '#4CAF50',
+            color: product.is_preorder ? '#FF5722' : '#4CAF50',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'baseline',
@@ -331,72 +361,75 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description Main Text */}
           <div style={{ marginBottom: '20px' }}>
             <p style={{
-              lineHeight: '1.5',
+              lineHeight: '1.6',
               color: 'var(--text-muted)',
               margin: 0,
-              fontSize: '0.95rem'
+              fontSize: '1rem',
+              whiteSpace: 'pre-wrap'
             }}>
-              {product.description}
+              {product.description ? product.description.split('--- Specifications ---')[0].trim() : ''}
             </p>
           </div>
 
           {/* Quantity Selector */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '30px'
-          }}>
-            <span style={{ fontWeight: 'bold' }}>Quantity:</span>
+          {product.stock > 0 && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              overflow: 'hidden'
+              gap: '20px',
+              marginBottom: '30px'
             }}>
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                style={{
-                  padding: '10px 15px',
-                  border: 'none',
-                  background: 'var(--card-bg)',
-                  color: 'var(--text-main)',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem'
-                }}
-              >
-                -
-              </button>
+              <span style={{ fontWeight: 'bold' }}>Quantity:</span>
               <div style={{
-                padding: '10px 20px',
-                minWidth: '60px',
-                textAlign: 'center',
-                fontWeight: 'bold'
+                display: 'flex',
+                alignItems: 'center',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                overflow: 'hidden'
               }}>
-                {quantity}
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  style={{
+                    padding: '10px 15px',
+                    border: 'none',
+                    background: 'var(--card-bg)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem'
+                  }}
+                >
+                  -
+                </button>
+                <div style={{
+                  padding: '10px 20px',
+                  minWidth: '60px',
+                  textAlign: 'center',
+                  fontWeight: 'bold'
+                }}>
+                  {quantity}
+                </div>
+                <button
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  style={{
+                    padding: '10px 15px',
+                    border: 'none',
+                    background: 'var(--card-bg)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem'
+                  }}
+                >
+                  +
+                </button>
               </div>
-              <button
-                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                style={{
-                  padding: '10px 15px',
-                  border: 'none',
-                  background: 'var(--card-bg)',
-                  color: 'var(--text-main)',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem'
-                }}
-              >
-                +
-              </button>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Stock: {product.stock} units
+              </span>
             </div>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Max: {product.stock} units
-            </span>
-          </div>
+          )}
 
           {/* Action Buttons */}
           <div style={{
@@ -410,7 +443,7 @@ const ProductDetail: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' : 'linear-gradient(135deg, #FF5722, #E64A19)',
+                background: addingToCart ? '#4CAF50' : (product.stock === 0 ? '#555' : 'linear-gradient(135deg, #FF5722, #E64A19)'),
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -418,8 +451,8 @@ const ProductDetail: React.FC = () => {
                 fontWeight: 'bold',
                 cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
-                opacity: product.stock === 0 ? 0.5 : 1,
-                boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
+                opacity: product.stock === 0 ? 0.7 : 1,
+                boxShadow: product.stock > 0 ? '0 4px 16px rgba(255, 87, 34, 0.3)' : 'none'
               }}
               onMouseEnter={(e) => {
                 if (!addingToCart && product.stock > 0) {
@@ -428,7 +461,7 @@ const ProductDetail: React.FC = () => {
                 }
               }}
               onMouseLeave={(e) => {
-                if (!addingToCart) {
+                if (!addingToCart && product.stock > 0) {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #FF5722, #E64A19)';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
@@ -472,7 +505,7 @@ const ProductDetail: React.FC = () => {
             </button>
           </div>
 
-          {/* Material Information */}
+          {/* Dynamic Specifications */}
           <div style={{
             borderTop: '1px solid var(--border-color)',
             paddingTop: '20px'
@@ -486,33 +519,26 @@ const ProductDetail: React.FC = () => {
               color: 'var(--text-muted)'
             }}>
               <div><strong>Product ID:</strong> {product.product_id}</div>
-              <div><strong>Material:</strong> Premium PVC Vinyl</div>
-              <div><strong>Height:</strong> 18 cm</div>
-              <div><strong>Weight:</strong> 450g</div>
-              <div><strong>Base:</strong> 7cm x 5cm</div>
-              <div><strong>Paint:</strong> Hand-painted details</div>
-              <div><strong>Packaging:</strong> Collector's box</div>
-              <div><strong>Authenticity:</strong> Certificate included</div>
-              <div><strong>Limited Edition:</strong> 500 pieces worldwide</div>
+              <div><strong>Category:</strong> {product.category}</div>
+              <div><strong>Fandom:</strong> {product.fandom}</div>
+              {(() => {
+                const specPart = product.description?.split('--- Specifications ---')[1];
+                if (specPart) {
+                  return specPart.trim().split('\n')
+                    .filter((line: string) => line.includes(':'))
+                    .map((line: string, idx: number) => {
+                      const [key, ...val] = line.split(':');
+                      return (
+                        <div key={idx}><strong>{key.trim()}:</strong> {val.join(':').trim()}</div>
+                      );
+                    });
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Add pulse animation */}
-      <style>{`
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
-          }
-        }
-      `}</style>
     </div>
   );
 };

@@ -163,47 +163,75 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     // --- Actions ---
 
     const addItem = async (item: Item) => {
-        // Optimistic update
-        const tempId = item.id || Date.now();
-        setItems([...items, { ...item, id: tempId }]);
-
         try {
-            await productAPI.create({
+            const response = await productAPI.create({
                 name: item.name,
                 price: parseFloat(item.price.replace(/[^\d.]/g, '')),
-                category: item.category,
+                category_id: item.category,
+                supplier_id: 'internal',
                 image: item.image,
                 fandom: item.fandom,
                 stock_qty: item.stock || 0,
                 description: item.description,
                 gallery: JSON.stringify(item.gallery || [])
             });
-            // Ideally we re-fetch or update ID with response
+
+            // Add the REAL item from DB to state
+            const newItem: Item = {
+                id: response.product_id ? (Number(response.product_id) || response.product_id) : Date.now(),
+                name: response.name,
+                price: `฿${response.price.toLocaleString()}`,
+                category: response.category || response.category_id || item.category,
+                fandom: response.fandom,
+                image: response.image,
+                description: response.description,
+                stock: response.stock_qty || 0,
+                gallery: response.gallery ? (typeof response.gallery === 'string' ? JSON.parse(response.gallery) : response.gallery) : []
+            };
+
+            setItems(prev => [...prev, newItem]);
+
+            if (!fandoms.includes(item.fandom)) {
+                setFandoms(prev => [...prev, item.fandom]);
+            }
+
+            return newItem;
         } catch (e) {
             console.error("Add item failed", e);
-        }
-
-        if (!fandoms.includes(item.fandom)) {
-            setFandoms([...fandoms, item.fandom]);
+            throw e;
         }
     };
 
     const updateItem = async (updatedItem: Item) => {
-        setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item));
         try {
             // Assuming we have the numeric/string ID that matches
-            await productAPI.update(String(updatedItem.id), {
+            const response = await productAPI.update(String(updatedItem.id), {
                 name: updatedItem.name,
                 price: parseFloat(updatedItem.price.replace(/[^\d.]/g, '')),
-                category: updatedItem.category,
+                category_id: updatedItem.category,
                 image: updatedItem.image,
                 fandom: updatedItem.fandom,
                 stock_qty: updatedItem.stock,
                 description: updatedItem.description,
                 gallery: JSON.stringify(updatedItem.gallery || [])
             });
+
+            const newItem: Item = {
+                id: response.product_id ? (Number(response.product_id) || response.product_id) : updatedItem.id,
+                name: response.name,
+                price: `฿${response.price.toLocaleString()}`,
+                category: response.category || response.category_id || updatedItem.category,
+                fandom: response.fandom,
+                image: response.image,
+                description: response.description,
+                stock: response.stock_qty || 0,
+                gallery: response.gallery ? (typeof response.gallery === 'string' ? JSON.parse(response.gallery) : response.gallery) : []
+            };
+
+            setItems(prev => prev.map(item => item.id === updatedItem.id ? newItem : item));
         } catch (e) {
             console.error("Update item failed", e);
+            throw e;
         }
     };
 

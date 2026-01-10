@@ -73,6 +73,8 @@ const ProductForm: React.FC = () => {
     const [specs, setSpecs] = useState<Record<string, string>>({});
     const [internalId, setInternalId] = useState<number | string | null>(null);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Redirect if not admin
     useEffect(() => {
         if (role !== 'admin') {
@@ -167,13 +169,15 @@ const ProductForm: React.FC = () => {
         setFormData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (isEditMode && !internalId) {
             alert('Error: Could not identify original product.');
             return;
         }
+
+        setIsSubmitting(true);
 
         // Format Specifications
         const specString = Object.entries(specs)
@@ -206,15 +210,23 @@ const ProductForm: React.FC = () => {
             stock: Number(formData.stock)
         };
 
-        if (isEditMode) {
-            updateItem(productData);
-            alert('Product updated successfully!');
-        } else {
-            addItem(productData);
-            alert('Product added successfully!');
+        try {
+            if (isEditMode) {
+                // @ts-ignore
+                await updateItem(productData);
+                alert('Product updated successfully!');
+            } else {
+                // @ts-ignore
+                await addItem(productData);
+                alert('Product added successfully!');
+            }
+            navigate('/admin/products');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to save product. Please try again.');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        navigate('/admin/products');
     };
 
     // Styles

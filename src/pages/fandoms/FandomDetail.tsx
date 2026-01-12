@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const FandomDetail: React.FC = () => {
     const { name } = useParams<{ name: string }>();
-    const { items, fandomImages, likedProductIds, toggleLikeProduct } = useProducts();
+    const { items, fandomImages, likedProductIds, toggleLikeProduct, preOrders } = useProducts();
     const { t } = useLanguage();
     const navigate = useNavigate();
 
@@ -13,11 +13,26 @@ const FandomDetail: React.FC = () => {
 
     // Filter items for this fandom
     const fandomItems = items.filter(item => item.fandom === decodedName);
+    const fandomPreOrders = preOrders.filter(item => item.fandom === decodedName);
+
+    // Combine items for display
+    const displayItems = [
+        ...fandomPreOrders.map(p => ({
+            ...p,
+            id: p.id,
+            price: `฿${p.price.toLocaleString()}`, // Format price for display
+            type: 'preorder' as const
+        })),
+        ...fandomItems.map(i => ({
+            ...i,
+            type: 'regular' as const
+        }))
+    ];
 
     // Get fandom image
     const fandomImage = (fandomImages && fandomImages[decodedName])
         ? fandomImages[decodedName]
-        : fandomItems[0]?.image;
+        : (displayItems[0]?.image || fandomItems[0]?.image);
 
     if (!decodedName) return <div>{t('fandom_not_found')}</div>;
 
@@ -83,7 +98,7 @@ const FandomDetail: React.FC = () => {
                 </div>
 
                 <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
-                    {fandomItems.length} {t('products_available')}
+                    {displayItems.length} {t('products_available')}
                 </p>
             </div>
 
@@ -95,9 +110,9 @@ const FandomDetail: React.FC = () => {
                 width: '100%',
                 maxWidth: '1200px'
             }}>
-                {fandomItems.length > 0 ? (
-                    fandomItems.map((item) => (
-                        <div key={item.id} style={{
+                {displayItems.length > 0 ? (
+                    displayItems.map((item) => (
+                        <div key={`${item.type}-${item.id}`} style={{
                             background: 'rgba(255,255,255,0.02)',
                             borderRadius: '15px',
                             overflow: 'hidden',
@@ -105,66 +120,77 @@ const FandomDetail: React.FC = () => {
                             transition: 'transform 0.2s',
                             display: 'flex',
                             flexDirection: 'column',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            position: 'relative'
                         }}
                             onClick={() => {
-                                // Navigate to product detail page
-                                navigate(`/fandoms/${encodeURIComponent(decodedName)}/${item.id}`);
+                                // Navigate based on type
+                                if (item.type === 'preorder') {
+                                    navigate(`/fandoms/${encodeURIComponent(decodedName)}/P${item.id}`);
+                                } else {
+                                    navigate(`/fandoms/${encodeURIComponent(decodedName)}/${item.id}`);
+                                }
                             }}
                             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            <div style={{ height: '250px', overflow: 'hidden' }}>
+                            {item.type === 'preorder' && (
+                                <>
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        background: 'rgba(0,0,0,0.8)',
+                                        border: '1px solid #FFC107',
+                                        color: '#FFC107',
+                                        padding: '5px 15px',
+                                        borderRadius: '20px',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 'bold',
+                                        zIndex: 2,
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        Pre Order Close Date: {item.preOrderCloseDate}
+                                    </div>
+                                </>
+                            )}
+                            <div style={{ height: '320px', overflow: 'hidden', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <img
                                     src={item.image}
                                     alt={item.name}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                     onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/300?text=No+Image')}
                                 />
                             </div>
                             <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div>
                                     <h3 style={{
-                                        margin: '5px 0 10px 0',
-                                        fontSize: '1.2rem',
+                                        margin: '5px 0 20px 0',
+                                        fontSize: '1.3rem',
+                                        fontWeight: 'bold',
                                         transition: 'color 0.2s',
                                         display: 'inline-block',
                                         cursor: 'pointer',
+                                        lineHeight: '1.4'
                                     }}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            navigate(`/fandoms/${encodeURIComponent(item.fandom)}`);
+                                            if (item.type === 'preorder') {
+                                                navigate(`/fandoms/${encodeURIComponent(decodedName)}/P${item.id}`);
+                                            } else {
+                                                navigate(`/fandoms/${encodeURIComponent(decodedName)}/${item.id}`);
+                                            }
                                         }}>{item.name}</h3>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>{item.price}</span>
-                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleLikeProduct(item.id);
-                                            }}
-                                            style={{
-                                                background: 'transparent',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                padding: '5px'
-                                            }}
-                                        >
-                                            {likedProductIds.includes(item.id) ? (
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                                </svg>
-                                            ) : (
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                                </svg>
-                                            )}
-                                        </button>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
+                                    <div>
+                                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#FF5722' }}>{item.price}</div>
                                     </div>
+                                    {item.type === 'preorder' && (
+                                        <div style={{ fontSize: '0.9rem', color: '#888' }}>
+                                            Deposit: ฿{(item as any).deposit?.toLocaleString()}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

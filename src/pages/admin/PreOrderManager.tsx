@@ -49,7 +49,14 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
         gallery: initialItem?.gallery || [] as string[]
     });
 
-    const [specs, setSpecs] = useState<Record<string, string>>(initialSpecs);
+    // define default keys
+    const defaultSpecKeys = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity', 'Domestic Shipping'];
+    const filledSpecs = { ...initialSpecs };
+    defaultSpecKeys.forEach(key => {
+        if (!filledSpecs[key]) filledSpecs[key] = '-';
+    });
+
+    const [specs, setSpecs] = useState<Record<string, string>>(filledSpecs);
 
     const handleSpecChange = (key: string, value: string) => {
         setSpecs(prev => ({ ...prev, [key]: value }));
@@ -214,16 +221,28 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
                         </div>
                     </div>
 
-                    {/* Pre-order Close Date */}
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Pre-order Close Date *</label>
-                        <input
-                            type="date"
-                            required
-                            value={formData.preOrderCloseDate}
-                            onChange={(e) => handleInputChange('preOrderCloseDate', e.target.value)}
-                            style={inputStyle}
-                        />
+                    {/* Date & Shipping Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label style={labelStyle}>Pre-order Close Date *</label>
+                            <input
+                                type="date"
+                                required
+                                value={formData.preOrderCloseDate}
+                                onChange={(e) => handleInputChange('preOrderCloseDate', e.target.value)}
+                                style={inputStyle}
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Domestic Shipping (THB)</label>
+                            <input
+                                type="number"
+                                placeholder="e.g. 100"
+                                style={inputStyle}
+                                value={specs['Domestic Shipping'] || ''}
+                                onChange={(e) => handleSpecChange('Domestic Shipping', e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     {/* Fandom & Category Grid */}
@@ -357,12 +376,7 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
                                     value={specs['Packaging'] || ''}
                                     onChange={(e) => handleSpecChange('Packaging', e.target.value)} />
                             </div>
-                            <div>
-                                <label style={labelStyle}>Domestic Shipping (THB)</label>
-                                <input type="number" placeholder="e.g. 100" style={inputStyle}
-                                    value={specs['Domestic Shipping'] || ''}
-                                    onChange={(e) => handleSpecChange('Domestic Shipping', e.target.value)} />
-                            </div>
+
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <label style={labelStyle}>Authenticity</label>
                                 <input type="text" placeholder="e.g. Certificate included" style={inputStyle}
@@ -710,10 +724,14 @@ const PreOrderManager: React.FC = () => {
                     initialItem={editItem}
                     onClose={() => setEditItem(null)}
                     onAdd={() => { }} // Not used in edit mode
-                    onUpdate={(updatedItem) => {
-                        updatePreOrder(updatedItem);
-                        setEditItem(null);
-                        alert(`Updated ${updatedItem.name} successfully!`);
+                    onUpdate={async (updatedItem) => {
+                        try {
+                            await updatePreOrder(updatedItem);
+                            setEditItem(null);
+                            alert(`Updated ${updatedItem.name} successfully!`);
+                        } catch (error) {
+                            console.error("Update failed", error);
+                        }
                     }}
                 />
             )}

@@ -59,7 +59,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                                 image: p.image || 'https://placehold.co/300x300?text=No+Image',
                                 description: p.description,
                                 fandom: p.fandom || 'Other',
-                                category: p.category_id || p.category || 'PreOrder'
+                                category: p.category_id || p.category || 'PreOrder',
+                                gallery: p.gallery ? (typeof p.gallery === 'string' ? JSON.parse(p.gallery) : p.gallery) : []
                             });
                         } else {
                             loadedItems.push({
@@ -383,6 +384,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (e) {
             console.error("Failed to update pre-order via API", e);
             alert("Failed to update pre-order.");
+            throw e;
         }
     };
 

@@ -35,7 +35,8 @@ const PreOrderDetail: React.FC = () => {
       release_date: item.preOrderCloseDate,
       deposit_amount: item.deposit,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      gallery: JSON.stringify(item.gallery || [])
     };
   };
 
@@ -202,7 +203,7 @@ const PreOrderDetail: React.FC = () => {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: '450px 1fr',
         gap: '60px',
         alignItems: 'start'
       }}>
@@ -216,50 +217,66 @@ const PreOrderDetail: React.FC = () => {
             marginBottom: '20px'
           }}>
             <img
-              src={product.image}
+              src={(() => {
+                const gallery = product.gallery ? (typeof product.gallery === 'string' ? JSON.parse(product.gallery) : product.gallery) : [];
+                const images = [product.image, ...(Array.isArray(gallery) ? gallery : [])];
+                return images[selectedImage] || product.image;
+              })()}
               alt={product.name}
               style={{
                 width: '100%',
                 height: '400px',
-                objectFit: 'cover',
+                objectFit: 'contain',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(255,87,34,0.05)'
+                backgroundColor: 'rgba(0,0,0,0.2)' // Darker background for better contrast with 'contain'
               }}
             />
           </div>
 
-          {/* Thumbnail Gallery */}
-          <div style={{
+          <div className="gallery-scroll" style={{
             display: 'flex',
-            gap: '10px'
+            gap: '10px',
+            overflowX: 'auto',
+            paddingBottom: '10px',
+            scrollBehavior: 'smooth'
           }}>
-            {[0, 1, 2, 3].map((index) => (
-              <div
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '8px',
-                  border: selectedImage === index ? '2px solid #FF5722' : '1px solid var(--border-color)',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                <img
-                  src={product.image}
-                  alt={`View ${index + 1}`}
+            {(() => {
+              const gallery = product.gallery ? (typeof product.gallery === 'string' ? JSON.parse(product.gallery) : product.gallery) : [];
+              // Combine main image (if not in gallery) or just render gallery. 
+              // Usually gallery = extra images. Let's include main img as first option if we want to switch back.
+              const images = [product.image, ...(Array.isArray(gallery) ? gallery : [])];
+
+              if (images.length <= 1) return null; // Don't show thumbnails if only 1 image
+
+              return images.map((img: string, index: number) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '8px',
+                    border: selectedImage === index ? '2px solid #FF5722' : '1px solid var(--border-color)',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    flexShrink: 0
                   }}
-                />
-              </div>
-            ))}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <img
+                    src={img}
+                    alt={`View ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              ));
+            })()}
           </div>
         </div>
 
@@ -328,13 +345,15 @@ const PreOrderDetail: React.FC = () => {
             <div style={{
               fontSize: '0.9rem',
               color: '#666',
-              fontWeight: 'normal'
+              fontWeight: 'normal',
+              position: 'relative',
+              top: '-6px'
             }}>
-              <div style={{ color: '#FF5722', fontWeight: 'bold' }}>PRE-ORDER PRICE</div>
+
               <div>Deposit: ฿{product.deposit_amount?.toLocaleString()}</div>
               <div style={{ fontSize: '0.8rem', color: '#999' }}>
                 {(() => {
-                  const deposit = product.deposit_amount || Math.round(product.price * 0.2);
+                  const deposit = product.deposit_amount || Math.round(product.price * 0.5);
                   // const balance = product.price - deposit; // Removed as mostly irrelevant for display now
                   let shipping = 0;
                   const specPart = product.description?.split('--- Specifications ---')[1];
@@ -344,7 +363,7 @@ const PreOrderDetail: React.FC = () => {
                       shipping = Number(shippingLine.split(':')[1]?.trim()) || 0;
                     }
                   }
-                  return `(฿${deposit.toLocaleString()} now + ฿${shipping.toLocaleString()} shipping on release)`;
+                  return `(฿${deposit.toLocaleString()} now + ฿${shipping.toLocaleString()} arrived in Thailand)`;
                 })()}
               </div>
             </div>
@@ -510,11 +529,12 @@ const PreOrderDetail: React.FC = () => {
                 const specPart = product.description?.split('--- Specifications ---')[1];
                 if (specPart) {
                   return specPart.trim().split('\n')
-                    .filter(line => line.includes(':'))
+                    .filter(line => line.includes(':') && !line.includes('Domestic Shipping'))
                     .map((line, idx) => {
                       const [key, ...val] = line.split(':');
+                      const value = val.join(':').trim();
                       return (
-                        <div key={idx}><strong>{key.trim()}:</strong> {val.join(':').trim()}</div>
+                        <div key={idx}><strong>{key.trim()}:</strong> {value || '-'}</div>
                       );
                     });
                 }
@@ -615,6 +635,23 @@ const PreOrderDetail: React.FC = () => {
         @keyframes popIn {
             from { opacity: 0; transform: scale(0.8); }
             to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Custom Scrollbar for Gallery */
+        .gallery-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .gallery-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 4px;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 87, 34, 0.6); 
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb:hover {
+            background: #FF5722; 
         }
       `}</style>
     </div>

@@ -11,7 +11,7 @@ const AllFandom: React.FC = () => {
 
     // Get fandoms from items and custom images
     // Get fandoms from context (source of truth) instead of deriving from items
-    const { items, fandoms: contextFandoms, fandomImages, likedFandoms, toggleLikeFandom } = useProducts();
+    const { items, fandoms: contextFandoms, fandomImages, likedFandoms, toggleLikeFandom, preOrders } = useProducts();
     const fandoms = React.useMemo(() => {
         // Use contextFandoms which contains all fandoms including manually added ones
         return contextFandoms.map(f => {
@@ -22,12 +22,31 @@ const AllFandom: React.FC = () => {
                 ? fandomImages[f]
                 : (item?.image || 'https://placehold.co/600x400?text=No+Image');
 
+            // Find closest ending pre-order
+            const relevantPreOrders = preOrders.filter(p => p.fandom === f && p.preOrderCloseDate && new Date(p.preOrderCloseDate).getTime() > Date.now());
+            let timeLeft = null;
+            if (relevantPreOrders.length > 0) {
+                const closest = relevantPreOrders.sort((a, b) => {
+                    const dateA = a.preOrderCloseDate ? new Date(a.preOrderCloseDate).getTime() : 0;
+                    const dateB = b.preOrderCloseDate ? new Date(b.preOrderCloseDate).getTime() : 0;
+                    return dateA - dateB;
+                })[0];
+
+                if (closest.preOrderCloseDate) {
+                    const diff = new Date(closest.preOrderCloseDate).getTime() - Date.now();
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    timeLeft = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+                }
+            }
+
             return {
                 name: f,
-                image: image
+                image: image,
+                timeLeft: timeLeft
             };
         }).filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [contextFandoms, items, fandomImages, searchTerm]);
+    }, [contextFandoms, items, fandomImages, searchTerm, preOrders]);
 
     return (
         <div style={{
@@ -118,6 +137,24 @@ const AllFandom: React.FC = () => {
                                     background: 'var(--card-bg)',
                                     boxShadow: hoveredId === f.name ? '0 15px 30px rgba(255, 87, 34, 0.2)' : '0 4px 10px rgba(0,0,0,0.1)',
                                 }}>
+                                    {f.timeLeft && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '10px',
+                                            right: '10px',
+                                            background: 'rgba(0,0,0,0.8)',
+                                            border: '1px solid #FF5722',
+                                            color: '#FF5722',
+                                            padding: '5px 12px',
+                                            borderRadius: '20px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 'bold',
+                                            zIndex: 2,
+                                            boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                                        }}>
+                                            Ends in: {f.timeLeft}
+                                        </div>
+                                    )}
                                     <img
                                         src={f.image}
                                         alt={f.name}

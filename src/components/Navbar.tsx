@@ -72,7 +72,7 @@ function Navbar() {
                 </Link>
 
                 <div style={{ display: 'flex', gap: '20px' }}>
-                    <Link to="/preorder" style={linkStyle}>{t('pre_order')}</Link>
+                    <Link to="/request-custom-product" style={linkStyle}>Request</Link>
                     <Link to="/fandoms" style={linkStyle}>{t('all_fandoms')}</Link>
                     {role === 'admin' && (
                         <Link to="/admin" style={{ ...linkStyle, color: '#FF5722' }}>

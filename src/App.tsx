@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { usePoints } from './hooks/usePoints';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
 import Footer from './components/footer';
@@ -9,7 +8,6 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AboutUs from './pages/AboutUs';
-import PreOrder from './pages/preorder/PreOrder';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import Checkout from './pages/Checkout';
@@ -20,10 +18,10 @@ import CustomerChat from './pages/CustomerChat';
 import AllFandom from './pages/fandoms/AllFandom';
 import FandomDetail from './pages/fandoms/FandomDetail';
 import ProductDetail from './pages/fandoms/ProductDetail';
+import PreOrderDetail from './pages/fandoms/PreOrderDetail';
 import RequestCustomProduct from './pages/RequestCustomProduct';
 
 import UserDetail from './pages/UserDetail';
-import PreOrderDetail from './pages/preorder/PreOrderDetail';
 
 import FandomManager from './pages/admin/FandomManager';
 import UserManager from './pages/admin/UserManager';
@@ -41,9 +39,16 @@ import { userAPI } from './services/api';
 
 // ... (Other imports)
 
-function MainLayout() {
-  const { addPoints } = usePoints();
+// wrapper to decide between product and preorder based on ID
+function ProductRouteHandler() {
+  const { id } = useParams<{ id: string }>();
+  if (id && (id.startsWith('P') || id.startsWith('p'))) {
+    return <PreOrderDetail />;
+  }
+  return <ProductDetail />;
+}
 
+function MainLayout() {
   const { isLoggedIn, logout, user } = useAuth();
   const [showBlacklistKickModal, setShowBlacklistKickModal] = useState(false);
   const [showChatPopup, setShowChatPopup] = useState(false);
@@ -101,14 +106,10 @@ function MainLayout() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Preorder Routes */}
-            <Route path="/preorder" element={<PreOrder addPoints={addPoints} />} />
-            <Route path="/preorder/:id" element={<PreOrderDetail />} />
-
             {/* Fandom Routes */}
             <Route path="/fandoms" element={<AllFandom />} />
             <Route path="/fandoms/:name" element={<FandomDetail />} />
-            <Route path="/fandoms/:name/:id" element={<ProductDetail />} />
+            <Route path="/fandoms/:name/:id" element={<ProductRouteHandler />} />
 
             {/* About Routes */}
             <Route path="/about" element={<AboutUs />} />
@@ -122,6 +123,7 @@ function MainLayout() {
             <Route path="/profile/edit" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
             <Route path="/profile/users/:id" element={<UserDetail />} />
+
             {/* Profile Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UserManager />} />

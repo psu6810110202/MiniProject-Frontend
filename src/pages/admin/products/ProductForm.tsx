@@ -111,6 +111,8 @@ const ProductForm: React.FC = () => {
         }
 
         if (found) {
+            console.log('DEBUG: Found product:', found);
+            console.log('DEBUG: Product ID:', found.id, 'Type:', typeof found.id);
             setInternalId(found.id);
             const { desc, specs: parsedSpecs, variants } = parseInitialData(found);
 
@@ -224,34 +226,12 @@ const ProductForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Debug: Log current form data
-        console.log('Current form data:', formData);
-        console.log('Current specs:', specs);
+        console.log('DEBUG: Submit - isEditMode:', isEditMode);
+        console.log('DEBUG: Submit - internalId:', internalId, 'Type:', typeof internalId);
+        console.log('DEBUG: Submit - URL id:', id);
 
         if (isEditMode && !internalId) {
             alert('Error: Could not identify original product.');
-            return;
-        }
-
-        // Validation
-        if (!formData.name.trim()) {
-            alert('Please enter a product name.');
-            return;
-        }
-        if (!formData.price || Number(formData.price) <= 0) {
-            alert('Please enter a valid price.');
-            return;
-        }
-        if (!formData.category) {
-            alert('Please select a category.');
-            return;
-        }
-        if (!formData.fandom) {
-            alert('Please select a fandom.');
-            return;
-        }
-        if (!formData.image) {
-            alert('Please upload a thumbnail image.');
             return;
         }
 
@@ -277,7 +257,7 @@ const ProductForm: React.FC = () => {
             variantString;
 
         const productData: Item = {
-            id: isEditMode ? Number(internalId) : Date.now(),
+            id: isEditMode && internalId ? internalId : Date.now(),
             name: formData.name,
             price: `฿${Number(formData.price).toLocaleString()}`,
             category: formData.category,
@@ -289,25 +269,17 @@ const ProductForm: React.FC = () => {
         };
 
         try {
-            console.log('Submitting product data:', productData);
-            console.log('Is edit mode:', isEditMode);
-            console.log('Internal ID:', internalId);
-            
             if (isEditMode) {
-                // @ts-ignore
                 await updateItem(productData);
                 alert('Product updated successfully!');
             } else {
-                // @ts-ignore
                 await addItem(productData);
                 alert('Product added successfully!');
             }
             navigate('/admin/products');
-        } catch (error) {
-            console.error('Error saving product:', error);
-            const errorDetails = error instanceof Error ? error.message : String(error);
-            console.error('Error details:', errorDetails);
-            alert('Failed to save product. Please try again.');
+        } catch (error: any) {
+            console.error('Save product error:', error);
+            alert(`Failed to save product: ${error.message || 'Unknown error'}`);
         } finally {
             setIsSubmitting(false);
         }

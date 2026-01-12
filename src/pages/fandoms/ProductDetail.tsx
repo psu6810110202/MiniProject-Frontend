@@ -7,7 +7,7 @@ import { productAPI } from '../../services/api';
 const ProductDetail: React.FC = () => {
   const { id, name } = useParams<{ id: string; name: string }>();
   const { addToCart } = useCart();
-  const { items, preOrders, likedProductIds, toggleLikeProduct } = useProducts();
+  const { items } = useProducts();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ const ProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [purchaseOption, setPurchaseOption] = useState<'single' | 'set'>('single');
+
 
 
   // Convert Item to Product format
@@ -42,23 +42,55 @@ const ProductDetail: React.FC = () => {
       variants: {
         hasSet: false,
         setPrice: 0,
-        setQty: 0
+        setQty: 0,
+        options: [] as { name: string, price: number, image?: string }[] // Added options array
       }
     };
 
-    // Parse Variants from Description
+    // Parse Variants from Description (New JSON Format)
+    if (item.description && item.description.includes('--- Variants Data ---')) {
+      try {
+        const [, subJson] = item.description.split('--- Variants Data ---');
+        const parsedVars = JSON.parse(subJson.trim());
+        if (Array.isArray(parsedVars) && parsedVars.length > 0) {
+          baseProduct.variants = {
+            ...baseProduct.variants,
+            options: parsedVars
+          };
+        }
+      } catch (e) {
+        console.error("Error parsing variants data", e);
+      }
+    }
+
+    // Parse Variants from Description (Legacy Sales Options)
     if (item.description && item.description.includes('--- Sales Options ---')) {
-      const [descBody, varStr] = item.description.split('--- Sales Options ---');
+      const [varStr] = item.description.split('--- Sales Options ---');
       const setPrice = parseInt(varStr.match(/Set Price: (\d+)/)?.[1] || '0');
       const setQty = parseInt(varStr.match(/Set Quantity: (\d+)/)?.[1] || varStr.match(/Box Count: (\d+)/)?.[1] || '0');
 
+      // Clean the description for display if we haven't already (though we might prefer the raw main part)
+      // For now, we keep the original logic but prioritize the new Variants Data if present for UI
       if (setPrice) {
-        return {
-          ...baseProduct,
-          description: descBody.trim(),
-          variants: { hasSet: true, setPrice, setQty }
+        baseProduct.variants = {
+          ...baseProduct.variants,
+          hasSet: true,
+          setPrice,
+          setQty
         };
+        // If we don't have new JSON variants, create artificial ones from the legacy data for consistent UI
+        if (!baseProduct.variants.options) {
+          baseProduct.variants.options = [
+            { name: 'Single Box', price: baseProduct.price, image: baseProduct.image },
+            { name: 'Full Set', price: setPrice, image: baseProduct.image } // Could try to find a set image if available
+          ];
+        }
       }
+    } else if (!baseProduct.variants.options) {
+      // Default single option if no variants found
+      baseProduct.variants.options = [
+        { name: 'Default', price: baseProduct.price, image: baseProduct.image }
+      ];
     }
 
     return baseProduct;
@@ -72,7 +104,7 @@ const ProductDetail: React.FC = () => {
       setError('No product ID provided');
       setLoading(false);
     }
-  }, [id, items, preOrders]);
+  }, [id, items]);
 
   const loadProduct = async (productId: string) => {
     console.log('Loading product with ID:', productId);
@@ -88,18 +120,10 @@ const ProductDetail: React.FC = () => {
         return;
       }
 
-      // 2. Try to find in PreOrders
-      const cleanId = productId.replace(/^P/i, '');
-      const preOrderItem = preOrders.find(item => item.id.toString() === cleanId);
-      if (preOrderItem) {
-        setProduct(convertItemToProduct(preOrderItem));
-        setError(null);
-        return;
-      }
-
-      // 3. API Fallback
-      console.log('Not found in context, trying API for ID:', cleanId);
-      const apiData = await productAPI.getById(cleanId);
+      // 2. API Fallback (Assume regular product)
+      // Note: We don't check preOrders context here anymore as that is handled by PreOrderDetail
+      console.log('Not found in context, trying API for ID:', productId);
+      const apiData = await productAPI.getById(productId);
       if (apiData) {
         setProduct(convertItemToProduct(apiData));
         setError(null);
@@ -114,24 +138,45 @@ const ProductDetail: React.FC = () => {
     }
   };
 
+  /* State for Variant Selection */
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+
+  useEffect(() => {
+    if (product && product.variants?.options?.length > 0) {
+      setSelectedVariantIndex(0);
+      // If variant has an image, maybe we should set it but let's stick to gallery logic or overwrite for now
+      // if (product.variants.options[0].image) ...
+    }
+  }, [product]);
+
+  const currentVariant = product?.variants?.options?.[selectedVariantIndex] || {
+    name: product?.name,
+    price: product?.price,
+    image: product?.image,
+    stock: product?.stock
+  };
+
+
   const handleAddToCart = async () => {
     if (!product) return;
 
     setAddingToCart(true);
     try {
       const safeId = isNaN(Number(product.product_id)) ? Date.now() : Number(product.product_id);
+
       addToCart({
-        id: safeId,
-        name: purchaseOption === 'set' ? `${product.name} (Full Set)` : product.name,
-        price: purchaseOption === 'set' ? `฿${product.variants.setPrice.toLocaleString()}` : `฿${product.price.toLocaleString()}`,
+        id: safeId, // We might want a unique ID composed of ProductID + VariantIndex? For now, keeps simplified
+        name: `${product.name} - ${currentVariant.name}`,
+        price: `฿${Number(currentVariant.price).toLocaleString()}`,
         category: product.category,
         fandom: product.fandom,
-        image: product.image
+        image: currentVariant.image || product.image
       });
 
       console.log(`Item added to cart.`);
 
       setTimeout(() => {
+        // Simple visual feedback reset
         setAddingToCart(false);
       }, 1000);
     } catch (err) {
@@ -139,6 +184,7 @@ const ProductDetail: React.FC = () => {
       setAddingToCart(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -168,6 +214,11 @@ const ProductDetail: React.FC = () => {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+          }
         `}</style>
       </div>
     );
@@ -189,46 +240,26 @@ const ProductDetail: React.FC = () => {
   }
 
   // Gallery Logic: Use product.gallery if available, otherwise just main image repeated or single
+  // If Selected Variant has specific image, show that as main?
+  // User might prefer standard gallery logic. Let's keep gallery logic but augment main image if variant has one.
   const galleryImages = (product.gallery && product.gallery.length > 0)
     ? [product.image, ...product.gallery].slice(0, 5) // Max 5 images including main
     : [product.image];
 
-  const currentImage = galleryImages[selectedImage] || product.image;
+  // If the current variant has an image and it's different, prioritize showing it?
+  // Usually variants have their own images.
+  const displayImage = (currentVariant.image && currentVariant.image !== product.image) ? currentVariant.image : (galleryImages[selectedImage] || product.image);
 
   return (
     <div style={{
       padding: '40px 20px',
-      maxWidth: '1200px',
+      maxWidth: '1100px',
       margin: '0 auto',
-      color: 'var(--text-main)',
-      background: 'var(--bg-color)',
-      minHeight: '80vh',
+      color: '#fff',
+      background: '#000',
+      minHeight: '100vh',
       position: 'relative'
     }}>
-      {/* Back Button */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        zIndex: 10
-      }}>
-        <Link
-          to={`/fandoms/${name || 'all'}`}
-          style={{
-            textDecoration: 'none',
-            color: 'var(--text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '1rem',
-            transition: 'color 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
-        >
-          ← Back
-        </Link>
-      </div>
 
       {/* Error Message */}
       {error && (
@@ -247,7 +278,7 @@ const ProductDetail: React.FC = () => {
       {/* Product Details - Matching PreOrderDetail Layout */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: '450px 1fr',
         gap: '60px',
         marginTop: '40px',
         alignItems: 'start'
@@ -263,14 +294,14 @@ const ProductDetail: React.FC = () => {
             marginBottom: '20px'
           }}>
             <img
-              src={currentImage}
+              src={displayImage}
               alt={product.name}
               style={{
                 width: '100%',
                 height: '400px',
                 objectFit: 'contain',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(255,87,34,0.02)'
+                backgroundColor: 'rgba(0,0,0,0.2)'
               }}
               onError={(e) => {
                 e.currentTarget.src = 'https://via.placeholder.com/400?text=No+Image';
@@ -279,9 +310,18 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Thumbnail Gallery */}
-          {galleryImages.length > 1 && (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {galleryImages.map((img: string, index: number) => (
+          <div className="gallery-scroll" style={{
+            display: 'flex',
+            gap: '10px',
+            overflowX: 'auto',
+            paddingBottom: '10px',
+            scrollBehavior: 'smooth'
+          }}>
+            {(() => {
+              const images = [product.image, ...(product.gallery && Array.isArray(product.gallery) ? product.gallery : [])];
+              if (images.length <= 1) return null;
+
+              return images.map((img: string, index: number) => (
                 <div
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -293,6 +333,7 @@ const ProductDetail: React.FC = () => {
                     overflow: 'hidden',
                     cursor: 'pointer',
                     transition: 'transform 0.2s',
+                    flexShrink: 0,
                     background: 'var(--card-bg)'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -308,14 +349,14 @@ const ProductDetail: React.FC = () => {
                     }}
                   />
                 </div>
-              ))}
-            </div>
-          )}
+              ));
+            })()}
+          </div>
         </div>
 
         {/* Product Information */}
         <div>
-          {/* Product Name with Badges */}
+          {/* Product Name (No Badges) */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
               <h1
@@ -323,24 +364,12 @@ const ProductDetail: React.FC = () => {
                   fontSize: '2rem',
                   fontWeight: 'bold',
                   margin: '0',
-                  color: 'var(--text-main)',
+                  color: '#fff',
                   lineHeight: '1.2'
                 }}
               >
                 {product.name}
               </h1>
-              {product.is_preorder && (
-                <span style={{
-                  padding: '6px 12px',
-                  background: 'linear-gradient(135deg, #FF5722, #E64A19)',
-                  color: 'white',
-                  borderRadius: '15px',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold'
-                }}>
-                  PRE-ORDER
-                </span>
-              )}
               {product.stock > 0 ? (
                 <span style={{
                   padding: '6px 12px',
@@ -369,70 +398,71 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Purchase Options Selector */}
-          {product.variants?.hasSet && (
-            <div style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
-              <div
-                onClick={() => setPurchaseOption('single')}
-                style={{
-                  flex: 1,
-                  padding: '15px',
-                  borderRadius: '10px',
-                  border: purchaseOption === 'single' ? '2px solid #FF5722' : '1px solid #444',
-                  background: purchaseOption === 'single' ? 'rgba(255, 87, 34, 0.1)' : '#252525',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Single Box</div>
-                <div style={{ color: '#FF5722', fontSize: '1.2rem' }}>฿{product.price.toLocaleString()}</div>
-              </div>
-              <div
-                onClick={() => setPurchaseOption('set')}
-                style={{
-                  flex: 1,
-                  padding: '15px',
-                  borderRadius: '10px',
-                  border: purchaseOption === 'set' ? '2px solid #FF5722' : '1px solid #444',
-                  background: purchaseOption === 'set' ? 'rgba(255, 87, 34, 0.1)' : '#252525',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Full Set ({product.variants.setQty || '?'} pcs)</div>
-                <div style={{ color: '#FF5722', fontSize: '1.2rem' }}>฿{product.variants.setPrice.toLocaleString()}</div>
-                <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                  (Guaranteed Unique)
-                </div>
+          {/* Variants Selectors (As Buttons) */}
+          {product.variants?.options?.length > 0 && (
+            <div style={{ marginBottom: '25px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <label style={{ color: '#888', fontSize: '0.9rem', fontWeight: 'bold' }}>Select Option:</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {product.variants.options.map((v: any, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedVariantIndex(idx)}
+                    style={{
+                      padding: '10px 20px',
+                      background: selectedVariantIndex === idx ? 'linear-gradient(135deg, #FF5722, #E64A19)' : 'var(--card-bg)',
+                      color: selectedVariantIndex === idx ? 'white' : 'var(--text-muted)',
+                      border: selectedVariantIndex === idx ? 'none' : '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s',
+                      minWidth: '100px',
+                      boxShadow: selectedVariantIndex === idx ? '0 4px 12px rgba(255, 87, 34, 0.3)' : 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedVariantIndex !== idx) {
+                        e.currentTarget.style.borderColor = '#FF5722';
+                        e.currentTarget.style.color = '#FF5722';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedVariantIndex !== idx) {
+                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                      }
+                    }}
+                  >
+                    {v.name}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Price Display (Dynamic) */}
+          {/* Price Display (Dynamic based on selected variant) */}
           <div style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: product.is_preorder ? '#FF5722' : '#4CAF50',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'baseline',
             gap: '15px'
           }}>
-            <div>
-              ฿{purchaseOption === 'set' ? product.variants.setPrice.toLocaleString() : product.price.toLocaleString()}
+            <div style={{
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              color: '#FF5722'
+            }}>
+              ฿{Number(currentVariant.price).toLocaleString()}
             </div>
-            {purchaseOption === 'set' && (
-              <div style={{ fontSize: '1rem', color: '#888', fontWeight: 'normal' }}>
-                for {product.variants.setQty} items
-              </div>
-            )}
           </div>
 
           {/* Description Main Text */}
           <div style={{ marginBottom: '20px' }}>
             <p style={{
-              lineHeight: '1.6',
+              lineHeight: '1.5',
               color: 'var(--text-muted)',
               margin: 0,
-              fontSize: '1rem',
+              fontSize: '0.95rem',
               whiteSpace: 'pre-wrap'
             }}>
               {product.description ? product.description.split('--- Specifications ---')[0].trim() : ''}
@@ -472,12 +502,13 @@ const ProductDetail: React.FC = () => {
                   padding: '10px 20px',
                   minWidth: '60px',
                   textAlign: 'center',
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  color: 'var(--text-main)'
                 }}>
                   {quantity}
                 </div>
                 <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  onClick={() => setQuantity(Math.min((currentVariant.stock !== undefined ? parseInt(currentVariant.stock) : product.stock), quantity + 1))}
                   style={{
                     padding: '10px 15px',
                     border: 'none',
@@ -491,7 +522,7 @@ const ProductDetail: React.FC = () => {
                 </button>
               </div>
               <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                Stock: {product.stock} units
+                Stock: {currentVariant.stock !== undefined ? currentVariant.stock : product.stock} units
               </span>
             </div>
           )}
@@ -504,70 +535,39 @@ const ProductDetail: React.FC = () => {
           }}>
             <button
               onClick={handleAddToCart}
-              disabled={addingToCart || product.stock === 0}
+              disabled={addingToCart || (currentVariant.stock !== undefined ? parseInt(currentVariant.stock) === 0 : product.stock === 0)}
               style={{
                 flex: 1,
                 padding: '15px 30px',
-                background: addingToCart ? '#4CAF50' : (product.stock === 0 ? '#555' : 'linear-gradient(135deg, #FF5722, #E64A19)'),
+                background: addingToCart ? '#4CAF50' : ((currentVariant.stock !== undefined ? parseInt(currentVariant.stock) === 0 : product.stock === 0) ? '#555' : 'linear-gradient(135deg, #FF5722, #E64A19)'),
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
-                cursor: addingToCart || product.stock === 0 ? 'not-allowed' : 'pointer',
+                cursor: addingToCart || (currentVariant.stock !== undefined ? parseInt(currentVariant.stock) === 0 : product.stock === 0) ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
-                opacity: product.stock === 0 ? 0.7 : 1,
-                boxShadow: product.stock > 0 ? '0 4px 16px rgba(255, 87, 34, 0.3)' : 'none'
+                opacity: (currentVariant.stock !== undefined ? parseInt(currentVariant.stock) === 0 : product.stock === 0) ? 0.5 : 1,
+                boxShadow: '0 4px 16px rgba(255, 87, 34, 0.3)'
               }}
               onMouseEnter={(e) => {
-                if (!addingToCart && product.stock > 0) {
+                const stock = currentVariant.stock !== undefined ? parseInt(currentVariant.stock) : product.stock;
+                if (!addingToCart && stock > 0) {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #E64A19, #D84315)';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (!addingToCart && product.stock > 0) {
+                const stock = currentVariant.stock !== undefined ? parseInt(currentVariant.stock) : product.stock;
+                if (!addingToCart && stock > 0) {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #FF5722, #E64A19)';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              {addingToCart ? '✓ Added to Cart' : product.stock === 0 ? 'Out of Stock' : (product.is_preorder ? 'Pre-Order Now' : 'Add to Cart')}
+              {addingToCart ? '✓ Added to Cart' : ((currentVariant.stock !== undefined ? parseInt(currentVariant.stock) === 0 : product.stock === 0) ? 'Out of Stock' : 'Add to Cart')}
             </button>
 
-            <button
-              onClick={() => {
-                if (product?.product_id) toggleLikeProduct(Number(product.product_id));
-              }}
-              style={{
-                width: '60px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0',
-                background: 'transparent',
-                border: '2px solid #FF5722',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 87, 34, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              {product && likedProductIds.includes(Number(product.product_id)) ? (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              ) : (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              )}
-            </button>
           </div>
 
           {/* Dynamic Specifications */}
@@ -583,18 +583,26 @@ const ProductDetail: React.FC = () => {
               fontSize: '0.9rem',
               color: 'var(--text-muted)'
             }}>
-              <div><strong>Product ID:</strong> {product.product_id}</div>
-              <div><strong>Category:</strong> {product.category}</div>
-              <div><strong>Fandom:</strong> {product.fandom}</div>
+              <div><strong style={{ color: '#fff' }}>Product ID:</strong> {product.product_id}</div>
               {(() => {
-                const specPart = product.description?.split('--- Specifications ---')[1];
+                let specPart = product.description?.split('--- Specifications ---')[1];
                 if (specPart) {
+                  // Clean up potential trailing data blocks
+                  if (specPart.includes('--- Variants Data ---')) {
+                    specPart = specPart.split('--- Variants Data ---')[0];
+                  }
+                  if (specPart.includes('--- Sales Options ---')) {
+                    specPart = specPart.split('--- Sales Options ---')[0];
+                  }
+
                   return specPart.trim().split('\n')
-                    .filter((line: string) => line.includes(':'))
+                    .filter((line: string) => line.includes(':') && !line.trim().startsWith('[') && !line.trim().startsWith('{'))
                     .map((line: string, idx: number) => {
                       const [key, ...val] = line.split(':');
+                      const value = val.join(':').trim();
+
                       return (
-                        <div key={idx}><strong>{key.trim()}:</strong> {val.join(':').trim()}</div>
+                        <div key={idx}><strong style={{ color: '#fff' }}>{key.trim()}:</strong> {value || '-'}</div>
                       );
                     });
                 }
@@ -603,8 +611,27 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+
+      <style>{`
+        /* Custom Scrollbar for Gallery */
+        .gallery-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .gallery-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 4px;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 87, 34, 0.6); 
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb:hover {
+            background: #FF5722; 
+        }
+      `}</style>
+    </div >
   );
 };
 

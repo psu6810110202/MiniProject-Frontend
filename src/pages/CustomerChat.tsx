@@ -112,23 +112,6 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ isPopup = false, onClose })
     }, 1000 + Math.random() * 2000);
   };
 
-  const handleEndChat = () => {
-    if (chatRoom) {
-      const closedChat = {
-        ...chatRoom,
-        status: 'closed' as const
-      };
-      setChatRoom(closedChat);
-      if (isPopup && onClose) {
-        setTimeout(onClose, 2000);
-      } else {
-        setTimeout(() => {
-          navigate('/call-center');
-        }, 2000);
-      }
-    }
-  };
-
   return (
     <div style={{
       padding: isPopup ? '0' : '20px',

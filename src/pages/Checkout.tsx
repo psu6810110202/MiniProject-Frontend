@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { usePoints } from '../hooks/usePoints';
+import { useProducts } from '../contexts/ProductContext';
+import { userAPI, orderAPI } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 type PaymentMethodId = 'bank' | 'truemoney';
@@ -10,14 +13,15 @@ type PaymentMethodId = 'bank' | 'truemoney';
 const Checkout: React.FC = () => {
 
     const { cartItems, totalAmount, clearCart, addOrder } = useCart();
-    const { user, isLoggedIn } = useAuth();
+    const { user, isLoggedIn, updateUser } = useAuth();
+    const { t } = useLanguage();
     const { addPoints, calculatePointsFromAmount } = usePoints();
+    const { deductStock } = useProducts();
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Derive step from URL
+    // Derive step from URL (omitted unchanged parts)
     const step = location.pathname.includes('confirm') ? 2 : 1;
-
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -37,7 +41,7 @@ const Checkout: React.FC = () => {
                 user.district,
                 user.province,
                 user.postal_code
-            ].filter(Boolean); // Filter out empty strings/undefined
+            ].filter(Boolean);
 
             setForm(prev => ({
                 ...prev,
@@ -55,21 +59,73 @@ const Checkout: React.FC = () => {
         }
     }, [location.state]);
 
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [addressForm, setAddressForm] = useState({
+        name: '',
+        phone: '',
+        house_number: '',
+        sub_district: '',
+        district: '',
+        province: '',
+        postal_code: ''
+    });
+
+    React.useEffect(() => {
+        if (user) {
+            setAddressForm({
+                name: user.name || '',
+                phone: user.phone || '',
+                house_number: user.house_number || '',
+                sub_district: user.sub_district || '',
+                district: user.district || '',
+                province: user.province || '',
+                postal_code: user.postal_code || ''
+            });
+        }
+    }, [user]);
+
+    const handleSaveAddress = async () => {
+        if (!user) return;
+        try {
+            const updatedUser = { ...user, ...addressForm };
+            await userAPI.update(user.id, updatedUser);
+            updateUser(updatedUser);
+
+            const addressParts = [
+                addressForm.house_number,
+                addressForm.sub_district,
+                addressForm.district,
+                addressForm.province,
+                addressForm.postal_code
+            ].filter(Boolean);
+
+            setForm(prev => ({
+                ...prev,
+                name: addressForm.name,
+                phone: addressForm.phone,
+                address: addressParts.join(' ')
+            }));
+
+            setIsEditingAddress(false);
+            alert(t('address_updated_success'));
+        } catch (error) {
+            console.error(error);
+            alert(t('failed_update_address'));
+        }
+    };
+
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const totals = React.useMemo(() => {
-        // Shipping Calculation based on Territory (Postal Rates Logic)
-        let shippingCost = 60; // Default Rate (Upcountry/Standard)
-
+        let shippingCost = 60;
         if (user?.province) {
             const userProvince = user.province;
             const bkkVicinity = ['กรุงเทพมหานคร', 'Bangkok', 'นนทบุรี', 'Nonthaburi', 'ปทุมธานี', 'Pathum Thani', 'สมุทรปราการ', 'Samut Prakan'];
             if (bkkVicinity.some(p => userProvince.includes(p))) {
-                shippingCost = 45; // Metropolitan Rate
+                shippingCost = 45;
             }
         }
-
         const truemoneyFee = form.paymentMethod === 'truemoney' ? 10 : 0;
         return { subtotal: totalAmount, shipping: shippingCost, total: totalAmount + shippingCost + truemoneyFee, truemoneyFee };
     }, [totalAmount, form.paymentMethod, user]);
@@ -104,10 +160,52 @@ const Checkout: React.FC = () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 1200));
 
-            const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+            // Deduct Stock immediately (sanitize ID by removing 'P' if present)
+            await Promise.all(cartItems.map(item => deductStock(String(item.id).replace(/^P/i, ''), item.quantity)));
+
+            // Convert slip to Base64
+            let slipBase64 = null;
+            if (form.slipImage) {
+                try {
+                    slipBase64 = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(form.slipImage!);
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = error => reject(error);
+                    });
+                } catch (err) {
+                    console.error("Error reading file", err);
+                }
+            }
+
+            // Prepare Order Payload for Backend
+            const orderPayload: any = {
+                user_id: user?.id,
+                total_amount: totals.total,
+                shipping_fee: totals.shipping,
+                status: 'pending',
+                payment_status: 'pending_verification',
+                shipping_address: `${form.name} | ${form.phone} | ${form.address}`,
+                items: cartItems.map(item => ({
+                    product_id: String(item.id).replace(/^P/i, ''),
+                    quantity: item.quantity,
+                    unit_price: Number(String(item.price).replace(/[^0-9.-]+/g, ""))
+                })),
+                payment_slip: slipBase64,
+                payment_date: form.transferDate,
+                payment_time: form.transferTime
+            };
+
+            // Call Backend API
+            const createdOrder = await orderAPI.create(orderPayload);
+            const orderId = createdOrder.order_id || `ORD-${Date.now().toString().slice(-6)}`; // Fallback if mock
+
             const newOrder: any = {
                 id: orderId,
-                date: new Date().toISOString().split('T')[0],
+                date: (() => {
+                    const now = new Date();
+                    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                })(),
                 status: 'pending',
                 items: cartItems.map(item => ({
                     id: item.id,
@@ -122,7 +220,7 @@ const Checkout: React.FC = () => {
                 payment: {
                     date: form.transferDate,
                     time: form.transferTime,
-                    slip: form.slipImage ? form.slipImage.name : 'slip.jpg' // In real app, upload file first
+                    slip: form.slipImage ? form.slipImage.name : 'slip.jpg'
                 }
             };
 
@@ -137,8 +235,11 @@ const Checkout: React.FC = () => {
 
             clearCart();
             navigate(`/profile/orders/${orderId}`, { state: { order: newOrder } });
-        } catch {
-            setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
+        } catch (e) {
+            console.error("Order Creation Error:", e);
+            const msg = (e as any)?.message || 'การสร้างคำสั่งซื้อล้มเหลว';
+            // Check for specific backend validation messages if possible, otherwise show raw message to help debug
+            setError(`เกิดข้อผิดพลาด: ${msg}`);
         } finally {
             setIsProcessing(false);
         }
@@ -395,7 +496,7 @@ const Checkout: React.FC = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => navigate('/profile/edit')}
+                                            onClick={() => setIsEditingAddress(true)}
                                             style={{
                                                 position: 'absolute',
                                                 top: '15px',
@@ -412,7 +513,7 @@ const Checkout: React.FC = () => {
                                                 justifyContent: 'center',
                                                 zIndex: 1
                                             }}
-                                            title="Edit Address"
+                                            title={t('edit_address')}
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M12 20h9"></path>
@@ -481,6 +582,32 @@ const Checkout: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Address Edit Modal */}
+            {isEditingAddress && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: '#1a1a1a', padding: '30px', borderRadius: '16px', width: '90%', maxWidth: '500px', border: '1px solid #444' }}>
+                        <h3>{t('edit_address')}</h3>
+                        <div style={{ display: 'grid', gap: '15px' }}>
+                            <input placeholder={t('full_name_label')} value={addressForm.name} onChange={e => setAddressForm({ ...addressForm, name: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                            <input placeholder={t('phone_label')} value={addressForm.phone} onChange={e => setAddressForm({ ...addressForm, phone: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                            <input placeholder={t('house_number')} value={addressForm.house_number} onChange={e => setAddressForm({ ...addressForm, house_number: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <input placeholder={t('sub_district')} value={addressForm.sub_district} onChange={e => setAddressForm({ ...addressForm, sub_district: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                                <input placeholder={t('district')} value={addressForm.district} onChange={e => setAddressForm({ ...addressForm, district: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <input placeholder={t('province')} value={addressForm.province} onChange={e => setAddressForm({ ...addressForm, province: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                                <input placeholder={t('postal_code')} value={addressForm.postal_code} onChange={e => setAddressForm({ ...addressForm, postal_code: e.target.value })} style={{ padding: '10px', background: '#333', border: '1px solid #444', color: 'white', borderRadius: '6px' }} />
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setIsEditingAddress(false)} style={{ padding: '10px 20px', background: 'transparent', color: '#888', border: 'none', cursor: 'pointer' }}>{t('cancel')}</button>
+                            <button onClick={handleSaveAddress} style={{ padding: '10px 20px', background: '#FF5722', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>{t('save_update_profile')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

@@ -39,4 +39,5 @@ export interface PreOrderItem {
   fandom: string;
   category: string;
   gallery?: string[];
+  domesticShipping?: number;
 }

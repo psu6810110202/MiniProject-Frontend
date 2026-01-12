@@ -22,6 +22,7 @@ export interface Product {
   deposit_amount?: number;
   created_at: string;
   updated_at: string;
+  domestic_shipping_cost?: number;
 }
 
 export interface Order {
@@ -263,6 +264,10 @@ class APIService {
     });
   }
 
+  async deleteOrder(id: string): Promise<void> {
+    return this.request<void>(`/orders/${id}`, { method: 'DELETE' });
+  }
+
   // --- Users API ---
   async getUsers(): Promise<User[]> {
     return this.request<User[]>('/users');
@@ -394,12 +399,12 @@ export const orderAPI = {
   create: (order: Partial<Order>) => api.createOrder(order),
   createShippingLabel: (orderId: string) => api.createShippingLabel(orderId),
   updateStatus: (orderId: string, status: string) => api.updateOrderStatus(orderId, status),
+  delete: (id: string) => api.deleteOrder(id),
 };
 
 export const userAPI = {
   getAll: () => api.getUsers(),
   getById: (id: string) => api.getUserById(id),
-  restore: (id: string) => api.restoreUser(id),
   update: (id: string, data: Partial<User>) => api.updateUser(id, data),
   delete: (id: string) => api.deleteUser(id),
 };

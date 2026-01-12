@@ -46,11 +46,12 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
         description: initialDesc,
         fandom: initialItem?.fandom || '',
         category: initialItem?.category || '',
-        gallery: initialItem?.gallery || [] as string[]
+        gallery: initialItem?.gallery || [] as string[],
+        domesticShipping: initialItem?.domesticShipping?.toString() || ''
     });
 
     // define default keys
-    const defaultSpecKeys = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity', 'Domestic Shipping'];
+    const defaultSpecKeys = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
     const filledSpecs = { ...initialSpecs };
     defaultSpecKeys.forEach(key => {
         if (!filledSpecs[key]) filledSpecs[key] = '-';
@@ -88,6 +89,7 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
         const specString = Object.entries(specs)
             .filter(([_, val]) => val.trim() !== '')
             .map(([key, val]) => `${key}: ${val}`)
+            .concat(formData.domesticShipping ? [`Domestic Shipping: ${formData.domesticShipping}`] : [])
             .join('\n');
 
         const fullDescription = formData.description + (specString ? '\n\n--- Specifications ---\n' + specString : '');
@@ -103,7 +105,8 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
             description: fullDescription,
             fandom: formData.fandom,
             category: formData.category,
-            gallery: formData.gallery
+            gallery: formData.gallery,
+            domesticShipping: Number(formData.domesticShipping)
         };
 
         if (initialItem && onUpdate) {
@@ -239,8 +242,8 @@ const AddPreOrderModal: React.FC<AddPreOrderModalProps> = ({ onClose, onAdd, onU
                                 type="number"
                                 placeholder="e.g. 100"
                                 style={inputStyle}
-                                value={specs['Domestic Shipping'] || ''}
-                                onChange={(e) => handleSpecChange('Domestic Shipping', e.target.value)}
+                                value={formData.domesticShipping}
+                                onChange={(e) => handleInputChange('domesticShipping', e.target.value)}
                             />
                         </div>
                     </div>
@@ -451,7 +454,7 @@ const PreOrderManager: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [reservations, setReservations] = useState<any[]>([]);
 
-    // Function to load reservations for a specific item
+    // Updated Check for detailed order info
     const loadReservations = async (itemId: number) => {
         setReservations([]);
         console.log("Fetching reservations for item:", itemId);
@@ -459,17 +462,27 @@ const PreOrderManager: React.FC = () => {
             const allOrders = await orderAPI.getAll();
 
             // Filter orders containing this pre-order item
-            // Note: We match numeric itemId with product_id in order items
             const relevantOrders = allOrders.filter((order: any) =>
-                order.items && order.items.some((i: any) => Number(i.product_id) === Number(itemId))
+                order.items && order.items.some((i: any) => {
+                    const orderProductId = String(i.product_id || '').replace(/^P/i, '');
+                    const currentItemId = String(itemId || '').replace(/^P/i, '');
+                    return orderProductId === currentItemId;
+                })
             ).map((order: any) => ({
-                id: order.order_id, // Ensure this matches backend Order entity ID
+                id: order.order_id || order.id,
                 userId: order.user_id,
                 userName: order.user?.name || `User ${order.user_id}`,
                 userEmail: order.user?.email || '-',
+                userPhone: order.user?.phone || '-',
                 date: order.created_at || new Date().toISOString(),
                 total: Number(order.total_amount),
-                status: order.payment_status === 'PAID' ? 'Confirmed' : order.payment_status
+                status: order.status || order.payment_status, // Use main status or payment status
+                paymentStatus: order.payment_status,
+                // New Detailed Fields
+                slip: order.payment_slip,
+                transferDate: order.payment_date,
+                transferTime: order.payment_time,
+                address: order.shipping_address
             }));
 
             setReservations(relevantOrders);
@@ -478,26 +491,153 @@ const PreOrderManager: React.FC = () => {
         }
     };
 
+    const [verifyItem, setVerifyItem] = useState<any | null>(null);
+
+    // --- Detail / Verify Modal ---
+    const VerificationModal = ({ reservation, onClose, onUpdateStatus }: { reservation: any, onClose: () => void, onUpdateStatus: (id: string, status: string) => void }) => {
+        const getNextAction = (status: string) => {
+            switch (status) {
+                case 'pending_verification': return { label: 'Checking Slip & Confirm', next: 'paid' };
+                case 'paid': return { label: 'Product Arrived in TH', next: 'arrived_th' };
+                case 'arrived_th': return { label: 'Waiting for Balance Payment', next: null, disabled: true }; // User must action
+                case 'payment_verification_2': return { label: 'Confirm Balance Payment', next: 'shipping_ready' }; // Hypothetical status
+                case 'shipping_ready': return { label: 'Start Shipping', next: 'shipping' };
+                case 'shipping': return { label: 'Complete', next: 'completed' };
+                case 'cancelled': return { label: 'Cancelled', next: null, disabled: true };
+                default: return { label: 'Update Status', next: 'paid' }; // Fallback
+            }
+        };
+
+        const action = getNextAction(reservation.paymentStatus || reservation.status);
+
+        return (
+            <div style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 2200, padding: '20px', backdropFilter: 'blur(5px)'
+            }}>
+                <div style={{
+                    background: '#1a1a1a', padding: '30px', borderRadius: '16px', width: '100%', maxWidth: '600px',
+                    border: '1px solid #FF5722', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', maxHeight: '90vh', overflowY: 'auto'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #333', paddingBottom: '15px' }}>
+                        <h3 style={{ margin: 0 }}>Order Detail</h3>
+                        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.5rem' }}>✕</button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label style={{ display: 'block', color: '#888', marginBottom: '5px', fontSize: '0.9rem' }}>Customer ID</label>
+                            <div style={{ fontSize: '0.85rem', fontFamily: 'monospace', color: '#ccc' }}>{reservation.userId}</div>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', color: '#888', marginBottom: '5px', fontSize: '0.9rem' }}>Status</label>
+                            <div style={{
+                                display: 'inline-block', padding: '4px 10px', borderRadius: '4px',
+                                background: reservation.status === 'paid' ? '#4CAF50' : '#FF9800',
+                                color: 'white', fontWeight: 'bold', fontSize: '0.9rem'
+                            }}>
+                                {reservation.status}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ background: '#222', padding: '20px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #333' }}>
+                        <h4 style={{ margin: '0 0 15px 0', color: '#FF5722' }}>Payment Evidence</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                            <div>
+                                <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Date</label>
+                                <div>{reservation.transferDate || '-'}</div>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Time</label>
+                                <div>{reservation.transferTime || '-'}</div>
+                            </div>
+                        </div>
+
+                        {reservation.slip ? (
+                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #444' }}>
+                                <img
+                                    src={reservation.slip.startsWith('http') || reservation.slip.startsWith('data:') ? reservation.slip : `http://localhost:3000/uploads/${reservation.slip}`}
+                                    alt="Payment Slip"
+                                    style={{ width: '100%', display: 'block' }}
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=No+Slip+Image';
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div style={{ padding: '20px', textAlign: 'center', background: '#333', borderRadius: '8px', color: '#888' }}>
+                                No Slip Uploaded
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Shipping Address & Contact</label>
+                        <div style={{ padding: '15px', background: '#222', borderRadius: '8px', border: '1px solid #333' }}>
+                            <div>
+                                <span style={{ color: '#888' }}>Address:</span> <div style={{ marginTop: '5px', padding: '10px', background: '#333', borderRadius: '5px' }}>
+                                    {reservation.address || 'No address provided'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '30px' }}>
+                        <button
+                            onClick={onClose}
+                            style={{ padding: '15px 25px', background: 'transparent', border: '1px solid #555', color: '#aaa', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                            Close
+                        </button>
+
+                        {action.next && (
+                            <button
+                                onClick={() => onUpdateStatus(reservation.id, action.next!)}
+                                disabled={!!action.disabled}
+                                style={{
+                                    padding: '15px 30px',
+                                    background: action.disabled ? '#555' : '#FF5722',
+                                    color: 'white', border: 'none', borderRadius: '8px',
+                                    fontWeight: 'bold', cursor: action.disabled ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {action.label}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+
     const handleViewReservations = (item: PreOrderItem) => {
         setViewItem(item);
         loadReservations(item.id);
     };
 
-    const handleConfirmOrder = async (orderId: string, userId: string) => {
-        if (!confirm('Mark this pre-order as CONFIRMED (PAID)?')) return;
+    const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+        if (!confirm(`Update status to "${newStatus}"?`)) return;
 
         try {
-            // Using updated orderAPI
-            await orderAPI.updateStatus(orderId, 'PAID');
+            await orderAPI.updateStatus(orderId, newStatus);
 
-            alert('Order status updated successfully!');
-            // Update local state to reflect change immediately
+            // Update local
             setReservations(prev => prev.map(r =>
-                r.id === orderId ? { ...r, status: 'Confirmed' } : r
+                String(r.id) === String(orderId) ? { ...r, status: newStatus, paymentStatus: newStatus } : r
             ));
+
+            // Update verify modal if open
+            if (verifyItem && String(verifyItem.id) === String(orderId)) {
+                setVerifyItem((prev: any) => prev ? ({ ...prev, status: newStatus, paymentStatus: newStatus }) : null);
+            }
+
+            alert("Status Updated!");
         } catch (e) {
             console.error(e);
-            alert('Error connecting to server');
+            alert('Error updating status');
         }
     };
 
@@ -598,7 +738,7 @@ const PreOrderManager: React.FC = () => {
                                         }}
                                         title="View Reservations"
                                     >
-                                        👁️
+                                        Orders
                                     </button>
                                     <button
                                         onClick={() => setEditItem(item)}
@@ -642,7 +782,7 @@ const PreOrderManager: React.FC = () => {
                 </table>
             </div>
 
-            {/* Reservations Modal */}
+            {/* Reservations List Modal */}
             {viewItem && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -650,7 +790,7 @@ const PreOrderManager: React.FC = () => {
                     zIndex: 2000, padding: '20px'
                 }}>
                     <div style={{
-                        background: '#1a1a1a', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '800px',
+                        background: '#1a1a1a', padding: '30px', borderRadius: '20px', width: '100%', maxWidth: '900px',
                         maxHeight: '90vh', overflowY: 'auto', border: '1px solid #FF5722'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -682,8 +822,8 @@ const PreOrderManager: React.FC = () => {
                                                 <span style={{
                                                     padding: '4px 8px',
                                                     borderRadius: '4px',
-                                                    background: res.status === 'Confirmed' ? '#4CAF50' : '#FFC107',
-                                                    color: 'black',
+                                                    background: res.status === 'paid' ? '#4CAF50' : res.status === 'cancelled' ? '#F44336' : '#FF9800',
+                                                    color: 'white',
                                                     fontSize: '0.8rem',
                                                     fontWeight: 'bold'
                                                 }}>
@@ -691,22 +831,23 @@ const PreOrderManager: React.FC = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '12px' }}>
-                                                {res.status !== 'Confirmed' && res.status !== 'PAID' && (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
                                                     <button
-                                                        onClick={() => handleConfirmOrder(res.id, res.userId)}
+                                                        onClick={() => setVerifyItem(res)}
                                                         style={{
-                                                            padding: '6px 12px',
-                                                            background: '#FF5722',
+                                                            padding: '6px 14px',
+                                                            background: '#2196F3',
                                                             color: 'white',
                                                             border: 'none',
                                                             borderRadius: '4px',
                                                             cursor: 'pointer',
-                                                            fontSize: '0.8rem'
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: 'bold'
                                                         }}
                                                     >
-                                                        Confirm
+                                                        Verify / Manage
                                                     </button>
-                                                )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -719,6 +860,15 @@ const PreOrderManager: React.FC = () => {
                 </div>
             )}
 
+            {/* Detail Verification Modal */}
+            {verifyItem && (
+                <VerificationModal
+                    reservation={verifyItem}
+                    onClose={() => setVerifyItem(null)}
+                    onUpdateStatus={handleUpdateStatus}
+                />
+            )}
+
             {editItem && (
                 <AddPreOrderModal
                     initialItem={editItem}
@@ -728,7 +878,6 @@ const PreOrderManager: React.FC = () => {
                         try {
                             await updatePreOrder(updatedItem);
                             setEditItem(null);
-                            alert(`Updated ${updatedItem.name} successfully!`);
                         } catch (error) {
                             console.error("Update failed", error);
                         }

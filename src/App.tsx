@@ -11,7 +11,6 @@ import AboutUs from './pages/AboutUs';
 import Profile from './pages/Profile';
 import OrderDetail from './pages/OrderDetail';
 import Checkout from './pages/Checkout';
-import CreateTicket from './pages/CreateTicket';
 import CallCenter from './pages/CallCenter';
 import CustomerChat from './pages/CustomerChat';
 
@@ -19,16 +18,16 @@ import AllFandom from './pages/fandoms/AllFandom';
 import FandomDetail from './pages/fandoms/FandomDetail';
 import ProductDetail from './pages/fandoms/ProductDetail';
 import PreOrderDetail from './pages/fandoms/PreOrderDetail';
-import RequestCustomProduct from './pages/RequestCustomProduct';
+import RequestCustomProduct from './pages/request/RequestCustomProduct';
+import RequestDetail from './pages/request/RequestDetail';
 
-import UserDetail from './pages/UserDetail';
+import UserDetail from './pages/admin/UserDetail';
 
 import FandomManager from './pages/admin/FandomManager';
 import UserManager from './pages/admin/UserManager';
 import PreOrderManager from './pages/admin/PreOrderManager';
 import ProductManager from './pages/admin/products/ProductManager';
 import ProductForm from './pages/admin/products/ProductForm';
-import TicketManager from './pages/admin/TicketManager';
 import CustomRequestManager from './pages/admin/CustomRequestManager';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
@@ -122,12 +121,12 @@ function MainLayout() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<Profile />} />
             <Route path="/profile/orders/:orderId" element={<OrderDetail />} />
+            <Route path="/profile/request/:id" element={<RequestDetail />} />
             <Route path="/profile/users/:id" element={<UserDetail />} />
 
             {/* Profile Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<UserManager />} />
-            <Route path="/admin/tickets" element={<TicketManager />} />
             <Route path="/admin/preorders" element={<PreOrderManager />} />
             <Route path="/admin/products" element={<ProductManager />} />
             <Route path="/admin/products/new" element={<ProductForm />} />
@@ -137,7 +136,6 @@ function MainLayout() {
 
             {/* Support Routes */}
             <Route path="/call-center" element={<CallCenter />} />
-            <Route path="/call-center/new-ticket" element={<CreateTicket />} />
             <Route path="/customer-chat" element={<CustomerChat />} />
             <Route path="/request-custom-product" element={<RequestCustomProduct />} />
 

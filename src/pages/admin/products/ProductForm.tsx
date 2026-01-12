@@ -16,7 +16,7 @@ const ProductForm: React.FC = () => {
     const extractSpecsFromDescription = (description: string) => {
         const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
         const extractedSpecs: Record<string, string> = {};
-        
+
         specKeywords.forEach(keyword => {
             const regex = new RegExp(`${keyword}\\s*[:：]\\s*([^\\n]+)`, 'i');
             const match = description.match(regex);
@@ -24,52 +24,8 @@ const ProductForm: React.FC = () => {
                 extractedSpecs[keyword] = match[1].trim();
             }
         });
-        
+
         return extractedSpecs;
-    };
-
-    // Helper to separate Description, Specs, and Variants
-    const parseInitialData = (item: Item | undefined) => {
-        if (!item) return { desc: '', specs: {}, variants: { hasSet: false, setPrice: '', setQty: '' } };
-
-        let desc = item.description || '';
-
-        // Extract Variants
-        const variantMarker = '--- Sales Options ---';
-        let variants = { hasSet: false, setPrice: '', setQty: '' };
-
-        if (desc.includes(variantMarker)) {
-            const [mainD, varStr] = desc.split(variantMarker);
-            desc = mainD.trim();
-            const setPrice = varStr.match(/Set Price: (\d+)/)?.[1] || '';
-            const setQty = varStr.match(/Set Quantity: (\d+)/)?.[1] || ''; // Legacy support
-            const boxCount = varStr.match(/Box Count: (\d+)/)?.[1] || setQty || '';
-
-            return {
-                desc: mainD.trim(),
-                specs: {},
-                variants: {
-                    hasSet: !!setPrice,
-                    setPrice,
-                    boxCount
-                }
-            };
-        }
-
-        // Extract Specs
-        const marker = '--- Specifications ---';
-        const [mainDesc, specStr] = desc.includes(marker) ? desc.split(marker) : [desc, ''];
-
-        const parsedSpecs: Record<string, string> = {};
-        if (specStr) {
-            specStr.trim().split('\n').forEach(l => {
-                if (l.includes(':')) {
-                    const [k, ...v] = l.split(':');
-                    parsedSpecs[k.trim()] = v.join(':').trim();
-                }
-            });
-        }
-        return { desc: mainDesc.trim(), specs: parsedSpecs, variants };
     };
 
     const [formData, setFormData] = useState({
@@ -87,6 +43,7 @@ const ProductForm: React.FC = () => {
     });
 
     const [specs, setSpecs] = useState<Record<string, string>>({});
+    const [variants, setVariants] = useState<{ name: string; image: string; price: string; stock: string }[]>([]);
     const [internalId, setInternalId] = useState<number | string | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,6 +54,30 @@ const ProductForm: React.FC = () => {
             navigate('/');
         }
     }, [role, navigate]);
+
+    // Sync Variants with Box Count
+    useEffect(() => {
+        if (!formData.hasSetOption) {
+            if (variants.length > 0) setVariants([]);
+            return;
+        }
+
+        const count = parseInt(formData.boxCount) || 0;
+        // Limit max variants to prevent browser crash/abuse
+        const safeCount = Math.min(count, 50);
+
+        setVariants(prev => {
+            if (prev.length === safeCount) return prev;
+            if (safeCount > prev.length) {
+                // Add new slots
+                const newItems = Array(safeCount - prev.length).fill(null).map(() => ({ name: '', image: '', price: '', stock: '' }));
+                return [...prev, ...newItems];
+            } else {
+                // Remove slots
+                return prev.slice(0, safeCount);
+            }
+        });
+    }, [formData.boxCount, formData.hasSetOption]);
 
     // Load Data
     useEffect(() => {
@@ -112,27 +93,30 @@ const ProductForm: React.FC = () => {
 
         if (found) {
             console.log('DEBUG: Found product:', found);
-            console.log('DEBUG: Product ID:', found.id, 'Type:', typeof found.id);
             setInternalId(found.id);
-            const { desc, specs: parsedSpecs, variants } = parseInitialData(found);
+            const { desc, specs: parsedSpecs, variants: parsedVariants, embeddedVariants } = parseInitialData(found);
 
             // Extract specs from description as well
             const extractedSpecs = extractSpecsFromDescription(desc);
             const allSpecs = { ...parsedSpecs, ...extractedSpecs };
 
-            // Remove extracted specs from description
+            // Clean description logic (Remove entire specs block if it exists)
             let cleanedDescription = desc;
-            const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
-            
-            specKeywords.forEach(keyword => {
-                const regex = new RegExp(`${keyword}\\s*[:：]\\s*[^\\n]*\\n?`, 'gi');
-                cleanedDescription = cleanedDescription.replace(regex, '');
-            });
-            
-            // Clean up extra whitespace and empty lines
-            cleanedDescription = cleanedDescription.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+            const specBlockMarker = '--- Specifications ---';
+            if (cleanedDescription.includes(specBlockMarker)) {
+                cleanedDescription = cleanedDescription.split(specBlockMarker)[0].trim();
+            } else {
+                // Fallback for legacy data (keyword removal)
+                const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
 
-            // Extract numeric price from string like "฿2,500"
+                specKeywords.forEach(keyword => {
+                    const regex = new RegExp(`${keyword}\\s*[:：]\\s*[^\\n]*\\n?`, 'gi');
+                    cleanedDescription = cleanedDescription.replace(regex, '');
+                });
+                // Clean up extra whitespace
+                cleanedDescription = cleanedDescription.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+            }
+
             const priceVal = String(found.price).replace(/[^0-9.]/g, '');
 
             setFormData({
@@ -144,14 +128,75 @@ const ProductForm: React.FC = () => {
                 image: found.image,
                 description: cleanedDescription,
                 gallery: found.gallery || [],
-                hasSetOption: variants.hasSet,
-                setPrice: variants.setPrice,
+                hasSetOption: parsedVariants.hasSet,
+                setPrice: parsedVariants.setPrice,
                 // @ts-ignore
-                boxCount: variants.boxCount || variants.setQty
+                boxCount: parsedVariants.boxCount || parsedVariants.setQty
             });
             setSpecs(allSpecs);
+            if (embeddedVariants) {
+                setVariants(embeddedVariants);
+            }
         }
     }, [id, items, isEditMode]);
+
+    // Helper to separate Description, Specs, and Variants
+    const parseInitialData = (item: Item | undefined) => {
+        if (!item) return { desc: '', specs: {}, variants: { hasSet: false, setPrice: '', setQty: '' }, embeddedVariants: [] };
+
+        let desc = item.description || '';
+        let embeddedVariants: { name: string; image: string; price: string; stock: string }[] = [];
+
+        // Extract Variants JSON Block
+        const variantDataMarker = '--- Variants Data ---';
+        if (desc.includes(variantDataMarker)) {
+            const [preVariant, variantJson] = desc.split(variantDataMarker);
+            desc = preVariant.trim();
+            try {
+                embeddedVariants = JSON.parse(variantJson.trim());
+            } catch (e) {
+                console.error("Failed to parse embedded variants", e);
+            }
+        }
+
+        // Extract Variants Sales Options
+        const variantMarker = '--- Sales Options ---';
+        let variants = { hasSet: false, setPrice: '', setQty: '' };
+
+        if (desc.includes(variantMarker)) {
+            const [mainD, varStr] = desc.split(variantMarker);
+            desc = mainD.trim();
+            const setPrice = varStr.match(/Set Price: (\d+)/)?.[1] || '';
+            const setQty = varStr.match(/Set Quantity: (\d+)/)?.[1] || ''; // Legacy support
+            const boxCount = varStr.match(/Box Count: (\d+)/)?.[1] || setQty || '';
+
+            return {
+                desc: mainD.trim(),
+                specs: {},
+                variants: {
+                    hasSet: !!setPrice || !!boxCount,
+                    setPrice,
+                    boxCount
+                },
+                embeddedVariants
+            };
+        }
+
+        // Extract Specs
+        const marker = '--- Specifications ---';
+        const [mainDesc, specStr] = desc.includes(marker) ? desc.split(marker) : [desc, ''];
+
+        const parsedSpecs: Record<string, string> = {};
+        if (specStr) {
+            specStr.trim().split('\n').forEach(l => {
+                if (l.includes(':')) {
+                    const [k, ...v] = l.split(':');
+                    parsedSpecs[k.trim()] = v.join(':').trim();
+                }
+            });
+        }
+        return { desc: mainDesc.trim(), specs: parsedSpecs, variants, embeddedVariants };
+    };
 
     const handleInput = (key: string, value: string | boolean) => {
         setFormData(prev => ({ ...prev, [key]: value }));
@@ -161,23 +206,38 @@ const ProductForm: React.FC = () => {
         setSpecs(prev => ({ ...prev, [key]: value }));
     };
 
+    const handleVariantChange = (index: number, field: 'name' | 'image' | 'price' | 'stock', value: string) => {
+        setVariants(prev => {
+            const newVar = [...prev];
+            newVar[index] = { ...newVar[index], [field]: value };
+            return newVar;
+        });
+    };
+
+    const handleVariantImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                handleVariantChange(index, 'image', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleDescriptionChange = (value: string) => {
-        // Auto-extract specs when description changes
+        // ... (reuse existing logic if desired, or simplify)
+        // Auto-extract specs logic
         const extractedSpecs = extractSpecsFromDescription(value);
         setSpecs(prev => ({ ...prev, ...extractedSpecs }));
-        
-        // Remove extracted specs from description
+
         let cleanedDescription = value;
         const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
-        
         specKeywords.forEach(keyword => {
             const regex = new RegExp(`${keyword}\\s*[:：]\\s*[^\\n]*\\n?`, 'gi');
             cleanedDescription = cleanedDescription.replace(regex, '');
         });
-        
-        // Clean up extra whitespace and empty lines
         cleanedDescription = cleanedDescription.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
-        
         handleInput('description', cleanedDescription);
     };
 
@@ -193,6 +253,7 @@ const ProductForm: React.FC = () => {
     };
 
     const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // ... (existing logic)
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
@@ -226,10 +287,6 @@ const ProductForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log('DEBUG: Submit - isEditMode:', isEditMode);
-        console.log('DEBUG: Submit - internalId:', internalId, 'Type:', typeof internalId);
-        console.log('DEBUG: Submit - URL id:', id);
-
         if (isEditMode && !internalId) {
             alert('Error: Could not identify original product.');
             return;
@@ -237,13 +294,11 @@ const ProductForm: React.FC = () => {
 
         setIsSubmitting(true);
 
-        // Format Specifications
-        const specString = Object.entries(specs)
-            .filter(([_, val]) => val.trim() !== '')
-            .map(([key, val]) => `${key}: ${val}`)
+        const stdSpecs = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
+        const specString = stdSpecs
+            .map(key => `${key}: ${specs[key]?.trim() || '-'}`)
             .join('\n');
 
-        // Format Variants
         let variantString = '';
         if (formData.hasSetOption || formData.boxCount) {
             variantString = `\n\n--- Sales Options ---\nBox Count: ${formData.boxCount}`;
@@ -252,9 +307,26 @@ const ProductForm: React.FC = () => {
             }
         }
 
-        const fullDescription = formData.description +
-            (specString ? '\n\n--- Specifications ---\n' + specString : '') +
-            variantString;
+        let variantDataString = '';
+        if (variants.length > 0) {
+            variantDataString = `\n\n--- Variants Data ---\n${JSON.stringify(variants)}`;
+        }
+
+        let fullDescription = formData.description;
+
+        // Append specs only if they are not already in the description (to avoid duplication on re-save)
+        // However, since we clean the description on load, formData.description should be 'clean'.
+        // But let's be safe.
+        const specMarker = '--- Specifications ---';
+
+        // If the user manually edited the description and left the marker, we should respect that or clean it.
+        // Given the current logic cleans it on load, we assume formData.description is clean.
+
+        if (specString && !fullDescription.includes(specMarker)) {
+            fullDescription += `\n\n${specMarker}\n${specString}`;
+        }
+
+        fullDescription += variantString + variantDataString;
 
         const productData: Item = {
             id: isEditMode && internalId ? internalId : Date.now(),
@@ -271,10 +343,8 @@ const ProductForm: React.FC = () => {
         try {
             if (isEditMode) {
                 await updateItem(productData);
-                alert('Product updated successfully!');
             } else {
                 await addItem(productData);
-                alert('Product added successfully!');
             }
             navigate('/admin/products');
         } catch (error: any) {
@@ -285,7 +355,7 @@ const ProductForm: React.FC = () => {
         }
     };
 
-    // Styles
+    // ... (rest of styles)
     const inputStyle: React.CSSProperties = {
         width: '100%',
         padding: '12px',
@@ -414,6 +484,139 @@ const ProductForm: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Sales Options (New Feature) */}
+                    <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px solid #4CAF50' }}>
+                        <h4 style={{ margin: '0 0 15px 0', color: '#4CAF50' }}>Sales Options</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+                            <input
+                                type="checkbox"
+                                checked={formData.hasSetOption}
+                                onChange={(e) => handleInput('hasSetOption', e.target.checked)}
+                                style={{ width: '20px', height: '20px', marginRight: '10px' }}
+                            />
+                            <label style={{ color: 'white', fontWeight: 'bold' }}>Sell more than one?</label>
+                        </div>
+
+                        {formData.hasSetOption && (
+                            <div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px' }}>
+                                    <div>
+                                        <label style={labelStyle}>Product Count</label>
+                                        <input
+                                            type="number"
+                                            value={formData.boxCount}
+                                            onChange={(e) => handleInput('boxCount', e.target.value)}
+                                            style={inputStyle}
+                                            placeholder="e.g. 6, 8, 12"
+                                            min="0"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Dynamic Products Input */}
+                                {variants.length > 0 && (
+                                    <div style={{ marginTop: '20px', background: '#1e1e1e', padding: '15px', borderRadius: '8px' }}>
+                                        <label style={{ ...labelStyle, color: '#4CAF50', borderBottom: '1px solid #444', paddingBottom: '10px', marginBottom: '15px' }}>
+                                            Product Details ({variants.length} items)
+                                        </label>
+                                        <div style={{ display: 'grid', gap: '15px' }}>
+                                            {variants.map((v, i) => (
+                                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 120px 100px', gap: '15px', alignItems: 'end', background: '#252525', padding: '15px', borderRadius: '6px' }}>
+                                                    {/* Image Upload Block */}
+                                                    <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+                                                        <input
+                                                            type="file"
+                                                            id={`var-img-${i}`}
+                                                            style={{ display: 'none' }}
+                                                            onChange={(e) => handleVariantImageUpload(e, i)}
+                                                        />
+                                                        <label
+                                                            htmlFor={`var-img-${i}`}
+                                                            style={{
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                background: '#333',
+                                                                borderRadius: '8px',
+                                                                overflow: 'hidden',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                border: '1px solid #444',
+                                                                cursor: 'pointer',
+                                                                position: 'relative',
+                                                                transition: 'border-color 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF5722'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#444'}
+                                                        >
+                                                            {v.image ? (
+                                                                <img src={v.image} alt={`Var ${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <div style={{ textAlign: 'center', color: '#666' }}>
+                                                                    <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '4px' }}>+</span>
+                                                                    <span style={{ fontSize: '0.7rem' }}>Img</span>
+                                                                </div>
+                                                            )}
+                                                            {/* Overlay for existing image to hint change */}
+                                                            {v.image && (
+                                                                <div style={{
+                                                                    position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', opacity: 0,
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s',
+                                                                    color: 'white', fontSize: '0.8rem', fontWeight: 'bold'
+                                                                }}
+                                                                    onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                                                    onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                                                                >
+                                                                    Change
+                                                                </div>
+                                                            )}
+                                                        </label>
+                                                    </div>
+
+                                                    {/* Name */}
+                                                    <div>
+                                                        <label style={labelStyle}>Option Name</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder={`e.g. Set A`}
+                                                            value={v.name}
+                                                            onChange={(e) => handleVariantChange(i, 'name', e.target.value)}
+                                                            style={inputStyle}
+                                                        />
+                                                    </div>
+
+                                                    {/* Price */}
+                                                    <div>
+                                                        <label style={labelStyle}>Price (THB)</label>
+                                                        <input
+                                                            type="number"
+                                                            value={v.price}
+                                                            onChange={(e) => handleVariantChange(i, 'price', e.target.value)}
+                                                            style={inputStyle}
+                                                            placeholder="e.g. 3000"
+                                                        />
+                                                    </div>
+
+                                                    {/* Stock */}
+                                                    <div>
+                                                        <label style={labelStyle}>Stock</label>
+                                                        <input
+                                                            type="number"
+                                                            value={v.stock || ''}
+                                                            onChange={(e) => handleVariantChange(i, 'stock', e.target.value)}
+                                                            style={inputStyle}
+                                                            placeholder="e.g. 10"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Gallery */}
                     <div>
                         <label style={labelStyle}>Gallery Images (Max 5) - {formData.gallery.length}/5</label>
@@ -447,50 +650,6 @@ const ProductForm: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Sales Options (New Feature) */}
-                <div style={{ marginBottom: '30px', padding: '20px', background: '#252525', borderRadius: '10px', border: '1px solid #4CAF50' }}>
-                    <h4 style={{ margin: '0 0 15px 0', color: '#4CAF50' }}>Sales Options</h4>
-                    {/* Box Count Input (Always Visible) */}
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-                        <input
-                            type="checkbox"
-                            checked={formData.hasSetOption}
-                            onChange={(e) => handleInput('hasSetOption', e.target.checked)}
-                            style={{ width: '20px', height: '20px', marginRight: '10px' }}
-                        />
-                        <label style={{ color: 'white', fontWeight: 'bold' }}>Sell as a Set / Full Box?</label>
-                    </div>
-
-                    {formData.hasSetOption && (
-                        <div>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={labelStyle}>Boxes per Set (pcs)</label>
-                                <input
-                                    type="number"
-                                    value={formData.boxCount}
-                                    onChange={(e) => handleInput('boxCount', e.target.value)}
-                                    style={inputStyle}
-                                    placeholder="e.g. 6, 8, 12"
-                                />
-                                <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '5px' }}>
-                                    Specify how many individual boxes make up a full set.
-                                </p>
-                            </div>
-
-                            <div>
-                                <label style={labelStyle}>Full Set Price (THB)</label>
-                                <input
-                                    type="number"
-                                    value={formData.setPrice}
-                                    onChange={(e) => handleInput('setPrice', e.target.value)}
-                                    style={inputStyle}
-                                    placeholder="e.g. 3000"
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Specs Section */}
@@ -545,17 +704,19 @@ const ProductForm: React.FC = () => {
                     </button>
                     <button
                         type="submit"
+                        disabled={isSubmitting}
                         style={{
                             flex: 1,
                             padding: '15px',
-                            background: 'linear-gradient(135deg, #FF5722, #E64A19)',
+                            background: isSubmitting ? '#555' : 'linear-gradient(135deg, #FF5722, #E64A19)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '8px',
                             fontSize: '1rem',
                             fontWeight: 'bold',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 15px rgba(255, 87, 34, 0.4)'
+                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                            boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(255, 87, 34, 0.4)',
+                            opacity: isSubmitting ? 0.7 : 1
                         }}
                     >
                         {isEditMode ? 'Save Changes' : 'Add Product'}

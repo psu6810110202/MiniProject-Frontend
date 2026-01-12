@@ -9,7 +9,7 @@ import { productAPI, type Product } from '../../services/api';
 const PreOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, cartItems, purchasedItems, userOrders } = useCart();
-  const { likedProductIds, toggleLikeProduct, preOrders } = useProducts(); // Added preOrders
+  const { preOrders } = useProducts(); // Added preOrders
 
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -36,7 +36,8 @@ const PreOrderDetail: React.FC = () => {
       deposit_amount: item.deposit,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      gallery: JSON.stringify(item.gallery || [])
+      gallery: JSON.stringify(item.gallery || []),
+      domestic_shipping_cost: item.domesticShipping
     };
   };
 
@@ -355,12 +356,14 @@ const PreOrderDetail: React.FC = () => {
                 {(() => {
                   const deposit = product.deposit_amount || Math.round(product.price * 0.5);
                   // const balance = product.price - deposit; // Removed as mostly irrelevant for display now
-                  let shipping = 0;
-                  const specPart = product.description?.split('--- Specifications ---')[1];
-                  if (specPart) {
-                    const shippingLine = specPart.trim().split('\n').find(l => l.includes('Domestic Shipping'));
-                    if (shippingLine) {
-                      shipping = Number(shippingLine.split(':')[1]?.trim()) || 0;
+                  let shipping = product.domestic_shipping_cost || 0;
+                  if (shipping === 0) {
+                    const specPart = product.description?.split('--- Specifications ---')[1];
+                    if (specPart) {
+                      const shippingLine = specPart.trim().split('\n').find(l => l.includes('Domestic Shipping'));
+                      if (shippingLine) {
+                        shipping = Number(shippingLine.split(':')[1]?.trim()) || 0;
+                      }
                     }
                   }
                   return `(฿${deposit.toLocaleString()} now + ฿${shipping.toLocaleString()} arrived in Thailand)`;
@@ -475,40 +478,7 @@ const PreOrderDetail: React.FC = () => {
               {addingToCart ? '✓ Added to Cart' : (product.stock ?? 0) === 0 ? 'Out of Stock' : ' Pre-Order Now'}
             </button>
 
-            <button
-              onClick={() => {
-                const id = product?.product_id ? product.product_id.toString().replace(/^P/i, '') : '';
-                if (id) toggleLikeProduct(Number(id));
-              }}
-              style={{
-                width: '60px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0',
-                background: 'transparent',
-                border: '2px solid #FF5722',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 87, 34, 0.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              {product && likedProductIds.includes(Number(product.product_id.toString().replace(/^P/i, ''))) ? (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              ) : (
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              )}
-            </button>
+            {/* Like button removed */}
           </div>
 
           {/* Material Information */}

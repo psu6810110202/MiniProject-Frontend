@@ -9,20 +9,19 @@ interface ProductContextType {
     categories: string[];
     fandomImages: Record<string, string>;
     preOrders: PreOrderItem[];
-    addItem: (item: Item) => void;
-    updateItem: (item: Item) => void;
-    deleteItem: (id: number | string) => void;
-    addFandom: (name: string, image?: string) => void;
+    addItem: (item: Item) => Promise<Item>;
+    updateItem: (item: Item) => Promise<void>;
+    deleteItem: (id: number | string) => Promise<void>;
+    addFandom: (name: string, image?: string) => Promise<void>;
     setFandomImage: (name: string, image: string) => void;
-    deleteFandom: (name: string) => void;
-    updateFandomName: (oldName: string, newName: string) => void;
-    addPreOrder: (item: PreOrderItem) => void;
-    updatePreOrder: (item: PreOrderItem) => void;
-    deletePreOrder: (id: number) => void;
-    likedProductIds: (number | string)[];
+    deleteFandom: (name: string) => Promise<void>;
+    updateFandomName: (oldName: string, newName: string) => Promise<void>;
+    addPreOrder: (item: PreOrderItem) => Promise<void>;
+    updatePreOrder: (item: PreOrderItem) => Promise<void>;
+    deletePreOrder: (id: number) => Promise<void>;
     likedFandoms: string[];
-    toggleLikeProduct: (id: number | string) => void;
     toggleLikeFandom: (name: string) => void;
+    deductStock: (id: number | string, quantity: number) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -60,7 +59,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                                 description: p.description,
                                 fandom: p.fandom || 'Other',
                                 category: p.category_id || p.category || 'PreOrder',
-                                gallery: p.gallery ? (typeof p.gallery === 'string' ? JSON.parse(p.gallery) : p.gallery) : []
+                                gallery: p.gallery ? (typeof p.gallery === 'string' ? JSON.parse(p.gallery) : p.gallery) : [],
+                                domesticShipping: Number(p.domestic_shipping_cost) || 0,
                             });
                         } else {
                             loadedItems.push({
@@ -117,12 +117,6 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, []);
 
     // --- Like System ---
-    const [likedProductIds, setLikedProductIds] = useState<(number | string)[]>(() => {
-        try {
-            const saved = localStorage.getItem(getStorageKey('likedProductIds'));
-            return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-    });
     const [likedFandoms, setLikedFandoms] = useState<string[]>(() => {
         try {
             const saved = localStorage.getItem(getStorageKey('likedFandoms'));
@@ -133,27 +127,15 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Load Likes when user changes
     useEffect(() => {
         try {
-            const savedProducts = localStorage.getItem(getStorageKey('likedProductIds'));
             const savedFandoms = localStorage.getItem(getStorageKey('likedFandoms'));
-            setLikedProductIds(savedProducts ? JSON.parse(savedProducts) : []);
             setLikedFandoms(savedFandoms ? JSON.parse(savedFandoms) : []);
         } catch (e) { }
     }, [userId]);
 
     // Save Likes
     useEffect(() => {
-        localStorage.setItem(getStorageKey('likedProductIds'), JSON.stringify(likedProductIds));
-    }, [likedProductIds]);
-
-    useEffect(() => {
         localStorage.setItem(getStorageKey('likedFandoms'), JSON.stringify(likedFandoms));
     }, [likedFandoms]);
-
-    const toggleLikeProduct = (id: number | string) => {
-        setLikedProductIds(prev =>
-            prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]
-        );
-    };
 
     const toggleLikeFandom = (name: string) => {
         setLikedFandoms(prev =>
@@ -306,6 +288,12 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 : item
         ));
 
+        setPreOrders(preOrders.map(item =>
+            item.fandom === oldName
+                ? { ...item, fandom: newName }
+                : item
+        ));
+
         if (fandomImages[oldName]) {
             setFandomImages(prev => {
                 const newImages = { ...prev, [newName]: prev[oldName] };
@@ -340,7 +328,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 deposit_amount: item.deposit,
                 release_date: item.preOrderCloseDate,
                 stock_qty: 999,
-                gallery: JSON.stringify(item.gallery || [])
+                gallery: JSON.stringify(item.gallery || []),
+                domestic_shipping_cost: item.domesticShipping || 0
             });
 
             // Convert response (Product) to PreOrderItem
@@ -354,7 +343,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 image: response.image,
                 preOrderCloseDate: response.release_date || '',
                 deposit: response.deposit_amount || 0,
-                gallery: response.gallery ? JSON.parse(response.gallery) : []
+                gallery: response.gallery ? JSON.parse(response.gallery) : [],
+                domesticShipping: Number(response.domestic_shipping_cost) || 0
             };
 
             setPreOrders(prev => [...prev, newPreOrder]);
@@ -376,7 +366,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 deposit_amount: updatedItem.deposit,
                 release_date: updatedItem.preOrderCloseDate,
                 stock_qty: 999,
-                gallery: JSON.stringify(updatedItem.gallery || [])
+                gallery: JSON.stringify(updatedItem.gallery || []),
+                domestic_shipping_cost: updatedItem.domesticShipping || 0
             });
 
             // Update state after success
@@ -393,9 +384,45 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             await productAPI.delete(String(id));
             // Update state after success
             setPreOrders(prev => prev.filter(item => item.id !== id));
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to delete pre-order via API", e);
-            alert("Failed to delete pre-order.");
+            const msg = e.response?.data?.message || e.message || "Unknown error";
+            alert(`Failed to delete pre-order: ${msg}\n(It may be linked to existing orders)`);
+        }
+    };
+
+    const deductStock = async (id: number | string, quantity: number) => {
+        // Optimistic update
+        setItems(prevItems => prevItems.map(item => {
+            if (item.id === id) {
+                const newStock = Math.max(0, (item.stock || 0) - quantity);
+                return { ...item, stock: newStock };
+            }
+            return item;
+        }));
+
+        try {
+            // Find the item to get its current details for the API call
+            const currentItem = items.find(i => i.id === id);
+            if (!currentItem) return;
+
+            const newStock = Math.max(0, (currentItem.stock || 0) - quantity);
+
+            // API Update
+            await productAPI.update(String(id), {
+                name: currentItem.name,
+                price: parseFloat(currentItem.price.replace(/[^\d.]/g, '')),
+                description: currentItem.description,
+                category_id: currentItem.category,
+                fandom: currentItem.fandom,
+                image: currentItem.image,
+                stock_qty: newStock,
+                gallery: JSON.stringify(currentItem.gallery || [])
+            });
+        } catch (e) {
+            console.error("Failed to deduct stock via API", e);
+            // Revert on failure (optional but good practice, though user specifically wanted 'immediate' feel)
+            // For now, we prioritize the optimistic UI update.
         }
     };
 
@@ -406,7 +433,8 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
             addItem, updateItem, deleteItem,
             addFandom, deleteFandom, updateFandomName, setFandomImage,
             addPreOrder, updatePreOrder, deletePreOrder,
-            likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom
+            likedFandoms, toggleLikeFandom,
+            deductStock
         }}>
             {children}
         </ProductContext.Provider>

@@ -5,7 +5,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const FandomDetail: React.FC = () => {
     const { name } = useParams<{ name: string }>();
-    const { items, fandomImages, likedProductIds, toggleLikeProduct, preOrders } = useProducts();
+    const { items, fandomImages, preOrders } = useProducts();
     const { t } = useLanguage();
     const navigate = useNavigate();
 

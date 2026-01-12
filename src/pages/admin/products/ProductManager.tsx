@@ -113,7 +113,7 @@ const ProductManager: React.FC = () => {
                             <th style={{ padding: '15px' }}>Category</th>
                             <th style={{ padding: '15px' }}>Price</th>
                             <th style={{ padding: '15px' }}>Stock</th>
-                            <th style={{ padding: '15px' }}>Variants (Set/Box)</th>
+                            <th style={{ padding: '15px' }}>Products</th>
                             <th style={{ padding: '15px' }}>Actions</th>
                         </tr>
                     </thead>

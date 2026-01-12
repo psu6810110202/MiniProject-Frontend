@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-import { userAPI, orderAPI } from '../services/api';
+import { userAPI, orderAPI } from '../../services/api';
 
 const UserDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -12,7 +12,7 @@ const UserDetail: React.FC = () => {
     const { t } = useLanguage();
     const [user, setUser] = useState<any | null>(null);
     const [userOrders, setUserOrders] = useState<any[]>([]);
-    const [fetchStatus, setFetchStatus] = useState<string>('');
+
 
     useEffect(() => {
         if (role !== 'admin') {
@@ -30,8 +30,6 @@ const UserDetail: React.FC = () => {
                 // Use a proper type or cast if necessary, ignoring type errors for quick migration if 'any' used in state
                 setUser(userData);
 
-                // Mock orders for now/load from local if existing
-                // Load Orders from API
                 try {
                     const allOrders = await orderAPI.getAll();
                     // Filter orders belonging to this user
@@ -44,12 +42,12 @@ const UserDetail: React.FC = () => {
                         String(o.user?.id) === String(activeUserId)
                     );
                     setUserOrders(filteredApiOrders);
-                    setFetchStatus(`Loaded ${filteredApiOrders.length} orders from Database (Total: ${allOrders.length}).`);
+
                 } catch (orderErr) {
                     console.error("Failed to load user orders:", orderErr);
                     // Fallback or just empty
                     setUserOrders([]);
-                    setFetchStatus('Order Fetch Failed');
+
                 }
             } catch (error: any) {
                 console.error('Fetching user failed:', error);
@@ -115,7 +113,7 @@ const UserDetail: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
                 <div style={{ background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
                     <h3 style={{ color: '#FF5722', marginBottom: '15px' }}>{t('account_info')}</h3>
-                    <p><strong>ID:</strong> {user.id}</p>
+                    <p><strong>ID:</strong> {user.id || user.user_id}</p>
                     <p><strong>Username:</strong> {user.username || '-'}</p>
                     <p><strong>Name:</strong> {user.name || '-'}</p>
 
@@ -134,34 +132,43 @@ const UserDetail: React.FC = () => {
                 </div>
             </div>
 
-            <h3 style={{ marginTop: '40px', marginBottom: '20px', color: '#FF5722' }}>
-                {t('order_history')}
-                <span style={{ fontSize: '0.8rem', color: '#666', marginLeft: '10px', fontWeight: 'normal' }}>({fetchStatus})</span>
-            </h3>
-            <div style={{ overflowX: 'auto', background: '#222', padding: '20px', borderRadius: '10px', border: '1px solid #444' }}>
+            <div style={{ marginTop: '30px' }}>
+                <h2 style={{ color: '#FF5722', marginBottom: '20px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
+                    Order History ({userOrders.length})
+                </h2>
                 {userOrders.length > 0 ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid #444' }}>
-                                <th style={{ padding: '10px' }}>Order ID</th>
-                                <th style={{ padding: '10px' }}>Date</th>
-                                <th style={{ padding: '10px' }}>Items</th>
-                                <th style={{ padding: '10px' }}>Total</th>
-                                <th style={{ padding: '10px' }}>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {userOrders.map((order: any) => (
-                                <tr key={order.id} style={{ borderBottom: '1px solid #333' }}>
-                                    <td style={{ padding: '10px' }}>#{order.id}</td>
-                                    <td style={{ padding: '10px' }}>{new Date(order.date).toLocaleDateString()}</td>
-                                    <td style={{ padding: '10px' }}>{order.items?.length || 0}</td>
-                                    <td style={{ padding: '10px' }}>฿{order.totalAmount?.toLocaleString()}</td>
-                                    <td style={{ padding: '10px', color: '#4CAF50' }}>{order.status}</td>
+                    <div style={{ background: '#222', borderRadius: '10px', border: '1px solid #444', overflow: 'hidden' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ background: '#333', color: '#FF5722' }}>
+                                    <th style={{ padding: '15px' }}>Order ID</th>
+                                    <th style={{ padding: '15px' }}>Date</th>
+                                    <th style={{ padding: '15px' }}>Total Amount</th>
+                                    <th style={{ padding: '15px' }}>Status</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {userOrders.map((order, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid #333' }}>
+                                        <td style={{ padding: '15px', color: '#ccc' }}>{order.order_id || order.id}</td>
+                                        <td style={{ padding: '15px', color: '#ccc' }}>
+                                            {new Date(order.created_at || order.date || Date.now()).toLocaleDateString()}
+                                        </td>
+                                        <td style={{ padding: '15px', color: '#FFC107' }}>฿{(Number(order.total_amount || 0)).toLocaleString()}</td>
+                                        <td style={{ padding: '15px' }}>
+                                            <span style={{
+                                                padding: '4px 8px', borderRadius: '4px',
+                                                background: ['paid', 'completed'].includes((order.status || order.payment_status || '').toLowerCase()) ? '#4CAF50' : '#FF9800',
+                                                color: 'white', fontSize: '0.85rem'
+                                            }}>
+                                                {order.status || order.payment_status || 'Unknown'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <p style={{ color: '#888' }}>No orders found for this user.</p>
                 )}

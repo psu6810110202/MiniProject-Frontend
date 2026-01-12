@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import SearchableSelect from '../components/SearchableSelect';
 
 import { useProducts } from '../contexts/ProductContext';
-import { userAPI } from '../services/api';
+import { userAPI, orderAPI } from '../services/api';
 
 const Profile: React.FC = () => {
     const { t } = useLanguage();
@@ -18,7 +18,7 @@ const Profile: React.FC = () => {
     const { user, updateUser, logout, isLoggedIn } = useAuth();
     const { userOrders } = useCart();
     const { points } = usePoints();
-    const { items, likedProductIds, likedFandoms, toggleLikeProduct, toggleLikeFandom, fandomImages } = useProducts();
+    const { likedFandoms, toggleLikeFandom, fandomImages } = useProducts();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,9 +27,6 @@ const Profile: React.FC = () => {
         }
     }, [isLoggedIn, navigate]);
 
-    // Favorites Logic
-    const [activeTab, setActiveTab] = useState<'products' | 'fandoms'>('products');
-    const favoriteProducts = items.filter(item => likedProductIds.includes(item.id));
     const favoriteFandomList = likedFandoms;
 
     const isEditing = useLocation().pathname.includes('/edit');
@@ -85,6 +82,71 @@ const Profile: React.FC = () => {
         postal_code: '',
 
     });
+
+    // Custom Requests Logic
+    const [customRequests, setCustomRequests] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (user) {
+            const stored = JSON.parse(localStorage.getItem('custom_requests') || '[]');
+            const myRequests = stored.filter((r: any) => r.userId === (user.id || (user as any).user_id) || r.userEmail === user.email);
+            setCustomRequests(myRequests);
+        }
+    }, [user]);
+
+    const [apiOrders, setApiOrders] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (!user) return;
+            try {
+                const fetched = await orderAPI.getAll();
+                // Filter and Map
+                const mapped = fetched
+                    .filter((o: any) => o.user_id === (user.id || (user as any).user_id))
+                    .map((o: any) => ({
+                        ...o,
+                        id: o.order_id || o.id,
+                        date: o.order_date || o.created_at || o.date,
+                        totalAmount: Number(o.total_amount || o.totalAmount || 0),
+                        status: o.payment_status || o.status || 'pending',
+                        items: o.items || []
+                    }));
+                setApiOrders(mapped);
+            } catch (err) {
+                console.error("Failed to fetch orders profiles", err);
+            }
+        };
+        fetchOrders();
+    }, [user]);
+
+    // Merge Orders and Requests for Display
+    const historySource = apiOrders.length > 0 ? apiOrders : userOrders;
+
+    const allHistory = [
+        ...historySource.map(o => ({
+            type: 'order',
+            id: o.id,
+            date: new Date(o.date).getTime(),
+            displayDate: new Date(o.date).toLocaleDateString('en-GB'),
+            amount: o.totalAmount,
+            status: o.status,
+            itemCount: o.items.length,
+            title: `${t('order')} #${o.id}`,
+            raw: o
+        })),
+        ...customRequests.map(r => ({
+            type: 'request',
+            id: r.id,
+            date: new Date(r.createdAt).getTime(),
+            displayDate: new Date(r.createdAt).toLocaleDateString('en-GB'),
+            amount: r.estimatedTotal,
+            status: r.status,
+            itemCount: 1, // Custom request usually 1 item concept
+            title: `${t('request')} #${r.id}`,
+            raw: r
+        }))
+    ].sort((a, b) => b.date - a.date);
 
     // Fetch Thai Address Data
     useEffect(() => {
@@ -485,6 +547,23 @@ const Profile: React.FC = () => {
             )}
 
             {/* Password Change Modal */}
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.02);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.15);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.25);
+                }
+            `}</style>
+
             {isChangingPassword && (
                 <div style={{
                     position: 'fixed',
@@ -639,66 +718,158 @@ const Profile: React.FC = () => {
                             {t('order_history')}
                         </h2>
 
-                        <div style={{ display: 'grid', gap: '15px' }}>
-                            {userOrders.length === 0 ? (
-                                <p style={{ color: 'var(--text-muted)' }}>{t('no_orders_found')}</p>
-                            ) : (
-                                userOrders.map((order) => (
-                                    <div
-                                        key={order.id}
-                                        onClick={() => navigate(`/profile/orders/${order.id}`, { state: { order } })}
-                                        style={{
-                                            background: 'var(--card-bg)',
-                                            border: '1px solid var(--border-color)',
-                                            borderRadius: '12px',
-                                            padding: '20px',
-                                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s, box-shadow 0.2s',
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(0)';
-                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-                                        }}
-                                    >
-                                        <div>
-                                            <h3 style={{ color: '#FF5722', marginBottom: '5px', fontSize: '1rem', margin: 0 }}>{t('order')} #{order.id}</h3>
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.date}</span>
-                                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }}>
 
-                                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>฿{order.totalAmount.toLocaleString()}</div>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.items.length} {t('items')}</div>
-                                            </div>
-                                            <div style={{
-                                                padding: '5px 12px',
-                                                borderRadius: '15px',
-                                                fontSize: '0.8rem',
-                                                fontWeight: 'bold',
-                                                backgroundColor: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
-                                                    order.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
-                                                        order.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
-                                                color: order.status === 'delivered' ? '#4CAF50' :
-                                                    order.status === 'shipped' ? '#2196F3' :
-                                                        order.status === 'cancelled' ? '#f44336' : '#FFC107'
-                                            }}>
-                                                {getStatusText(order.status)}
-                                            </div>
-                                            <div style={{ color: 'var(--text-muted)' }}>
-                                                &gt;
-                                            </div>
-                                        </div>
-                                    </div>
-                                )))
-                            }
+                            {/* Left Column: Custom Requests */}
+                            <div>
+                                <h3 style={{ color: '#2196F3', fontSize: '1.2rem', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+                                    Custom Requests
+                                </h3>
+                                <div className="custom-scrollbar" style={{ display: 'grid', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+                                    {customRequests.length === 0 ? (
+                                        <p style={{ color: 'var(--text-muted)' }}>No requests found</p>
+                                    ) : (
+                                        customRequests
+                                            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                                            .map((item) => (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => navigate(`/profile/request/${item.id}`)}
+                                                    style={{
+                                                        background: 'var(--card-bg)',
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: '12px',
+                                                        padding: '15px',
+                                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                        cursor: 'pointer',
+                                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        opacity: 0.9
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                                                            <h3 style={{ color: '#2196F3', fontSize: '1rem', margin: 0 }}>
+                                                                {`${t('request')} #${item.id}`}
+                                                            </h3>
+                                                            <span style={{ fontSize: '0.7rem', background: '#2196F3', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>CUSTOM</span>
+                                                        </div>
+                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                                            {new Date(item.createdAt).toLocaleDateString('en-GB')}
+                                                        </span>
+                                                        <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '4px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {item.productName}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>
+                                                            {item.estimatedTotal > 0 ? `฿${item.estimatedTotal.toLocaleString()}` : 'Pending'}
+                                                        </div>
+                                                        <div style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 'bold',
+                                                            marginTop: '5px',
+                                                            display: 'inline-block',
+                                                            backgroundColor: getStatusText(item.status).includes('Cancel') ? 'rgba(244, 67, 54, 0.1)' : 'rgba(33, 150, 243, 0.1)',
+                                                            color: getStatusText(item.status).includes('Cancel') ? '#f44336' : '#2196F3'
+                                                        }}>
+                                                            {getStatusText(item.status)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Right Column: Pre-orders / Products */}
+                            <div>
+                                <h3 style={{ color: '#FF5722', fontSize: '1.2rem', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+                                    Products / Pre-Orders
+                                </h3>
+                                <div className="custom-scrollbar" style={{ display: 'grid', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+                                    {historySource.length === 0 ? (
+                                        <p style={{ color: 'var(--text-muted)' }}>{t('no_orders_found')}</p>
+                                    ) : (
+                                        historySource
+                                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                            .map((item) => (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => navigate(`/profile/orders/${item.id}`, { state: { order: item } })}
+                                                    style={{
+                                                        background: 'var(--card-bg)',
+                                                        border: '1px solid var(--border-color)',
+                                                        borderRadius: '12px',
+                                                        padding: '15px',
+                                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                        cursor: 'pointer',
+                                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <h3 style={{ color: '#FF5722', fontSize: '1rem', margin: '0 0 5px 0' }}>
+                                                            {`${t('order')} #${item.id}`}
+                                                        </h3>
+                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                                            {new Date(item.date).toLocaleDateString('en-GB')}
+                                                        </span>
+                                                        <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '4px' }}>
+                                                            {item.items.length} {t('items')}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>
+                                                            ฿{item.totalAmount.toLocaleString()}
+                                                        </div>
+                                                        <div style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 'bold',
+                                                            marginTop: '5px',
+                                                            display: 'inline-block',
+                                                            backgroundColor:
+                                                                item.status === 'delivered' ? 'rgba(76, 175, 80, 0.1)' :
+                                                                    item.status === 'shipped' ? 'rgba(33, 150, 243, 0.1)' :
+                                                                        item.status === 'cancelled' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+                                                            color:
+                                                                item.status === 'delivered' ? '#4CAF50' :
+                                                                    item.status === 'shipped' ? '#2196F3' :
+                                                                        item.status === 'cancelled' ? '#f44336' : '#FFC107'
+                                                        }}>
+                                                            {getStatusText(item.status)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                    )}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 )
@@ -711,131 +882,49 @@ const Profile: React.FC = () => {
                         <h2 style={{ color: 'var(--text-main)', marginBottom: '20px', borderLeft: '4px solid #FF5722', paddingLeft: '15px' }}>
                             {t('my_favorites')}
                         </h2>
-
-                        <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '20px' }}>
-                            <button
-                                onClick={() => setActiveTab('products')}
-                                style={{
-                                    padding: '10px 20px',
-                                    background: 'transparent',
-                                    border: 'none',
-                                    borderBottom: activeTab === 'products' ? '2px solid #FF5722' : '2px solid transparent',
-                                    color: activeTab === 'products' ? '#FF5722' : 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '1.1rem',
-                                    fontWeight: 'bold',
-                                    transition: 'color 0.2s'
-                                }}
-                            >
-                                {t('liked products')}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('fandoms')}
-                                style={{
-                                    padding: '10px 20px',
-                                    background: 'transparent',
-                                    border: 'none',
-                                    borderBottom: activeTab === 'fandoms' ? '2px solid #FF5722' : '2px solid transparent',
-                                    color: activeTab === 'fandoms' ? '#FF5722' : 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: '1.1rem',
-                                    fontWeight: 'bold',
-                                    transition: 'color 0.2s'
-                                }}
-                            >
-                                {t('liked fandoms')}
-                            </button>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
+                            {favoriteFandomList.length > 0 ? (
+                                favoriteFandomList.map((fandom, index) => (
+                                    <div key={index} style={{
+                                        background: 'var(--card-bg)',
+                                        borderRadius: '12px',
+                                        padding: '15px',
+                                        border: '1px solid var(--border-color)',
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                        onClick={() => navigate(`/fandoms/${fandom}`)}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ width: '80px', height: '80px', margin: '0 auto 10px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #FF5722' }}>
+                                            <img src={fandomImages[fandom] || 'https://placehold.co/100x100?text=Fandom'} alt={fandom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                        <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-main)' }}>{fandom}</h4>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleLikeFandom(fandom);
+                                            }}
+                                            style={{
+                                                background: 'transparent',
+                                                border: '1px solid #F44336',
+                                                color: '#F44336',
+                                                borderRadius: '20px',
+                                                padding: '5px 15px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.8rem'
+                                            }}
+                                        >
+                                            {t('unlike')}
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p style={{ color: 'var(--text-muted)' }}>{t('no liked fandoms')}</p>
+                            )}
                         </div>
-
-                        {activeTab === 'products' && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                                {favoriteProducts.length > 0 ? (
-                                    favoriteProducts.map(item => (
-                                        <div key={item.id} style={{
-                                            background: 'var(--card-bg)',
-                                            borderRadius: '12px',
-                                            padding: '15px',
-                                            border: '1px solid var(--border-color)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s'
-                                        }}
-                                            onClick={() => navigate(`/product/${item.id}`)}
-                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                        >
-                                            <div style={{ height: '180px', marginBottom: '10px', borderRadius: '8px', overflow: 'hidden' }}>
-                                                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                            <h4 style={{ margin: '0 0 5px 0', color: 'var(--text-main)' }}>{item.name}</h4>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                                                <span style={{ color: '#FF5722', fontWeight: 'bold' }}>{item.price}</span>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleLikeProduct(item.id);
-                                                    }}
-                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                                >
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF5722" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p style={{ color: 'var(--text-muted)' }}>{t('no liked products')}</p>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'fandoms' && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                                {favoriteFandomList.length > 0 ? (
-                                    favoriteFandomList.map((fandom, index) => (
-                                        <div key={index} style={{
-                                            background: 'var(--card-bg)',
-                                            borderRadius: '12px',
-                                            padding: '15px',
-                                            border: '1px solid var(--border-color)',
-                                            textAlign: 'center',
-                                            cursor: 'pointer',
-                                            transition: 'transform 0.2s'
-                                        }}
-                                            onClick={() => navigate(`/fandoms/${fandom}`)}
-                                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                        >
-                                            <div style={{ width: '80px', height: '80px', margin: '0 auto 10px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #FF5722' }}>
-                                                <img src={fandomImages[fandom] || 'https://placehold.co/100x100?text=Fandom'} alt={fandom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            </div>
-                                            <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-main)' }}>{fandom}</h4>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleLikeFandom(fandom);
-                                                }}
-                                                style={{
-                                                    background: 'transparent',
-                                                    border: '1px solid #F44336',
-                                                    color: '#F44336',
-                                                    borderRadius: '20px',
-                                                    padding: '5px 15px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.8rem'
-                                                }}
-                                            >
-                                                {t('unlike')}
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p style={{ color: 'var(--text-muted)' }}>{t('no liked fandoms')}</p>
-                                )}
-                            </div>
-                        )}
                     </div>
                 )
             }

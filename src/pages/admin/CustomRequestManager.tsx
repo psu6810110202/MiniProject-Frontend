@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useProducts } from '../../contexts/ProductContext';
 import { useNavigate } from 'react-router-dom';
-import type { PreOrderItem } from '../../types';
 
 interface CustomRequest {
     id: string;
@@ -13,7 +11,7 @@ interface CustomRequest {
     price: number;
     quantity: number;
     estimatedTotal: number;
-    status: 'pending' | 'approved' | 'rejected' | 'ordered' | 'completed';
+    status: 'pending' | 'payment_pending' | 'payment_verification' | 'paid' | 'ordered' | 'arrived_th' | 'shipping' | 'completed' | 'rejected' | 'approved';
     userName: string;
     userEmail: string;
     userId: string;
@@ -21,17 +19,25 @@ interface CustomRequest {
     updatedAt: string;
     adminNotes?: string;
     preorderId?: string;
+    shippingCost?: number;
+    paymentSlip?: string;
+    paymentDate?: string;
+    paymentTime?: string;
+    shippingAddress?: string;
+    trackingNumber?: string;
 }
 
 const CustomRequestManager: React.FC = () => {
     const { role } = useAuth();
     const navigate = useNavigate();
-    const { preOrders, addPreOrder } = useProducts();
+    // Removed unused useProducts call entirely
     const [requests, setRequests] = useState<CustomRequest[]>([]);
     const [selectedRequest, setSelectedRequest] = useState<CustomRequest | null>(null);
     const [adminNotes, setAdminNotes] = useState('');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterRegion, setFilterRegion] = useState<string>('all');
+    const [shippingCostInput, setShippingCostInput] = useState<string>('');
+    const [trackingNumberInput, setTrackingNumberInput] = useState<string>('');
 
     useEffect(() => {
         if (role !== 'admin') {
@@ -49,11 +55,12 @@ const CustomRequestManager: React.FC = () => {
         }
     };
 
-    const updateRequestStatus = (requestId: string, newStatus: CustomRequest['status'], notes?: string) => {
+    const updateRequestStatus = (requestId: string, newStatus: CustomRequest['status'], notes?: string, extraFields?: Partial<CustomRequest>) => {
         const updatedRequests = requests.map(request =>
             request.id === requestId
                 ? {
                     ...request,
+                    ...extraFields,
                     status: newStatus,
                     adminNotes: notes || request.adminNotes,
                     updatedAt: new Date().toISOString()
@@ -66,6 +73,7 @@ const CustomRequestManager: React.FC = () => {
         if (selectedRequest && selectedRequest.id === requestId) {
             setSelectedRequest({
                 ...selectedRequest,
+                ...extraFields,
                 status: newStatus,
                 adminNotes: notes || selectedRequest.adminNotes
             });
@@ -80,37 +88,15 @@ const CustomRequestManager: React.FC = () => {
         alert('บันทึกหมายเหตุเรียบร้อยแล้ว');
     };
 
-    const createPreorderFromRequest = (request: CustomRequest) => {
-        // Generate new PreOrder ID
-        const currentMaxId = preOrders.length > 0 ? Math.max(...preOrders.map(item => item.id)) : 0;
-        const newPreorderId = currentMaxId + 1;
+    const handleConfirmOrder = (request: CustomRequest) => {
+        // Update request status to "ordered" without creating a PreOrder item
+        updateRequestStatus(request.id, 'ordered', 'Admin confirmed order.');
 
-        // Calculate deposit (20% of total price)
-        const depositAmount = Math.round(request.estimatedTotal * 0.2);
+        // Alert user
+        alert(`Confirmed Order for Request #${request.id}`);
 
-        // Create new PreOrder item from request
-        const newPreorderItem: PreOrderItem = {
-            id: newPreorderId,
-            name: request.productName,
-            price: request.estimatedTotal,
-            deposit: depositAmount,
-            preOrderCloseDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
-            image: 'http://localhost:3000/images/covers/custom-request.webp',
-            description: `Custom request from ${request.userName}. Details: ${request.details}. Original link: ${request.link}`,
-            fandom: 'Custom Request',
-            category: 'Other'
-        };
-
-        // Add to Context (API + State)
-        addPreOrder(newPreorderItem);
-
-        // Update request status to "ordered" with preorder ID
-        updateRequestStatus(request.id, 'ordered', `สร้าง PreOrder ID: ${newPreorderId}`);
-
-        alert(`สร้าง PreOrder สำเร็จแล้ว! PreOrder ID: ${newPreorderId}`);
-
-        // Navigate to PreOrder Manager to see the new preorder
-        navigate('/admin/preorders');
+        // Close modal or refresh (optional, but updateRequestStatus updates state)
+        setSelectedRequest(prev => prev ? { ...prev, status: 'ordered' } : null);
     };
 
     const getFilteredRequests = () => {
@@ -123,11 +109,16 @@ const CustomRequestManager: React.FC = () => {
 
     const getStatusColor = (status: CustomRequest['status']) => {
         switch (status) {
-            case 'pending': return '#FFC107';
-            case 'approved': return '#4CAF50';
-            case 'rejected': return '#F44336';
-            case 'ordered': return '#2196F3';
-            case 'completed': return '#9C27B0';
+            case 'pending': return '#FFC107'; // Amber
+            case 'approved':
+            case 'payment_pending': return '#FF9800'; // Orange
+            case 'payment_verification': return '#2196F3'; // Blue
+            case 'paid':
+            case 'ordered': return '#4CAF50'; // Green
+            case 'arrived_th': return '#9C27B0'; // Purple
+            case 'shipping': return '#00BCD4'; // Cyan
+            case 'completed': return '#8BC34A'; // Light Green
+            case 'rejected': return '#F44336'; // Red
             default: return '#666';
         }
     };
@@ -145,10 +136,15 @@ const CustomRequestManager: React.FC = () => {
     const getStatusLabel = (status: CustomRequest['status']) => {
         const labels: Record<string, string> = {
             'pending': 'รอดำเนินการ',
-            'approved': 'อนุมัติ',
-            'rejected': 'ปฏิเสธ',
+            'approved': 'อนุมัติ (Old)',
+            'payment_pending': 'รอชำระเงิน',
+            'payment_verification': 'ตรวจสอบสลิป',
+            'paid': 'ชำระแล้ว',
             'ordered': 'สั่งซื้อแล้ว',
-            'completed': 'เสร็จสิ้น'
+            'arrived_th': 'ถึงไทยแล้ว',
+            'shipping': 'กำลังจัดส่ง',
+            'completed': 'เสร็จสิ้น',
+            'rejected': 'ปฏิเสธ'
         };
         return labels[status] || status;
     };
@@ -311,7 +307,7 @@ const CustomRequestManager: React.FC = () => {
                                     </button>
                                     {request.status === 'approved' && (
                                         <button
-                                            onClick={() => createPreorderFromRequest(request)}
+                                            onClick={() => handleConfirmOrder(request)}
                                             style={{
                                                 padding: '6px 12px',
                                                 background: '#4CAF50',
@@ -458,70 +454,144 @@ const CustomRequestManager: React.FC = () => {
                         {selectedRequest.status !== 'rejected' && selectedRequest.status !== 'completed' && (
                             <div style={{ marginBottom: '20px' }}>
                                 <h4 style={{ marginBottom: '10px' }}>จัดการคำขอ:</h4>
-                                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+                                    {/* 1. Pending -> Approved/Payment Pending */}
                                     {selectedRequest.status === 'pending' && (
-                                        <>
-                                            <button
-                                                onClick={() => updateRequestStatus(selectedRequest.id, 'approved')}
-                                                style={{
-                                                    padding: '10px 20px',
-                                                    background: '#4CAF50',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 'bold'
-                                                }}
-                                            >
-                                                อนุมัติ
-                                            </button>
-                                            <button
-                                                onClick={() => updateRequestStatus(selectedRequest.id, 'rejected')}
-                                                style={{
-                                                    padding: '10px 20px',
-                                                    background: '#F44336',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 'bold'
-                                                }}
-                                            >
-                                                ปฏิเสธ
-                                            </button>
-                                        </>
+                                        <div style={{ background: '#333', padding: '15px', borderRadius: '8px' }}>
+                                            <div style={{ marginBottom: '10px' }}>
+                                                <label style={{ display: 'block', marginBottom: '5px' }}>ค่าส่ง (Shipping Cost):</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="ระบุค่าส่ง (บาท) หรือ 0"
+                                                    value={shippingCostInput}
+                                                    onChange={(e) => setShippingCostInput(e.target.value)}
+                                                    style={{ width: '100%', padding: '8px', background: '#222', border: '1px solid #444', color: 'white', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        const cost = parseFloat(shippingCostInput || '0');
+                                                        updateRequestStatus(selectedRequest.id, 'payment_pending', undefined, { shippingCost: cost });
+                                                        setShippingCostInput('');
+                                                        alert('อนุมัติและแจ้งชำระเงินเรียบร้อย');
+                                                    }}
+                                                    style={{ padding: '10px 20px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                >
+                                                    อนุมัติ & แจ้งชำระเงิน
+                                                </button>
+                                                <button
+                                                    onClick={() => updateRequestStatus(selectedRequest.id, 'rejected')}
+                                                    style={{ padding: '10px 20px', background: '#F44336', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                >
+                                                    ปฏิเสธ
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
-                                    {selectedRequest.status === 'approved' && (
-                                        <button
-                                            onClick={() => createPreorderFromRequest(selectedRequest)}
-                                            style={{
-                                                padding: '10px 20px',
-                                                background: '#2196F3',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            สร้าง PreOrder: {selectedRequest.productName}
-                                        </button>
+
+                                    {/* 2. Payment Pending (Waiting for User) */}
+                                    {selectedRequest.status === 'payment_pending' && (
+                                        <div style={{ color: '#aaa', fontStyle: 'italic' }}>
+                                            รอลูกค้าชำระเงิน (ยอดรวม: ฿{((selectedRequest.estimatedTotal || 0) + (selectedRequest.shippingCost || 0)).toLocaleString()})
+                                        </div>
                                     )}
-                                    {selectedRequest.status === 'ordered' && (
-                                        <button
-                                            onClick={() => updateRequestStatus(selectedRequest.id, 'completed')}
-                                            style={{
-                                                padding: '10px 20px',
-                                                background: '#9C27B0',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            เสร็จสิ้น
-                                        </button>
+
+                                    {/* 3. Payment Verification */}
+                                    {selectedRequest.status === 'payment_verification' && (
+                                        <div style={{ background: '#333', padding: '15px', borderRadius: '8px' }}>
+                                            <h4 style={{ margin: '0 0 10px 0', color: '#2196F3' }}>ตรวจสอบการชำระเงิน</h4>
+                                            <div style={{ marginBottom: '10px' }}>
+                                                <strong>วันที่:</strong> {selectedRequest.paymentDate} {selectedRequest.paymentTime}
+                                            </div>
+                                            <div style={{ marginBottom: '10px' }}>
+                                                <strong>ที่อยู่จัดส่ง:</strong><br />
+                                                {selectedRequest.shippingAddress}
+                                            </div>
+                                            {selectedRequest.paymentSlip && (
+                                                <div style={{ marginBottom: '15px' }}>
+                                                    <strong>สลิปโอนเงิน:</strong>
+                                                    <div style={{ marginTop: '5px' }}>
+                                                        <a href={selectedRequest.paymentSlip} target="_blank" rel="noopener noreferrer">
+                                                            <img src={selectedRequest.paymentSlip} alt="Slip" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px', border: '1px solid #555' }} />
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        // Auto create PreOrder logic could go here, or just simple status update first
+                                                        handleConfirmOrder(selectedRequest);
+                                                        // Note: handleConfirmOrder sets status to 'ordered' automatically
+                                                    }}
+                                                    style={{ padding: '10px 20px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                >
+                                                    ยืนยันยอด & สั่งซื้อ (Confirm Order)
+                                                </button>
+                                                <button
+                                                    onClick={() => updateRequestStatus(selectedRequest.id, 'payment_pending', 'Slip rejected, please re-upload')}
+                                                    style={{ padding: '10px 20px', background: '#F44336', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                >
+                                                    สลิปไม่ถูกต้อง (Reject Slip)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 4. Tracking Updates */}
+                                    {(selectedRequest.status === 'ordered' || selectedRequest.status === 'arrived_th' || selectedRequest.status === 'shipping') && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                            {selectedRequest.status !== 'shipping' && (
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    {selectedRequest.status !== 'arrived_th' && (
+                                                        <button
+                                                            onClick={() => updateRequestStatus(selectedRequest.id, 'arrived_th')}
+                                                            style={{ padding: '8px 16px', background: '#9C27B0', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                                                        >
+                                                            สินค้าถึงไทย (Arrived TH)
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => updateRequestStatus(selectedRequest.id, 'shipping')}
+                                                        style={{ padding: '8px 16px', background: '#00BCD4', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                                                    >
+                                                        กำลังจัดส่ง (Shipping)
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {selectedRequest.status === 'shipping' && (
+                                                <div style={{ background: '#333', padding: '15px', borderRadius: '8px' }}>
+                                                    <div style={{ marginBottom: '10px' }}>
+                                                        <label style={{ display: 'block', marginBottom: '5px' }}>Tracking Number / Postal Code:</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Enter tracking number..."
+                                                            value={trackingNumberInput}
+                                                            onChange={(e) => setTrackingNumberInput(e.target.value)}
+                                                            style={{ width: '100%', padding: '10px', background: '#222', border: '1px solid #444', color: 'white', borderRadius: '4px' }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!trackingNumberInput.trim()) {
+                                                                alert('Please enter a tracking number');
+                                                                return;
+                                                            }
+                                                            // Update tracking number but keep status as 'shipping'
+                                                            updateRequestStatus(selectedRequest.id, 'shipping', undefined, { trackingNumber: trackingNumberInput });
+
+                                                            alert('บันทึกเลขพัสดุเรียบร้อย (Tracking Saved)!');
+                                                        }}
+                                                        style={{ padding: '10px 20px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                    >
+                                                        บันทึกเลขพัสดุ (Save Tracking)
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

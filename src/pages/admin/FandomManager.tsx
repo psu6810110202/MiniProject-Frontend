@@ -7,7 +7,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 const FandomManager: React.FC = () => {
     const navigate = useNavigate();
     const { role } = useAuth();
-    const { fandoms, addFandom, updateFandomName, deleteFandom, fandomImages, setFandomImage, items } = useProducts();
+    const { fandoms, addFandom, updateFandomName, deleteFandom, fandomImages, setFandomImage, items, preOrders } = useProducts();
     const { t } = useLanguage();
 
     // State for creating new fandom
@@ -34,8 +34,8 @@ const FandomManager: React.FC = () => {
         if (fandomImages && fandomImages[fandomName]) {
             setCurrentImage(fandomImages[fandomName]);
         } else {
-            // Fallback to first item image
-            const firstItem = items.find(i => i.fandom === fandomName);
+            // Fallback to first item image (check both regular and pre-order)
+            const firstItem = items.find(i => i.fandom === fandomName) || preOrders.find(i => i.fandom === fandomName);
             setCurrentImage(firstItem?.image || '');
         }
 
@@ -83,8 +83,6 @@ const FandomManager: React.FC = () => {
         if (currentImage) {
             setFandomImage(editName, currentImage); // Use new name if renamed
         }
-
-        alert(t('save_success') || 'Saved successfully');
         setEditingFandom(null); // Exit edit mode
     };
 
@@ -235,7 +233,7 @@ const FandomManager: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                 {fandoms.map(fandom => {
                     const isEditing = editingFandom === fandom;
-                    const itemsInFandom = items.filter(i => i.fandom === fandom).length;
+                    const itemsInFandom = items.filter(i => i.fandom === fandom).length + preOrders.filter(p => p.fandom === fandom).length;
 
                     // Specific logic for getting image for list display
                     let displayImage = '';

@@ -32,8 +32,8 @@ function Footer() {
                     <div>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#FFFFFF' }}>{t('shop')}</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <Link to="/preorder" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('preorder')}</Link>
-                            <Link to="/fandoms" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{t('fandoms')}</Link>
+                            <Link to="/request-custom-product" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{'Request Custom Product'}</Link>
+                            <Link to="/fandoms" style={{ textDecoration: 'none', color: '#a1a1a1', transition: 'color 0.2s' }}>{'Fandoms'}</Link>
                         </div>
                     </div>
 

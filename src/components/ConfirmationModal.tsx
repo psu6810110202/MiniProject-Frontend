@@ -9,7 +9,6 @@ interface ConfirmationModalProps {
     confirmText?: string;
     cancelText?: string;
     isDangerous?: boolean;
-    isDark?: boolean;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -20,8 +19,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     message,
     confirmText = 'Confirm',
     cancelText = 'Cancel',
-    isDangerous = false,
-    isDark = false
+    isDangerous = false
 }) => {
     if (!isOpen) return null;
 

@@ -12,6 +12,22 @@ const ProductForm: React.FC = () => {
 
     const isEditMode = !!id;
 
+    // Helper function to extract specs from description
+    const extractSpecsFromDescription = (description: string) => {
+        const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
+        const extractedSpecs: Record<string, string> = {};
+        
+        specKeywords.forEach(keyword => {
+            const regex = new RegExp(`${keyword}\\s*[:：]\\s*([^\\n]+)`, 'i');
+            const match = description.match(regex);
+            if (match) {
+                extractedSpecs[keyword] = match[1].trim();
+            }
+        });
+        
+        return extractedSpecs;
+    };
+
     // Helper to separate Description, Specs, and Variants
     const parseInitialData = (item: Item | undefined) => {
         if (!item) return { desc: '', specs: {}, variants: { hasSet: false, setPrice: '', setQty: '' } };
@@ -98,6 +114,22 @@ const ProductForm: React.FC = () => {
             setInternalId(found.id);
             const { desc, specs: parsedSpecs, variants } = parseInitialData(found);
 
+            // Extract specs from description as well
+            const extractedSpecs = extractSpecsFromDescription(desc);
+            const allSpecs = { ...parsedSpecs, ...extractedSpecs };
+
+            // Remove extracted specs from description
+            let cleanedDescription = desc;
+            const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
+            
+            specKeywords.forEach(keyword => {
+                const regex = new RegExp(`${keyword}\\s*[:：]\\s*[^\\n]*\\n?`, 'gi');
+                cleanedDescription = cleanedDescription.replace(regex, '');
+            });
+            
+            // Clean up extra whitespace and empty lines
+            cleanedDescription = cleanedDescription.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+
             // Extract numeric price from string like "฿2,500"
             const priceVal = String(found.price).replace(/[^0-9.]/g, '');
 
@@ -108,14 +140,14 @@ const ProductForm: React.FC = () => {
                 category: found.category,
                 fandom: found.fandom,
                 image: found.image,
-                description: desc,
+                description: cleanedDescription,
                 gallery: found.gallery || [],
                 hasSetOption: variants.hasSet,
                 setPrice: variants.setPrice,
                 // @ts-ignore
                 boxCount: variants.boxCount || variants.setQty
             });
-            setSpecs(parsedSpecs);
+            setSpecs(allSpecs);
         }
     }, [id, items, isEditMode]);
 
@@ -125,6 +157,26 @@ const ProductForm: React.FC = () => {
 
     const handleSpecChange = (key: string, value: string) => {
         setSpecs(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleDescriptionChange = (value: string) => {
+        // Auto-extract specs when description changes
+        const extractedSpecs = extractSpecsFromDescription(value);
+        setSpecs(prev => ({ ...prev, ...extractedSpecs }));
+        
+        // Remove extracted specs from description
+        let cleanedDescription = value;
+        const specKeywords = ['Material', 'Height', 'Weight', 'Base', 'Paint', 'Packaging', 'Authenticity'];
+        
+        specKeywords.forEach(keyword => {
+            const regex = new RegExp(`${keyword}\\s*[:：]\\s*[^\\n]*\\n?`, 'gi');
+            cleanedDescription = cleanedDescription.replace(regex, '');
+        });
+        
+        // Clean up extra whitespace and empty lines
+        cleanedDescription = cleanedDescription.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+        
+        handleInput('description', cleanedDescription);
     };
 
     const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,8 +224,34 @@ const ProductForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Debug: Log current form data
+        console.log('Current form data:', formData);
+        console.log('Current specs:', specs);
+
         if (isEditMode && !internalId) {
             alert('Error: Could not identify original product.');
+            return;
+        }
+
+        // Validation
+        if (!formData.name.trim()) {
+            alert('Please enter a product name.');
+            return;
+        }
+        if (!formData.price || Number(formData.price) <= 0) {
+            alert('Please enter a valid price.');
+            return;
+        }
+        if (!formData.category) {
+            alert('Please select a category.');
+            return;
+        }
+        if (!formData.fandom) {
+            alert('Please select a fandom.');
+            return;
+        }
+        if (!formData.image) {
+            alert('Please upload a thumbnail image.');
             return;
         }
 
@@ -211,6 +289,10 @@ const ProductForm: React.FC = () => {
         };
 
         try {
+            console.log('Submitting product data:', productData);
+            console.log('Is edit mode:', isEditMode);
+            console.log('Internal ID:', internalId);
+            
             if (isEditMode) {
                 // @ts-ignore
                 await updateItem(productData);
@@ -222,7 +304,9 @@ const ProductForm: React.FC = () => {
             }
             navigate('/admin/products');
         } catch (error) {
-            console.error(error);
+            console.error('Error saving product:', error);
+            const errorDetails = error instanceof Error ? error.message : String(error);
+            console.error('Error details:', errorDetails);
             alert('Failed to save product. Please try again.');
         } finally {
             setIsSubmitting(false);
@@ -461,10 +545,10 @@ const ProductForm: React.FC = () => {
                     <label style={labelStyle}>Description (Main Text)</label>
                     <textarea
                         value={formData.description}
-                        onChange={(e) => handleInput('description', e.target.value)}
+                        onChange={(e) => handleDescriptionChange(e.target.value)}
                         rows={6}
                         style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
-                        placeholder="Enter detailed product description..."
+                        placeholder="Enter detailed product description... (e.g. Material: PVC, Height: 20cm, Weight: 500g)"
                     />
                 </div>
 

@@ -104,21 +104,6 @@ export interface TimelineEvent {
   created_at: string;
 }
 
-export interface Ticket {
-  id: string;
-  subject: string;
-  category: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  message: string;
-  userName: string;
-  userEmail: string;
-  userId: string;
-  created_at: string;
-  updated_at: string;
-  admin_response?: string;
-}
-
 // API Service Class
 class APIService {
   private baseURL: string;
@@ -187,23 +172,6 @@ class APIService {
       console.error(`API Request failed [${endpoint}]:`, error);
       throw error;
     }
-  }
-
-  // --- Tickets API ---
-  async getTickets(): Promise<Ticket[]> {
-    return this.request<Ticket[]>('/tickets');
-  }
-
-  async updateTicket(id: string, data: Partial<Ticket>): Promise<Ticket> {
-    return this.request<Ticket>(`/tickets/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async replyTicket(id: string, response: string): Promise<Ticket> {
-    // Specialized endpoint or just PATCH
-    return this.updateTicket(id, { admin_response: response, status: 'in_progress' });
   }
 
   // --- Products API ---
@@ -277,21 +245,11 @@ class APIService {
     return this.request<User>(`/users/${id}`);
   }
 
-  async restoreUser(id: string): Promise<void> {
-    return this.request<void>(`/users/${id}/restore`, {
-      method: 'PATCH'
-    });
-  }
-
   async updateUser(id: string, data: Partial<User>): Promise<User> {
     return this.request<User>(`/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data)
     });
-  }
-
-  async deleteUser(id: string): Promise<void> {
-    return this.request<void>(`/users/${id}`, { method: 'DELETE' });
   }
 
   // --- Fandoms API ---
@@ -406,7 +364,6 @@ export const userAPI = {
   getAll: () => api.getUsers(),
   getById: (id: string) => api.getUserById(id),
   update: (id: string, data: Partial<User>) => api.updateUser(id, data),
-  delete: (id: string) => api.deleteUser(id),
 };
 
 export const fandomAPI = {
@@ -434,12 +391,6 @@ export const timelineAPI = {
   getByProduct: (productId: string) => api.getTimelineEventsByProduct(productId),
   getByOrder: (orderId: string) => api.getTimelineEventsByOrder(orderId),
   create: (event: Partial<TimelineEvent>) => api.createTimelineEvent(event),
-};
-
-export const ticketAPI = {
-  getAll: () => api.getTickets(),
-  update: (id: string, data: Partial<Ticket>) => api.updateTicket(id, data),
-  reply: (id: string, response: string) => api.replyTicket(id, response),
 };
 
 export default api;

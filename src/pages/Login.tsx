@@ -3,9 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { BlacklistModal, DeletedWarningModal, RestoreModal } from '../components/LoginModals';
+import { BlacklistModal } from '../components/LoginModals';
 import ThemeNotification from '../components/ThemeNotification';
-import { authAPI, userAPI, api } from '../services/api';
+import { authAPI } from '../services/api';
 import './Login.css';
 
 const Login: React.FC = () => {
@@ -18,10 +18,6 @@ const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [showBlacklistModal, setShowBlacklistModal] = useState(false);
-
-    const [showRestoreModal, setShowRestoreModal] = useState(false);
-    const [restoreData, setRestoreData] = useState({ username: '', password: '' });
-    const [showDeletedWarningModal, setShowDeletedWarningModal] = useState(false);
 
     const { theme } = useTheme();
     const [notification, setNotification] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({
@@ -36,41 +32,6 @@ const Login: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleRestoreSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            const loginData = await authAPI.login({ email: restoreData.username, password: restoreData.password });
-
-            if (loginData.access_token) {
-                const userId = loginData.user.id || loginData.user.user_id;
-
-                // Manually set token for this operation since we haven't fully logged in via Context yet
-                api.setToken(loginData.access_token);
-
-                try {
-                    await userAPI.restore(userId);
-                    alert('Account restored successfully! Logging you in...');
-                    login(loginData.access_token, { ...loginData.user, deletedAt: null }, true);
-                    navigate('/');
-                } catch (restoreErr: any) {
-                    // If restore fails, we shouldn't leave the token in the api instance if login wasn't fully intended
-                    // api.clearToken(); // Assuming we might want to clear. But technically user authenticated.
-                    // But restore failed, so maybe we shouldn't login?
-                    // Let's keep it safe.
-                    const msg = restoreErr.message || 'Restore failed';
-                    alert(msg);
-                }
-            }
-        } catch (apiErr: any) {
-            console.error("API Restore flow failed", apiErr.message);
-            alert("Failed to restore account via API. " + (apiErr.message || ''));
-        }
-        setLoading(false);
-    };
-
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -82,13 +43,6 @@ const Login: React.FC = () => {
             if (data.access_token) {
                 if (data.user.isBlacklisted) {
                     setShowBlacklistModal(true);
-                    setLoading(false);
-                    return;
-                }
-
-                if (data.user.deletedAt) {
-                    setRestoreData({ ...restoreData, username: formData.username, password: formData.password });
-                    setShowDeletedWarningModal(true);
                     setLoading(false);
                     return;
                 }
@@ -172,22 +126,6 @@ const Login: React.FC = () => {
             <BlacklistModal
                 isOpen={showBlacklistModal}
                 onClose={() => setShowBlacklistModal(false)}
-                isDark={isDark}
-            />
-
-            <RestoreModal
-                isOpen={showRestoreModal}
-                onClose={() => setShowRestoreModal(false)}
-                onSubmit={handleRestoreSubmit}
-                data={restoreData}
-                setData={setRestoreData}
-                isDark={isDark}
-            />
-
-            <DeletedWarningModal
-                isOpen={showDeletedWarningModal}
-                onClose={() => setShowDeletedWarningModal(false)}
-                onRestore={() => { setShowDeletedWarningModal(false); setShowRestoreModal(true); }}
                 isDark={isDark}
             />
 

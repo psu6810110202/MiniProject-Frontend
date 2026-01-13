@@ -123,31 +123,6 @@ const Profile: React.FC = () => {
     // Merge Orders and Requests for Display
     const historySource = apiOrders.length > 0 ? apiOrders : userOrders;
 
-    const allHistory = [
-        ...historySource.map(o => ({
-            type: 'order',
-            id: o.id,
-            date: new Date(o.date).getTime(),
-            displayDate: new Date(o.date).toLocaleDateString('en-GB'),
-            amount: o.totalAmount,
-            status: o.status,
-            itemCount: o.items.length,
-            title: `${t('order')} #${o.id}`,
-            raw: o
-        })),
-        ...customRequests.map(r => ({
-            type: 'request',
-            id: r.id,
-            date: new Date(r.createdAt).getTime(),
-            displayDate: new Date(r.createdAt).toLocaleDateString('en-GB'),
-            amount: r.estimatedTotal,
-            status: r.status,
-            itemCount: 1, // Custom request usually 1 item concept
-            title: `${t('request')} #${r.id}`,
-            raw: r
-        }))
-    ].sort((a, b) => b.date - a.date);
-
     // Fetch Thai Address Data
     useEffect(() => {
         const fetchAddressData = async () => {

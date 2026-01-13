@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { usePoints } from '../hooks/usePoints';
 import ConfirmationModal from '../components/ConfirmationModal';
 
-import { userAPI, orderAPI } from '../services/api';
+import { orderAPI } from '../services/api';
 
 // ... (existing imports)
 
@@ -17,7 +17,7 @@ const OrderDetail: React.FC = () => {
     const { userOrders, updateOrderStatus, removePurchasedItems } = useCart();
     const { deductPoints } = usePoints();
 
-    const getTrackingUrl = (carrier: string, trackingNumber: string) => {
+    const getTrackingUrl = (trackingNumber: string) => {
         return `https://track.thailandpost.co.th/?trackNumber=${trackingNumber}`;
     };
 
@@ -462,7 +462,7 @@ const OrderDetail: React.FC = () => {
                             {order.trackingNumber}
                         </div>
                         <a
-                            href={getTrackingUrl(order.carrier, order.trackingNumber)}
+                            href={getTrackingUrl(order.trackingNumber)}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{

@@ -18,7 +18,7 @@ interface ProductContextType {
     updateFandomName: (oldName: string, newName: string) => Promise<void>;
     addPreOrder: (item: PreOrderItem) => Promise<void>;
     updatePreOrder: (item: PreOrderItem) => Promise<void>;
-    deletePreOrder: (id: number) => Promise<void>;
+    deletePreOrder: (id: number | string) => Promise<void>;
     likedFandoms: string[];
     toggleLikeFandom: (name: string) => void;
     deductStock: (id: number | string, quantity: number) => Promise<void>;
@@ -159,9 +159,13 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 gallery: JSON.stringify(item.gallery || [])
             });
 
+            if (!response || !response.product_id) {
+                throw new Error("Backend failed to return a valid Product ID.");
+            }
+
             // Add the REAL item from DB to state
             const newItem: Item = {
-                id: response.product_id ? (Number(response.product_id) || response.product_id) : Date.now(),
+                id: response.product_id,
                 name: response.name,
                 price: `฿${response.price.toLocaleString()}`,
                 category: response.category || response.category_id || item.category,
@@ -332,9 +336,15 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 domestic_shipping_cost: item.domesticShipping || 0
             });
 
+            console.log("DEBUG: addPreOrder response", response);
+            if (!response || !response.product_id) {
+                console.error("DEBUG: No product_id in response!", response);
+                throw new Error("Backend failed to return a valid Product ID.");
+            }
+
             // Convert response (Product) to PreOrderItem
             const newPreOrder: PreOrderItem = {
-                id: Number(response.product_id.replace(/^P/i, '')) || Date.now(), // Handle ID conversion if needed
+                id: response.product_id,
                 name: response.name,
                 price: response.price,
                 description: response.description,
@@ -343,7 +353,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
                 image: response.image,
                 preOrderCloseDate: response.release_date || '',
                 deposit: response.deposit_amount || 0,
-                gallery: response.gallery ? JSON.parse(response.gallery) : [],
+                gallery: response.gallery ? (typeof response.gallery === 'string' ? JSON.parse(response.gallery) : response.gallery) : [],
                 domesticShipping: Number(response.domestic_shipping_cost) || 0
             };
 
@@ -379,7 +389,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
     };
 
-    const deletePreOrder = async (id: number) => {
+    const deletePreOrder = async (id: number | string) => {
         try {
             await productAPI.delete(String(id));
             // Update state after success

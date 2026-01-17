@@ -29,7 +29,7 @@ export interface Item {
 }
 
 export interface PreOrderItem {
-  id: number;
+  id: number | string;
   name: string;
   price: number;
   deposit: number;

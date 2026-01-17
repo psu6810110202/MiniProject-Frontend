@@ -455,7 +455,7 @@ const PreOrderManager: React.FC = () => {
     const [reservations, setReservations] = useState<any[]>([]);
 
     // Updated Check for detailed order info
-    const loadReservations = async (itemId: number) => {
+    const loadReservations = async (itemId: number | string) => {
         setReservations([]);
         console.log("Fetching reservations for item:", itemId);
         try {
@@ -648,7 +648,7 @@ const PreOrderManager: React.FC = () => {
         }
     }, [role, navigate]);
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: number | string) => {
         if (confirm('Are you sure you want to delete this pre-order?')) {
             deletePreOrder(id);
         }
